@@ -8,3 +8,4 @@ export * from './usersession.model';
 
 export * from './roles.model';
 export * from './notification.model';
+export * from './buyerscontact.model';

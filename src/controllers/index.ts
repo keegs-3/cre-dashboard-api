@@ -10,3 +10,4 @@ export * from './usersession.controller';
 
 export * from './roles.controller';
 export * from './notification.controller';
+export * from './buyeers-contact.controller';
