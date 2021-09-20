@@ -1,30 +1,25 @@
+import {authenticate} from '@loopback/authentication';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Buyerscontact} from '../models';
 import {BuyerscontactRepository} from '../repositories';
-
+@authenticate("jwt")
 export class BuyeersContactController {
   constructor(
     @repository(BuyerscontactRepository)
-    public buyerscontactRepository : BuyerscontactRepository,
-  ) {}
+    public buyerscontactRepository: BuyerscontactRepository,
+  ) { }
 
   @post('/buyerscontacts')
   @response(200, {
