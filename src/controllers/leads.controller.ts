@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {
   repository
 } from '@loopback/repository';
@@ -8,7 +9,7 @@ import {
   response
 } from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-// @authenticate("jwt")
+@authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -750,7 +751,7 @@ export class LeadsController {
       const city = property_city.split(',');
       const cityq = "'" + city.join("','") + "'";
       const sql = await this.leadsRepository.execute(
-        `select b.* ,bc.connected,bc.interested
+        `select b.* ,bc.connected,bc.interested,bc.id as contact_id
         from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation b
         left join ${this.DB_SCHEMA}.buyers_contact bc  on b.property_id = bc.property_id and b.buyers_name = bc.buyer_name
         where property_name in (${marq}) and city in (${cityq})
@@ -767,7 +768,7 @@ export class LeadsController {
       // const cityq = "'" + city.join("','") + "'";
       const sql = await this.leadsRepository.execute(
         `
-        select b.* ,bc.connected,bc.interested
+        select b.* ,bc.connected,bc.interested,bc.id as contact_id
         from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation b
         left join ${this.DB_SCHEMA}.buyers_contact bc  on b.property_id = bc.property_id and b.buyers_name = bc.buyer_name
          where property_name in (${marq})
@@ -783,7 +784,7 @@ export class LeadsController {
       const city = property_city.split(',');
       const cityq = "'" + city.join("','") + "'";
       const sql = await this.leadsRepository.execute(
-        `select b.* ,bc.connected,bc.interested
+        `select b.* ,bc.connected,bc.interested,bc.id as contact_id
         from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation b
         left join ${this.DB_SCHEMA}.buyers_contact bc  on b.property_id = bc.property_id and b.buyers_name = bc.buyer_name
         where city in (${cityq})
