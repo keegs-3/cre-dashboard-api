@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {
   Count,
   CountSchema,
@@ -13,13 +12,17 @@ import {
   response
 } from '@loopback/rest';
 import {Usersession} from '../models';
-import {UsersessionRepository} from '../repositories';
-@authenticate("jwt")
+import {LeadsRepository, UsersessionRepository} from '../repositories';
+
+// @authenticate("jwt")
 export class UsersessionController {
   constructor(
     @repository(UsersessionRepository)
     public usersessionRepository: UsersessionRepository,
+    @repository(LeadsRepository)
+    public leadsRepository: LeadsRepository
   ) { }
+  DB_SCHEMA = process.env.DB_SCHEMA
 
   @post('/usersessions')
   @response(200, {
@@ -142,4 +145,72 @@ export class UsersessionController {
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.usersessionRepository.deleteById(id);
   }
+
+
+
+  @get('/usersessions/userdata/{name}')
+  @response(200, {
+    description: 'Usersession model instance',
+
+  })
+  async name(
+    @param.path.string('name') name: string,
+    @param.query.string('startdate') startdate: string,
+    @param.query.string('enddate') enddate: string,
+
+  ): Promise<any> {
+    const loca = name.split(',');
+    const locaq = "'" + loca.join("','") + "'";
+    if (
+      name !== '' && name !== undefined
+      && startdate !== '' && startdate !== undefined
+      && enddate !== '' && enddate !== undefined
+    ) {
+
+      const sql = await this.leadsRepository.execute(
+        `
+    with days as (
+      SELECT date_trunc('day', dd):: date as day
+     FROM generate_series
+             ( '${startdate}'::timestamp
+             , '${enddate}'::timestamp
+             , '1 day'::interval) as dd
+     )
+     ,
+     total as(
+     select
+        days.day,
+        us."name" ,
+       count(us.starttime) over (partition by days.day),
+       sum (age(endtime,starttime) ) over ( partition  by days.day) as totaltime,
+       sum (age(endtime,starttime) ) over ( partition  by days.day)/count (days.day)over ( partition  by days.day) as averagetimetaken
+     from days
+     left join ${this.DB_SCHEMA}.user_session us on date_trunc('day', us.starttime) = days.day
+     where endtime is not null and us.name  in (${locaq})
+     and  us.starttime between '${startdate}' and '${enddate}'
+     group by days.day ,us."name" ,us.starttime ,us.endtime
+     ),
+
+     distinctt as (
+     select distinct * from total
+     )
+     select days.day as days ,distinctt.* from days left join distinctt on days.day = distinctt.day
+    `
+      );
+      if (sql.length > 0) {
+        return sql
+      }
+      else return 'no data matched'
+
+    }
+    else return 'username , startdate and end date is required'
+  }
+
+
+
+
+
+
+
+
 }
