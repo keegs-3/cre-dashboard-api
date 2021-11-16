@@ -49,9 +49,14 @@ export class User extends Entity {
   })
   role: String;
   @property({
+    type: 'string',
+  })
+  resetkey: String;
+  @property({
     type: 'date',
   })
   agent_map_date: Date;
+
 
 
   constructor(data?: Partial<User>) {
@@ -61,6 +66,8 @@ export class User extends Entity {
 
 export interface UserRelations {
   // describe navigational properties here
+
+
 }
 
 export type UserWithRelations = User & UserRelations;
