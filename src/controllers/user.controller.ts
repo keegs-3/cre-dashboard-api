@@ -123,7 +123,7 @@ export class CReUserController {
   ): Promise<any> {
 
     const data = await this.usersRepository.dataSource.execute(`
-    select * from cre.users where "email" = '${email}'
+    select * from ${this.DB_SCHEMA}.users where "email" = '${email}'
     `);
     console.log(data);
     if (data.length < 1) {
@@ -164,7 +164,7 @@ SET   resetkey= '${resetkey}' where email = '${email}'
       // Preview only available when sending through an Ethereal account
       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
       // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-      return 'Successfully sent mail';
+      return 'Successfully Emailed';
     }
 
 
