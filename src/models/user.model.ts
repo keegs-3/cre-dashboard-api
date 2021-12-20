@@ -39,7 +39,7 @@ export class User extends Entity {
   @property({
     type: 'string',
   })
-  agent_id: string;
+  agent_id?: string;
   @property({
     type: 'string',
   })
@@ -51,7 +51,7 @@ export class User extends Entity {
   @property({
     type: 'string',
   })
-  resetkey: String;
+  resetkey?: String;
   @property({
     type: 'date',
   })

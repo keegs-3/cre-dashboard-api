@@ -57,6 +57,52 @@ export class CReUserController {
     // delete savedUser.password;
     return savedUser;
   }
+  @post('/admin/{name}/adduser', {
+    responses: {
+      '200': {
+        description: 'User',
+        content: {
+          schema: getJsonSchemaRef(User)
+        }
+      }
+    }
+  })
+  async adduser(
+
+    @requestBody() userData: User,
+    @param.path.string('name') name?: string,
+  ) {
+    if (name !== '') {
+      let data = await this.userRepository.dataSource.execute(`
+  select * from ${this.DB_SCHEMA}.users u
+  left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
+  where username = '${name}'
+    `);
+      console.log(data)
+
+
+      if (data.length > 0 && data[0].role === 'admin') {
+        validateCredentials(_.pick(userData, ['username', 'password']));
+        userData.password = await this.hasher.hashPassword(userData.password)
+        const savedUser: any = await this.userRepository.create(userData);
+        delete savedUser.password;
+        delete savedUser.resetkey;
+
+        return savedUser;
+      }
+      else {
+        return `${name} is not a Admin User`
+      }
+
+
+    }
+    else {
+      return 'Pass UserName On Url'
+    }
+
+
+
+  }
 
   @post('/login', {
     responses: {
