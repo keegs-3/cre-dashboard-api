@@ -40,6 +40,8 @@ export class CReUserController {
 
   ) { }
   DB_SCHEMA = process.env.DB_SCHEMA
+
+  @authenticate("jwt")
   @post('/signup', {
     responses: {
       '200': {
@@ -57,6 +59,8 @@ export class CReUserController {
     // delete savedUser.password;
     return savedUser;
   }
+  @authenticate("jwt")
+
   @post('/admin/{name}/adduser', {
     responses: {
       '200': {
