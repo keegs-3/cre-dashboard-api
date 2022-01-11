@@ -194,14 +194,14 @@ SET   resetkey= '${resetkey}' where email = '${email}'
         port: 465,
         secure: true, // true for 465, false for other ports
         auth: {
-          user: 'anilchapagain68@gmail.com', // generated ethereal user
-          pass: 'tmhmbpzvvtrbkoaj', // generated ethereal password
+          user: '', // generated ethereal user
+          pass: '', // generated ethereal password
         },
       });
 
       // send mail with defined transport object
       const info = await transporter.sendMail({
-        from: '"Anil Chapagain" <anilchapagain68@gmail.com>', // sender address
+        from: '"name" <email>', // sender address
         to: `${email}`, // list of receivers
         subject: 'Verify Email', // Subject line
         text: 'Is this your account', // plain text body
