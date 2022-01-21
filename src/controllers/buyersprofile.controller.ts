@@ -48,8 +48,6 @@ export class BuyeersProfileController {
 
     if (property_id !== '' && property_id !== undefined) {
 
-
-
       const sql = await this.buyerscontactRepository.dataSource.execute(`
       select  *
        from ${this.DB_SCHEMA}.tgt_properties_metrics_new top where property_id = '${property_id}'
@@ -58,5 +56,56 @@ export class BuyeersProfileController {
       return sql;
     }
   }
+  @get('/city')
+  @response(200, {
+    description: 'Array of Buyerscontact model instances'
 
+  })
+  async city(
+
+  ): Promise<any> {
+    const sql = await this.buyerscontactRepository.dataSource.execute(
+      `select distinct owner_state from ${this.DB_SCHEMA}.tgt_owner_profiles
+      `);
+    return sql;
+
+  }
+
+  @get('/segments')
+  @response(200, {
+    description: 'Array of Buyerscontact model instances'
+
+  })
+  async segments(
+
+  ): Promise<any> {
+    const sql = await this.buyerscontactRepository.dataSource.execute(`
+          select distinct owner_segment from ${this.DB_SCHEMA}.tgt_owner_profiles
+      `);
+    return sql;
+  }
+  @get('/profilecharts')
+  @response(200, {
+    description: 'Array of Buyerscontact model instances'
+
+  })
+
+  async charts(
+    @param.query.string('property_id') property_id?: string,
+    @param.query.string('year') year?: string,
+  ): Promise<any> {
+    if (
+      year !== '' && year !== undefined
+      && property_id !== '' && property_id !== undefined
+    ) {
+
+      const sql = await this.buyerscontactRepository.dataSource.execute(`
+      select * from  ${this.DB_SCHEMA}.tgt_properties_metrics_new where property_id = '${property_id}' and
+        year_month between
+          TIMESTAMP '${year}' - INTERVAL '6 months'
+          and  TIMESTAMP '${year}' - INTERVAL '1 month'
+      `);
+      return sql;
+    }
+  }
 }
