@@ -29,7 +29,7 @@ export class BuyeersProfileController {
       const st = state.split(',');
       const stq = "'" + st.join("','") + "'";
       const sql = await this.buyerscontactRepository.dataSource.execute(`
-      select  count(owner)as "total_owners", sum(total_property_owned) as "total_property_owned", avg(avg_monetary) as "average Dollar value"
+      select  count(owner)as "total_owners", sum(total_property_owned) as "total_property_owned", avg(avg_monetary) as "average_dollar_value"
        from ${this.DB_SCHEMA}.tgt_owner_profiles top where owner_segment in (${locaq}) and owner_state in (${stq})
 
       `);
@@ -102,10 +102,39 @@ export class BuyeersProfileController {
       const sql = await this.buyerscontactRepository.dataSource.execute(`
       select * from  ${this.DB_SCHEMA}.tgt_properties_metrics_new where property_id = '${property_id}' and
         year_month between
-          TIMESTAMP '${year}' - INTERVAL '6 months'
+          TIMESTAMP '${year}' - INTERVAL '7 months'
           and  TIMESTAMP '${year}' - INTERVAL '1 month'
       `);
       return sql;
     }
   }
+  @get('/ownerstransaction')
+  @response(200, {
+    description: 'Array of Buyerscontact model instances'
+
+  })
+  async owners(
+    @param.query.string('segment') segment?: string,
+    @param.query.string('state') state?: string,
+  ): Promise<any> {
+
+    if (segment !== '' && segment !== undefined
+      && state !== '' && state !== undefined) {
+
+
+      const seg = segment.split(',');
+      const locaq = "'" + seg.join("','") + "'";
+      const st = state.split(',');
+      const stq = "'" + st.join("','") + "'";
+      const sql = await this.buyerscontactRepository.dataSource.execute(`
+      select  *
+       from ${this.DB_SCHEMA}.tgt_owner_profiles top where owner_segment in (${locaq}) and owner_state in (${stq})
+       order by total_property_owned desc
+
+      `);
+      return sql;
+    }
+  }
+
+
 }
