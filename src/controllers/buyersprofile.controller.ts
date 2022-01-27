@@ -104,6 +104,7 @@ export class BuyeersProfileController {
         year_month between
           TIMESTAMP '${year}' - INTERVAL '7 months'
           and  TIMESTAMP '${year}' - INTERVAL '1 month'
+          order by year_month asc
       `);
       return sql;
     }
@@ -136,5 +137,41 @@ export class BuyeersProfileController {
     }
   }
 
+  @get('/buyersmap')
+  @response(200, {
+    description: 'Array of Buyerscontact model instances'
+
+  })
+  async map(
+    @param.query.string('segment') segment?: string,
+    @param.query.string('state') state?: string,
+  ): Promise<any> {
+    const alldata = [];
+    if (segment !== '' && segment !== undefined
+      && state !== '' && state !== undefined) {
+
+
+      const seg = segment.split(',');
+      const locaq = "'" + seg.join("','") + "'";
+      const st = state.split(',');
+      const stq = "'" + st.join("','") + "'";
+      const owners = await this.buyerscontactRepository.dataSource.execute(`select  top.*
+      from ${this.DB_SCHEMA}.tgt_owner_profiles top where owner_segment in (${locaq}) and owner_state in (${stq})
+
+      order by total_property_owned desc`);
+
+      const longLatCity = await this.buyerscontactRepository.dataSource.execute(`
+      WITH statelongi AS (
+        select distinct state,min(latitude) ,max(longitude )from ${this.DB_SCHEMA}.src_properties_sale tlg
+group by state
+     )
+select statelongi.* from statelongi where state in (${stq})
+
+      `);
+      alldata.push({citydetails: longLatCity});
+      alldata.push({ownersdetails: owners});
+      return alldata;
+    }
+  }
 
 }
