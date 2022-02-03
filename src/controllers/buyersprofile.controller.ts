@@ -174,4 +174,70 @@ select statelongi.* from statelongi where state in (${stq})
     }
   }
 
+  @get('/usamap')
+  @response(200, {
+    description: 'Array of Buyerscontact model instances'
+
+  })
+  async usamap(
+    @param.query.string('state') state?: string,
+    @param.query.string('segment') segment?: string,
+  ): Promise<any> {
+    const data = {};
+    if (
+      state !== '' && state !== undefined
+      && segment !== '' && segment !== undefined
+    ) {
+
+
+      const st = state.split(',');
+      const stq = "'" + st.join("','") + "'";
+      const seg = segment.split(',');
+      const segq = "'" + seg.join("','") + "'";
+      let owners = {};
+      owners = await this.buyerscontactRepository.dataSource.execute(`select gll.state_abbrevation ,count(top."owner") ,top.owner_segment ,top.owner_city,gll.latitude ,gll.longitude from ${this.DB_SCHEMA}.geo_lat_long gll
+      join ${this.DB_SCHEMA}.tgt_owner_profiles top on gll.state_abbrevation  = top.owner_state
+      where top.owner_state in (${stq})and top.owner_segment in (${segq})
+      group by gll.state_abbrevation ,top.owner_segment ,top.owner_city ,gll.latitude ,gll.longitude `);
+
+
+
+
+      return owners;
+    }
+  }
+  @get('/funnelchart')
+  @response(200, {
+    description: 'Array of Buyerscontact model instances'
+
+  })
+  async funnelchart(
+    @param.query.string('state') state?: string,
+    @param.query.string('segment') segment?: string,
+  ): Promise<any> {
+    const data = {};
+    if (
+      state !== '' && state !== undefined
+      && segment !== '' && segment !== undefined
+    ) {
+
+
+      const st = state.split(',');
+      const stq = "'" + st.join("','") + "'";
+      const seg = segment.split(',');
+      const segq = "'" + seg.join("','") + "'";
+      let owners = {};
+      owners = await this.buyerscontactRepository.dataSource.execute(`
+      select top.owner_segment,count(top."owner") from ${this.DB_SCHEMA}.tgt_owner_profiles top
+      where top.owner_state in (${stq})and top.owner_segment in (${segq})
+      group by top.owner_segment
+      order by count(top."owner") desc`);
+
+
+
+
+      return owners;
+    }
+  }
+
 }
