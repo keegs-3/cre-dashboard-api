@@ -751,7 +751,10 @@ export class LeadsController {
       const city = property_city.split(',');
       const cityq = "'" + city.join("','") + "'";
       const sql = await this.leadsRepository.execute(
-        `select * from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation where property_name in (${marq}) and city in (${cityq})
+        `select b.* ,bc.connected,bc.interested,bc.id as contact_id
+        from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation b
+        left join ${this.DB_SCHEMA}.buyers_contact bc  on b.property_id = bc.property_id and b.buyers_name = bc.buyer_name
+        where property_name in (${marq}) and city in (${cityq})
         `
       )
       return sql
@@ -764,7 +767,11 @@ export class LeadsController {
       // const city = property_city.split(',');
       // const cityq = "'" + city.join("','") + "'";
       const sql = await this.leadsRepository.execute(
-        `select * from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation where property_name in (${marq})
+        `
+        select b.* ,bc.connected,bc.interested,bc.id as contact_id
+        from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation b
+        left join ${this.DB_SCHEMA}.buyers_contact bc  on b.property_id = bc.property_id and b.buyers_name = bc.buyer_name
+         where property_name in (${marq})
         `
       )
       return sql
@@ -777,7 +784,10 @@ export class LeadsController {
       const city = property_city.split(',');
       const cityq = "'" + city.join("','") + "'";
       const sql = await this.leadsRepository.execute(
-        `select * from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation where city in (${cityq})
+        `select b.* ,bc.connected,bc.interested,bc.id as contact_id
+        from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation b
+        left join ${this.DB_SCHEMA}.buyers_contact bc  on b.property_id = bc.property_id and b.buyers_name = bc.buyer_name
+        where city in (${cityq})
           `
       )
       return sql

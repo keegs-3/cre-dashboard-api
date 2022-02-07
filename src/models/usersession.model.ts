@@ -1,6 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: { postgresql: { schema: process.env.DB_SCHEMA, table: 'user_session'} }, })
+@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'user_session'}}, })
 export class Usersession extends Entity {
   @property({
     type: 'string',
@@ -28,6 +28,14 @@ export class Usersession extends Entity {
     type: 'string',
   })
   session?: string;
+  @property({
+    type: 'string',
+  })
+  timespentonleeds?: string;
+  @property({
+    type: 'string',
+  })
+  timespentonbuyers?: string;
 
 
   constructor(data?: Partial<Usersession>) {
