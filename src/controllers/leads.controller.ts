@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {
   repository
 } from '@loopback/repository';
@@ -9,7 +8,7 @@ import {
   response
 } from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-@authenticate("jwt")
+// @authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -18,7 +17,159 @@ export class LeadsController {
 
   DB_SCHEMA = process.env.DB_SCHEMA
 
+  @get('/analyticscard')
+  @response(200, {
+    description: 'Array of Leads model instances',
 
+  })
+  async analyticscard(
+    @param.query.string('year') year?: string,
+    @param.query.string('month') month?: string,
+    @param.query.string('market') market?: string,
+    @param.query.string('propensity') propensity?: string,
+  ): Promise<any> {
+    let all = [];
+    if (
+      year !== '' && year !== undefined && month !== '' && month !== undefined && market !== '' && market !== undefined && propensity !== '' && propensity !== undefined
+    ) {
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      const propen = propensity.split(',');
+      const propenq = "'" + propen.join("','") + "'";
+      const leads = await this.leadsRepository.dataSource.execute(`
+      with anacard as (
+        select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+      extract (YEAR FROM tlg.last_update_date) = ('${year}')
+      and extract (month from tlg.last_update_date) = ('${month}')
+      and tlg.market in (${marq})
+      and tlg.probability in (${propenq})
+      and tls.status  in ('lead')
+      order by  tlg.probability
+
+     )
+
+
+
+    select sum(a.total_sale_price_mm), count(a.created_date) from anacard a
+    `);
+      // console.log(sql);
+
+
+
+
+      const inprogres = await this.leadsRepository.dataSource.execute(`
+      with anacard as (
+        select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+      extract (YEAR FROM tlg.last_update_date) = ('${year}')
+      and extract (month from tlg.last_update_date) = ('${month}')
+      and tlg.market in (${marq})
+      and tlg.probability in (${propenq})
+      and tls.status in ('opportunity','negotiation','proposal')
+      order by  tlg.probability
+
+     )
+
+
+
+    select sum(a.total_sale_price_mm), count(a.created_date) from anacard a
+    `);
+      const deals = await this.leadsRepository.dataSource.execute(`
+    with anacard as (
+      select *
+    from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+    left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+   order by property_id , inserted_date desc )
+     tls on tlg.property_id =tls.property_id
+    where
+    extract (YEAR FROM tlg.last_update_date) = ('${year}')
+    and extract (month from tlg.last_update_date) = ('${month}')
+    and tlg.market in (${marq})
+    and tlg.probability in (${propenq})
+    and tls.status in ('deal')
+    order by  tlg.probability
+
+   )
+
+
+
+  select sum(a.total_sale_price_mm), count(a.created_date) from anacard a
+  `);
+
+      const notinterested = await this.leadsRepository.dataSource.execute(`
+  with anacard as (
+    select *
+  from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+  left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+ order by property_id , inserted_date desc )
+   tls on tlg.property_id =tls.property_id
+  where
+  extract (YEAR FROM tlg.last_update_date) = ('${year}')
+  and extract (month from tlg.last_update_date) = ('${month}')
+  and tlg.market in (${marq})
+  and tlg.probability in (${propenq})
+  and tls.status in ('notinterested')
+  order by  tlg.probability
+
+ )
+
+
+
+select sum(a.total_sale_price_mm), count(a.created_date) from anacard a
+`);
+
+      const totalclosing = await this.leadsRepository.dataSource.execute(`
+with anacard as (
+  select *
+from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+order by property_id , inserted_date desc )
+ tls on tlg.property_id =tls.property_id
+where
+extract (YEAR FROM tlg.last_update_date) = ('${year}')
+and extract (month from tlg.last_update_date) = ('${month}')
+and tlg.market in (${marq})
+and tlg.probability in (${propenq})
+and tls.status in ('deal')
+order by  tlg.probability
+
+)
+
+
+
+SELECT
+sum(case when a.total_sale_price_mm  > 5 then 1 else 0 end) as overfive,
+sum(case when a.total_sale_price_mm  < 10 then 1 else 0 end) as overten,
+sum(case when a.total_sale_price_mm  < 5 then 1 else 0 end) as belowfive,
+sum(a.total_sale_price_mm)
+from anacard a
+`);
+      all.push({leads: leads});
+      all.push({inprogres: inprogres});
+      all.push({notinterested: notinterested});
+      all.push({deals: deals});
+      all.push({totalclosing: totalclosing});
+
+      return all;
+    }
+
+    else if (Error()) {
+      throw new HttpErrors.InternalServerError();
+    }
+    else {
+      return ' Filter Didinot matched '
+    }
+
+  }
   @get('/market')
   @response(200, {
     description: 'Array of Leads model instances',
