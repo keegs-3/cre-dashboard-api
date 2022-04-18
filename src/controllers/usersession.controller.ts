@@ -173,7 +173,7 @@ export class UsersessionController {
 
 
       // where u.agent_map_to = '${name}'
-      if (agentMap.role = 'admin') {
+      if (agentMap.role === 'admin') {
         const roledata = await this.leadsRepository.execute(
           `
           with days as (
