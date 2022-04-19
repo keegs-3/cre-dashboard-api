@@ -169,11 +169,11 @@ export class UsersessionController {
       const agentMap = await this.leadsRepository.execute(`
       select * from cre.users u where u.username = '${name}'
       `);
-
-
+      await console.log('all', agentMap);
+      await console.log('role', agentMap[0].role);
 
       // where u.agent_map_to = '${name}'
-      if (agentMap.role === 'admin') {
+      if (agentMap[0].role === 'admin') {
         const roledata = await this.leadsRepository.execute(
           `
           with days as (
