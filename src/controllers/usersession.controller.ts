@@ -1,29 +1,34 @@
-import {authenticate} from '@loopback/authentication';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where
+  Where,
 } from '@loopback/repository';
 import {
-  del, get,
-  getModelSchemaRef, param, patch, post, put, requestBody,
-  response
+  del,
+  get,
+  getModelSchemaRef,
+  param,
+  patch,
+  post,
+  put,
+  requestBody,
+  response,
 } from '@loopback/rest';
 import {Usersession} from '../models';
 import {LeadsRepository, UsersessionRepository} from '../repositories';
 
-@authenticate("jwt")
+// @authenticate("jwt")
 export class UsersessionController {
   constructor(
     @repository(UsersessionRepository)
     public usersessionRepository: UsersessionRepository,
     @repository(LeadsRepository)
-    public leadsRepository: LeadsRepository
-  ) { }
-  DB_SCHEMA = process.env.DB_SCHEMA
+    public leadsRepository: LeadsRepository,
+  ) {}
+  DB_SCHEMA = process.env.DB_SCHEMA;
 
   @post('/usersessions')
   @response(200, {
@@ -105,7 +110,8 @@ export class UsersessionController {
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Usersession, {exclude: 'where'}) filter?: FilterExcludingWhere<Usersession>
+    @param.filter(Usersession, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Usersession>,
   ): Promise<Usersession> {
     return this.usersessionRepository.findById(id, filter);
   }
@@ -147,71 +153,132 @@ export class UsersessionController {
     await this.usersessionRepository.deleteById(id);
   }
 
-
-
   @get('/usersessions/userdata/{name}')
   @response(200, {
     description: 'Usersession model instance',
-
   })
   async name(
     @param.path.string('name') name: string,
     @param.query.string('startdate') startdate: string,
     @param.query.string('enddate') enddate: string,
-
   ): Promise<any> {
     const loca = name.split(',');
     const locaq = "'" + loca.join("','") + "'";
     if (
-      name !== '' && name !== undefined
-      && startdate !== '' && startdate !== undefined
-      && enddate !== '' && enddate !== undefined
+      name !== '' &&
+      name !== undefined &&
+      startdate !== '' &&
+      startdate !== undefined &&
+      enddate !== '' &&
+      enddate !== undefined
     ) {
+      const agentMap = await this.leadsRepository.execute(`
+      select * from cre.users u where u.username = '${name}'
+      `);
 
-      const sql = await this.leadsRepository.execute(
-        `
-    with days as (
-      SELECT date_trunc('day', dd):: date as day
-     FROM generate_series
-             ( '${startdate}'::timestamp
-             , '${enddate}'::timestamp
-             , '1 day'::interval) as dd
-     )
-     ,
-     total as(
-     select
-        days.day,
-        us."name" ,
-       count(us.starttime) over (partition by days.day),
-       sum (age(endtime,starttime) ) over ( partition  by days.day) as totaltime,
-       sum (age(endtime,starttime) ) over ( partition  by days.day)/count (days.day)over ( partition  by days.day) as averagetimetaken
-     from days
-     left join ${this.DB_SCHEMA}.user_session us on date_trunc('day', us.starttime) = days.day
-     where endtime is not null and us.name  in (${locaq})
-     and  us.starttime between '${startdate}' and '${enddate}'
-     group by days.day ,us."name" ,us.starttime ,us.endtime
-     ),
+      // where u.agent_map_to = '${name}'
+      if (agentMap[0].role === 'super admin') {
+        const roledata = await this.leadsRepository.execute(
+          `
+          with days as (
+            SELECT date_trunc('day', dd):: date as day
+           FROM generate_series
+           ( '${startdate}'::timestamp
+           , '${enddate}'::timestamp
+           , '1 day'::interval) as dd
+           )
+           ,
+           total as(
+           select
+              days.day,
+              us."name" ,
+             count(us.starttime) over (partition by days.day),
+             sum (age(endtime,starttime) ) over ( partition  by days.day) as totaltime,
+             sum (age(endtime,starttime) ) over ( partition  by days.day)/count (days.day)
+             over ( partition  by days.day) as averagetimetaken
+           from days
+           left join ${this.DB_SCHEMA}.user_session us on date_trunc('day', us.starttime) = days.day
+           where endtime is not null and us.name  in ( select distinct name  from ${this.DB_SCHEMA}.user_session us
+           left join ${this.DB_SCHEMA}.users u on u.username = us."name")
+           and  us.starttime between '${startdate}' and '${enddate}'
+           group by days.day ,us."name" ,us.starttime ,us.endtime
+           ),
 
-     distinctt as (
-     select distinct * from total
-     )
-     select days.day as days ,distinctt.* from days left join distinctt on days.day = distinctt.day
-    `
-      );
-      if (sql.length > 0) {
-        return sql
+           distinctt as (
+           select distinct * from total
+           )
+           select days.day as days ,distinctt.* from days left join distinctt on days.day = distinctt.day
+          `,
+        );
+        return roledata;
+      } else if (agentMap[0].role === 'admin') {
+        const roledata = await this.leadsRepository.execute(
+          `
+          with days as (
+            SELECT date_trunc('day', dd):: date as day
+           FROM generate_series
+           ( '${startdate}'::timestamp
+           , '${enddate}'::timestamp
+           , '1 day'::interval) as dd
+           )
+           ,
+           total as(
+           select
+              days.day,
+              us."name" ,
+             count(us.starttime) over (partition by days.day),
+             sum (age(endtime,starttime) ) over ( partition  by days.day) as totaltime,
+             sum (age(endtime,starttime) ) over ( partition  by days.day)/count (days.day)
+             over ( partition  by days.day) as averagetimetaken
+           from days
+           left join ${this.DB_SCHEMA}.user_session us on date_trunc('day', us.starttime) = days.day
+           where endtime is not null and us.name  in ( select distinct name  from ${this.DB_SCHEMA}.user_session us
+           left join ${this.DB_SCHEMA}.users u on u.username = us."name"  where u.agent_map_to = '${name}')
+           and  us.starttime between '${startdate}' and '${enddate}'
+           group by days.day ,us."name" ,us.starttime ,us.endtime
+           ),
+
+           distinctt as (
+           select distinct * from total
+           )
+           select days.day as days ,distinctt.* from days left join distinctt on days.day = distinctt.day
+          `,
+        );
+        return roledata;
+      } else {
+        const sql = await this.leadsRepository.execute(
+          `
+      with days as (
+        SELECT date_trunc('day', dd):: date as day
+       FROM generate_series
+               ( '${startdate}'::timestamp
+               , '${enddate}'::timestamp
+               , '1 day'::interval) as dd
+       )
+       ,
+       total as(
+       select
+          days.day,
+          us."name" ,
+         count(us.starttime) over (partition by days.day),
+         sum (age(endtime,starttime) ) over ( partition  by days.day) as totaltime,
+         sum (age(endtime,starttime) ) over ( partition  by days.day)/count (days.day)over ( partition  by days.day) as averagetimetaken
+       from days
+       left join ${this.DB_SCHEMA}.user_session us on date_trunc('day', us.starttime) = days.day
+       where endtime is not null and us.name  in (${locaq}
+       )
+       and  us.starttime between '${startdate}' and '${enddate}'
+       group by days.day ,us."name" ,us.starttime ,us.endtime
+       ),
+
+       distinctt as (
+       select distinct * from total
+       )
+       select days.day as days ,distinctt.* from days left join distinctt on days.day = distinctt.day
+      `,
+        );
+        return sql;
       }
-      else return 'no data matched'
-
-    }
-    else return 'username , startdate and end date is required'
+    } else return 'username , startdate and end date is required';
   }
-
-
-
-
-
-
-
-
 }

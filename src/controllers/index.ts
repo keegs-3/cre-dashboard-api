@@ -13,3 +13,4 @@ export * from './usersession.controller';
 
 
 
+export * from './market-summary.controller';
