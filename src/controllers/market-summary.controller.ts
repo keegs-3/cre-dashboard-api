@@ -1,77 +1,68 @@
-import {
-  repository
-} from '@loopback/repository';
-import {
-  get, param, response
-} from '@loopback/rest';
+import {repository} from '@loopback/repository';
+import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
 
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
     public leadsRepository: LeadsRepository,
-  ) { }
-  DB_SCHEMA = process.env.DB_SCHEMA
+  ) {}
+  DB_SCHEMA = process.env.DB_SCHEMA;
   @get('/segmentSummary/topmarket')
   @response(200, {
-    description: 'Array of Leads model instances'
-
-
+    description: 'Array of Leads model instances',
   })
-  async find(
-    @param.query.string('date') date?: string,
-  ): Promise<any> {
-    let data = [];
+  async find(@param.query.string('date') date?: string): Promise<any> {
+    const data = [];
     const all = await this.leadsRepository.dataSource.execute(
       `
       select * from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
       TIMESTAMP '${date}' - INTERVAL '5 months'
              and  TIMESTAMP '${date}'
-      `
+      `,
     );
     const avgTrans = await this.leadsRepository.dataSource.execute(
       `
-      select distinct market , avg(avg_transaction_rate)  from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
+      select distinct market , avg(avg_transaction_rate) ,sum(no_of_transactions) from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
       TIMESTAMP '${date}' - INTERVAL '5 months'
              and  TIMESTAMP '${date}'
      group by market
    order by avg(avg_transaction_rate) desc
-      `
+      `,
     );
     const avgPropValue = await this.leadsRepository.dataSource.execute(
       `
-      select distinct market , avg(avg_total_sale_price)  from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
+      select distinct market , avg(avg_total_sale_price) ,sum(no_of_transactions) from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
       TIMESTAMP '${date}' - INTERVAL '5 months'
              and  TIMESTAMP '${date}'
      group by market
    order by avg(avg_total_sale_price) desc
-      `
+      `,
     );
     const avgRent = await this.leadsRepository.dataSource.execute(
       `
-      select distinct market , avg(avg_rent_actual)  from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
+      select distinct market , avg(avg_rent_actual),sum(no_of_transactions)  from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
       TIMESTAMP '${date}' - INTERVAL '5 months'
              and  TIMESTAMP '${date}'
      group by market
    order by avg(avg_rent_actual) desc
-      `
+      `,
     );
     const avgOccu = await this.leadsRepository.dataSource.execute(
       `
-      select  distinct market , avg(avg_occupancy_rate)  from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
+      select  distinct market , avg(avg_occupancy_rate),sum(no_of_transactions)  from ${this.DB_SCHEMA}.tgt_market_segmentation_summary  where record_date between
       TIMESTAMP '${date}' - INTERVAL '11 months'
              and  TIMESTAMP '${date}'
              group by market
              order by avg(avg_occupancy_rate) desc
-      `
+      `,
     );
-
 
     const marketFunnel = await this.leadsRepository.dataSource.execute(
       `
       select distinct "cluster" ,count ("market")  from ${this.DB_SCHEMA}.tgt_market_segmentation
       group  by "cluster"
-      `
+      `,
     );
     data.push({
       avgOccu: avgOccu,
@@ -80,17 +71,9 @@ export class MarketSummaryController {
       avgPropValue: avgPropValue,
       all: all,
       marketFunnel: marketFunnel,
-
     });
-    return data
-
+    return data;
   }
-
-
-
-
-
-
 
   // @post('/segmentSummary')
   // @response(200, {
