@@ -408,8 +408,6 @@ from anacard a
       };
     },
   ): Promise<any> {
-    const segments = "'" + required.filter.segment.join("','") + "'";
-    const states = "'" + required.filter.state.join("','") + "'";
     if (
       required.buyersprofile === true &&
       required.segment === true &&
@@ -418,6 +416,8 @@ from anacard a
       required.usmap === true &&
       required.ownerstransaction === true
     ) {
+      const segments = "'" + required.filter.segment.join("','") + "'";
+      const states = "'" + required.filter.state.join("','") + "'";
       const ownersprofile = [];
       const segment = await this.leadsRepository.dataSource.execute(`
     select distinct owner_segment from ${this.DB_SCHEMA}.tgt_owner_profiles
@@ -437,12 +437,18 @@ select top.owner_segment,count(top."owner") from ${this.DB_SCHEMA}.tgt_owner_pro
 where top.owner_state in (${states})and top.owner_segment in (${segments})
 group by top.owner_segment
 order by count(top."owner") desc`);
-
-      const usamap = await this.leadsRepository.dataSource
-        .execute(`select gll.state_abbrevation ,count(top."owner") ,top.owner_segment ,top.owner_city,gll.latitude ,gll.longitude from ${this.DB_SCHEMA}.geo_lat_long gll
-join ${this.DB_SCHEMA}.tgt_owner_profiles top on gll.state_abbrevation  = top.owner_state
-where top.owner_state in (${states})and top.owner_segment in (${segments})
-group by gll.state_abbrevation ,top.owner_segment ,top.owner_city ,gll.latitude ,gll.longitude `);
+      // select gll.state_abbrevation ,count(top."owner") ,top.owner_segment ,top.owner_city,gll.latitude ,gll.longitude from ${this.DB_SCHEMA}.geo_lat_long gll
+      // join ${this.DB_SCHEMA}.tgt_owner_profiles top on gll.state_abbrevation  = top.owner_state
+      // where top.owner_state in (${states})and top.owner_segment in (${segments})
+      // group by gll.state_abbrevation ,top.owner_segment ,top.owner_city ,gll.latitude ,gll.longitude
+      const usamap = await this.leadsRepository.dataSource.execute(`
+        select owner_state
+, sum(total_property_owned) as "sumoftotalproperty"
+, sum(avg_monetary)/count(owner_name) as "avgofmonitary"
+,count(owner_name) as "ownerscount"
+from ${this.DB_SCHEMA}.tgt_owner_profiles top
+group by owner_state
+        `);
 
       const ownerstransaction = await this.leadsRepository.dataSource.execute(`
 select  *
@@ -461,6 +467,23 @@ select  *
       });
 
       return ownersprofile;
+    } else if (
+      required.buyersprofile === false &&
+      required.segment === false &&
+      required.state === false &&
+      required.funnel === false &&
+      required.usmap === true &&
+      required.ownerstransaction === false
+    ) {
+      const usamap = await this.leadsRepository.dataSource.execute(`
+      select owner_state
+, sum(total_property_owned) as "sumoftotalproperty"
+, sum(avg_monetary)/count(owner_name) as "avgofmonitary"
+,count(owner_name) as "ownerscount"
+from ${this.DB_SCHEMA}.tgt_owner_profiles top
+group by owner_state
+      `);
+      return usamap;
     }
   }
 
