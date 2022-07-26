@@ -16,3 +16,4 @@ export * from './usersession.controller';
 
 
 
+export * from './userloginlocation.controller';

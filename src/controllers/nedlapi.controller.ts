@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/naming-convention */
 import {repository} from '@loopback/repository';
 import {post, requestBody, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
