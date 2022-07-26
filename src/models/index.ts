@@ -16,3 +16,4 @@ export * from './usersession.model';
 
 
 
+export * from './userloginlocation.model';
