@@ -245,6 +245,474 @@ from anacard a
       `);
     return sql;
   }
+  @get('/leadsnew')
+  @response(200, {
+    description: 'Array of Leads model instances',
+  })
+  async findnew(
+    @param.query.string('year') year?: string,
+    @param.query.string('month') month?: string,
+    @param.query.string('market') market?: string,
+    @param.query.string('sale_propensity') sale_propensity?: string,
+    @param.query.string('status') status?: string,
+    @param.query.number('limit') limit?: number,
+    @param.query.number('offset') offset?: number,
+  ): Promise<any> {
+    if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined &&
+      sale_propensity !== '' &&
+      sale_propensity !== undefined &&
+      status !== '' &&
+      status !== undefined
+    ) {
+      console.log('all');
+
+      // const loca = sub_market.split(',');
+      // const locaq = "'" + loca.join("','") + "'";
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      const pro = sale_propensity.split(',');
+      const proq = "'" + pro.join("','") + "'";
+      const statu = status.split(',');
+      const statuq = "'" + statu.join("','") + "'";
+
+      const sql = await this.leadsRepository.dataSource.execute(`
+
+
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+      extract (YEAR FROM tlg.last_update_date) = ('${year}')
+      and extract (month from tlg.last_update_date) = ('${month}')
+      and tlg.market in (${marq})
+      and tlg.probability in (${proq})
+      and tls.status in (${statuq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+
+      `);
+      // console.log('all', sql);
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      sale_propensity !== '' &&
+      sale_propensity !== undefined &&
+      status !== '' &&
+      status !== undefined
+    ) {
+      const pro = sale_propensity.split(',');
+      const proq = "'" + pro.join("','") + "'";
+      const statu = status.split(',');
+      const statuq = "'" + statu.join("','") + "'";
+
+      const query = `select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+       extract (YEAR FROM tlg.last_update_date) = '${year}'
+      and extract (month from tlg.last_update_date) = '${month}'
+      and tlg.probability in '${sale_propensity}'
+      and tls.status in (${statuq})
+      order by tlg.owner_name`;
+      console.log('year month submarket sale status', query);
+
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+       extract (YEAR FROM tlg.last_update_date) = '${year}'
+      and extract (month from tlg.last_update_date) = '${month}'
+      and tlg.probability in (${proq})
+      and tls.status in (${statuq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined &&
+      sale_propensity !== '' &&
+      sale_propensity !== undefined
+    ) {
+      console.log('year month  market sunmarket salepropensity');
+
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      // const statu = status.split(',');
+      // const statuq = "'" + statu.join("','") + "'";
+      const pro = sale_propensity.split(',');
+      const proq = "'" + pro.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+       extract (YEAR FROM tlg.last_update_date) = ('${year}')
+      and extract (month from tlg.last_update_date) = ('${month}')
+      and tlg.market in (${marq})
+      and tlg.probability in (${proq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined &&
+      status !== '' &&
+      status !== undefined
+    ) {
+      console.log('year month  market submarket status');
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      const statu = status.split(',');
+      const statuq = "'" + statu.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+       extract (YEAR FROM tlg.last_update_date) = ('${year}')
+      and extract (month from tlg.last_update_date) = ('${month}')
+      and tlg.market in (${marq})
+      and tls.status in (${statuq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined &&
+      sale_propensity !== '' &&
+      sale_propensity !== undefined &&
+      status !== '' &&
+      status !== undefined
+    ) {
+      console.log('year month  market salepropensity status');
+
+      const loca = sale_propensity.split(',');
+      const locaq = "'" + loca.join("','") + "'";
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      const statu = status.split(',');
+      const statuq = "'" + statu.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+
+      extract (YEAR FROM tlg.last_update_date) = '${year}'
+      and extract (month from tlg.last_update_date) = '${month}'
+      and tlg.market in (${marq})
+      and tlg.probability in (${locaq})
+      and tls.status in (${statuq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+      `);
+      console.log('mine test', sql);
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined &&
+      sale_propensity !== '' &&
+      sale_propensity !== undefined
+    ) {
+      console.log('year month  market sale propen');
+
+      const loca = sale_propensity.split(',');
+      const locaq = "'" + loca.join("','") + "'";
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+
+      extract (YEAR FROM tlg.last_update_date) = '${year}'
+      and extract (month from tlg.last_update_date) = '${month}'
+      and tlg.market in (${marq})
+      and tlg.probability in (${locaq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined
+    ) {
+      console.log('year month market submarket');
+
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+
+       extract (YEAR FROM tlg.last_update_date) = ('${year}')
+      and extract (month from tlg.last_update_date) = ('${month}')
+      and tlg.market in (${marq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined &&
+      status !== '' &&
+      status !== undefined
+    ) {
+      console.log('year month market status');
+
+      const mar = market.split(',');
+      const marq = "'" + mar.join("','") + "'";
+      const statu = status.split(',');
+      const statuq = "'" + statu.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+
+       extract (YEAR FROM tlg.last_update_date) = ('${year}')
+      and extract (month from tlg.last_update_date) = ('${month}')
+      and tlg.market in (${marq})
+      and tls.status in (${statuq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      sale_propensity !== '' &&
+      sale_propensity !== undefined &&
+      status !== '' &&
+      status !== undefined
+    ) {
+      console.log('year month salepropensity status');
+
+      const loca = sale_propensity.split(',');
+      const locaq = "'" + loca.join("','") + "'";
+      const statu = status.split(',');
+      const statuq = "'" + statu.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+
+      extract (YEAR FROM tlg.last_update_date) = '${year}'
+      and extract (month from tlg.last_update_date) = '${month}'
+      and tlg.probability in (${locaq})
+      and tls.status in (${statuq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      market !== '' &&
+      market !== undefined
+    ) {
+      console.log('year month market');
+
+      const loca = market.split(',');
+      const locaq = "'" + loca.join("','") + "'";
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+      where
+
+        extract (YEAR FROM tlg.last_update_date) = '${year}'
+      and extract (month from tlg.last_update_date) = '${month}'
+      and tlg.market in (${locaq})
+      order by tlg.owner_name
+      offset ${offset} limit ${limit}
+
+      `);
+      // console.log(sql)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      status !== '' &&
+      status !== undefined
+    ) {
+      // const sql1 = `select * from ${this.DB_SCHEMA}.tgt_lead_gen tlg,
+      // ${this.DB_SCHEMA}.tgt_lead_status tls
+      // where tlg.property_id = tls.property_id
+      // and tls.status not in ('notinterested')
+      //   and extract (YEAR FROM tlg.last_update_date) = '${year}'
+      // and extract (month from tlg.last_update_date) = '${month}'
+      // order by case tlg.probability
+      // when 'Hot' then 1
+      // when 'Warm' then 2
+      // when 'Cold' then 3
+      // end
+      // limit 100`;
+      console.log('year month status');
+
+      const statu = status.split(',');
+      const statuq = "'" + statu.join("','") + "'";
+
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+       where
+       extract (YEAR FROM tlg.last_update_date) = '${year}'
+       and extract (month from tlg.last_update_date) = '${month}'
+       and tls.status in (${statuq})
+       order by tlg.owner_name
+       offset ${offset} limit ${limit}
+
+      `);
+      // console.log(sql1)
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (
+      year !== '' &&
+      year !== undefined &&
+      month !== '' &&
+      month !== undefined &&
+      sale_propensity !== '' &&
+      sale_propensity !== undefined
+    ) {
+      console.log('year month salepropensity');
+      const loca = sale_propensity.split(',');
+      const locaq = "'" + loca.join("','") + "'";
+
+      const sql = await this.leadsRepository.dataSource.execute(`
+      select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+       where
+       extract (YEAR FROM tlg.last_update_date) = '${year}'
+       and extract (month from tlg.last_update_date) = '${month}'
+       and tlg.probability in (${locaq})
+       order by tlg.owner_name
+       offset ${offset} limit ${limit}
+      `);
+
+      if (sql.length > 0) {
+        return sql;
+      } else return 'no data matched';
+    } else if (Error()) {
+      throw new HttpErrors.InternalServerError();
+    }
+  }
   @get('/leads')
   @response(200, {
     description: 'Array of Leads model instances',
@@ -294,6 +762,7 @@ from anacard a
       and tlg.probability in (${proq})
       and tls.status in (${statuq})
       order by tlg.owner_name
+      limit 100
 
 
       `);
@@ -341,6 +810,7 @@ from anacard a
       and tlg.probability in (${proq})
       and tls.status in (${statuq})
       order by tlg.owner_name
+      limit 100
 
       `);
       // console.log(sql)
@@ -377,7 +847,7 @@ from anacard a
       and tlg.market in (${marq})
       and tlg.probability in (${proq})
       order by tlg.owner_name
-
+      limit 100
 
 
       `);
@@ -412,7 +882,7 @@ from anacard a
       and tlg.market in (${marq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-
+      limit 100
 
 
       `);
@@ -454,6 +924,7 @@ from anacard a
       and tlg.probability in (${locaq})
       and tls.status in (${statuq})
       order by tlg.owner_name
+      limit 100
 
       `);
       console.log('mine test', sql);
@@ -489,7 +960,7 @@ from anacard a
       and tlg.market in (${marq})
       and tlg.probability in (${locaq})
       order by tlg.owner_name
-
+      limit 100
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -519,7 +990,7 @@ from anacard a
       and extract (month from tlg.last_update_date) = ('${month}')
       and tlg.market in (${marq})
       order by tlg.owner_name
-
+      limit 100
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -554,7 +1025,7 @@ from anacard a
       and tlg.market in (${marq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-
+      limit 100
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -589,7 +1060,7 @@ from anacard a
       and tlg.probability in (${locaq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-
+      limit 100
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -619,7 +1090,7 @@ from anacard a
       and extract (month from tlg.last_update_date) = '${month}'
       and tlg.market in (${locaq})
       order by tlg.owner_name
-
+      limit 100
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -661,7 +1132,7 @@ from anacard a
        and extract (month from tlg.last_update_date) = '${month}'
        and tls.status in (${statuq})
        order by tlg.owner_name
-
+       limit 100
       `);
       // console.log(sql1)
       if (sql.length > 0) {
@@ -690,6 +1161,7 @@ from anacard a
        and extract (month from tlg.last_update_date) = '${month}'
        and tlg.probability in (${locaq})
        order by tlg.owner_name
+       limit 100
       `);
 
       if (sql.length > 0) {
