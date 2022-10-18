@@ -656,7 +656,7 @@ from anacard a
       // when 'Warm' then 2
       // when 'Cold' then 3
       // end
-      // limit 100`;
+      // limit 9`;
       console.log('year month status');
 
       const statu = status.split(',');
@@ -762,7 +762,7 @@ from anacard a
       and tlg.probability in (${proq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-      limit 100
+      limit 9
 
 
       `);
@@ -810,7 +810,7 @@ from anacard a
       and tlg.probability in (${proq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-      limit 100
+      limit 9
 
       `);
       // console.log(sql)
@@ -847,7 +847,7 @@ from anacard a
       and tlg.market in (${marq})
       and tlg.probability in (${proq})
       order by tlg.owner_name
-      limit 100
+      limit 9
 
 
       `);
@@ -882,7 +882,7 @@ from anacard a
       and tlg.market in (${marq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-      limit 100
+      limit 9
 
 
       `);
@@ -924,7 +924,7 @@ from anacard a
       and tlg.probability in (${locaq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-      limit 100
+      limit 9
 
       `);
       console.log('mine test', sql);
@@ -960,7 +960,7 @@ from anacard a
       and tlg.market in (${marq})
       and tlg.probability in (${locaq})
       order by tlg.owner_name
-      limit 100
+      limit 9
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -990,7 +990,7 @@ from anacard a
       and extract (month from tlg.last_update_date) = ('${month}')
       and tlg.market in (${marq})
       order by tlg.owner_name
-      limit 100
+      limit 9
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1025,7 +1025,7 @@ from anacard a
       and tlg.market in (${marq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-      limit 100
+      limit 9
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1060,7 +1060,7 @@ from anacard a
       and tlg.probability in (${locaq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-      limit 100
+      limit 9
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1090,7 +1090,7 @@ from anacard a
       and extract (month from tlg.last_update_date) = '${month}'
       and tlg.market in (${locaq})
       order by tlg.owner_name
-      limit 100
+      limit 9
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1115,12 +1115,24 @@ from anacard a
       // when 'Warm' then 2
       // when 'Cold' then 3
       // end
-      // limit 100`;
+      // limit 9`;
       console.log('year month status');
+      console.log('check');
 
       const statu = status.split(',');
       const statuq = "'" + statu.join("','") + "'";
-
+      const text = `select *
+      from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+      left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+     order by property_id , inserted_date desc )
+       tls on tlg.property_id =tls.property_id
+       where
+       extract (YEAR FROM tlg.last_update_date) = '${year}'
+       and extract (month from tlg.last_update_date) = '${month}'
+       and tls.status in (${statuq})
+       order by tlg.owner_name
+       limit 9`;
+      console.log('test ', text);
       const sql = await this.leadsRepository.dataSource.execute(`
       select *
       from ${this.DB_SCHEMA}.tgt_lead_gen tlg
@@ -1132,7 +1144,7 @@ from anacard a
        and extract (month from tlg.last_update_date) = '${month}'
        and tls.status in (${statuq})
        order by tlg.owner_name
-       limit 100
+       limit 9
       `);
       // console.log(sql1)
       if (sql.length > 0) {
@@ -1161,7 +1173,7 @@ from anacard a
        and extract (month from tlg.last_update_date) = '${month}'
        and tlg.probability in (${locaq})
        order by tlg.owner_name
-       limit 100
+       limit 9
       `);
 
       if (sql.length > 0) {
@@ -1788,7 +1800,7 @@ from anacard a
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -2267,7 +2279,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -2748,7 +2760,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -3228,7 +3240,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -3708,7 +3720,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -4189,7 +4201,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -4670,7 +4682,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -5150,7 +5162,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
@@ -5631,7 +5643,7 @@ end
           // when 'Warm' then 2
           // when 'Cold' then 3
           // end
-          // limit 100`;
+          // limit 9`;
           console.log('year month status');
 
           const statu = status.split(',');
