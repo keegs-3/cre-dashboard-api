@@ -762,6 +762,7 @@ from anacard a
       and tlg.probability in (${proq})
       and tls.status in (${statuq})
       order by tlg.owner_name
+      limit 30
 
 
 
@@ -810,6 +811,7 @@ from anacard a
       and tlg.probability in (${proq})
       and tls.status in (${statuq})
       order by tlg.owner_name
+      limit 30
 
 
       `);
@@ -847,7 +849,7 @@ from anacard a
       and tlg.market in (${marq})
       and tlg.probability in (${proq})
       order by tlg.owner_name
-
+limit 30
 
 
       `);
@@ -882,7 +884,7 @@ from anacard a
       and tlg.market in (${marq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-
+limit 30
 
 
       `);
@@ -924,7 +926,7 @@ from anacard a
       and tlg.probability in (${locaq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-
+limit 30
 
       `);
       console.log('mine test', sql);
@@ -960,7 +962,7 @@ from anacard a
       and tlg.market in (${marq})
       and tlg.probability in (${locaq})
       order by tlg.owner_name
-
+limit 30
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -990,7 +992,7 @@ from anacard a
       and extract (month from tlg.last_update_date) = ('${month}')
       and tlg.market in (${marq})
       order by tlg.owner_name
-
+limit 30
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1025,7 +1027,7 @@ from anacard a
       and tlg.market in (${marq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-
+limit 30
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1060,7 +1062,7 @@ from anacard a
       and tlg.probability in (${locaq})
       and tls.status in (${statuq})
       order by tlg.owner_name
-
+limit 30
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1090,7 +1092,7 @@ from anacard a
       and extract (month from tlg.last_update_date) = '${month}'
       and tlg.market in (${locaq})
       order by tlg.owner_name
-
+limit 30
       `);
       // console.log(sql)
       if (sql.length > 0) {
@@ -1144,7 +1146,7 @@ from anacard a
        and extract (month from tlg.last_update_date) = '${month}'
        and tls.status in (${statuq})
        order by tlg.owner_name
-
+limit 30
       `);
       // console.log(sql1)
       if (sql.length > 0) {
@@ -1173,7 +1175,7 @@ from anacard a
        and extract (month from tlg.last_update_date) = '${month}'
        and tlg.probability in (${locaq})
        order by tlg.owner_name
-
+limit 30
       `);
 
       if (sql.length > 0) {
