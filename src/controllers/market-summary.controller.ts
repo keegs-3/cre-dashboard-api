@@ -8,6 +8,57 @@ export class MarketSummaryController {
     public leadsRepository: LeadsRepository,
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
+
+  @get('/marketIntelligence')
+  @response(200, {})
+  async findall(): Promise<any> {
+    const alldata = await this.leadsRepository.dataSource.execute(`
+
+select * from ${this.DB_SCHEMA}.market_intelligence
+order by date
+
+ `);
+    return alldata;
+  }
+
+  @get('/marketIntelligence/liveFeeds')
+  @response(200, {})
+  async livefeeds(): Promise<any> {
+    const feeds = await this.leadsRepository.dataSource.execute(`
+
+    SELECT x.* FROM ${this.DB_SCHEMA}.market_intelligence_sales_feed x `);
+    return feeds;
+  }
+
+  @get('/reportBuilderFilter')
+  @response(200, {})
+  async findfilter(): Promise<any> {
+    const market = await this.leadsRepository.dataSource.execute(`
+
+select distinct market from ${this.DB_SCHEMA}.report_builder`);
+    const submarket = await this.leadsRepository.dataSource.execute(`
+
+select distinct (submarket), market from ${this.DB_SCHEMA}.report_builder`);
+    const status = await this.leadsRepository.dataSource.execute(`
+
+    select distinct   property_special_status  from ${this.DB_SCHEMA}.report_builder order by property_special_status `);
+    const impr_rating = await this.leadsRepository.dataSource.execute(`
+
+    select distinct impr_rating from ${this.DB_SCHEMA}.report_builder `);
+    const loc_rating = await this.leadsRepository.dataSource.execute(`
+
+    select distinct loc_rating from ${this.DB_SCHEMA}.report_builder `);
+
+    const data = {
+      market,
+      submarket,
+      status,
+      impr_rating,
+      loc_rating,
+    };
+
+    return data;
+  }
   @get('/segmentSummary/topmarket')
   @response(200, {
     description: 'Array of Leads model instances',
