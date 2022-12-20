@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
@@ -26,7 +28,7 @@ order by date
   async livefeeds(): Promise<any> {
     const feeds = await this.leadsRepository.dataSource.execute(`
 
-    SELECT x.* FROM ${this.DB_SCHEMA}.market_intelligence_sales_feed x `);
+    SELECT x.* FROM ${this.DB_SCHEMA}.market_intelligence_sales_feed x order by x.sale_date limit 10`);
     return feeds;
   }
 
@@ -48,6 +50,12 @@ select distinct (submarket), market from ${this.DB_SCHEMA}.report_builder`);
     const loc_rating = await this.leadsRepository.dataSource.execute(`
 
     select distinct loc_rating from ${this.DB_SCHEMA}.report_builder `);
+    const p_name = await this.leadsRepository.dataSource.execute(`
+
+    select distinct property_name from ${this.DB_SCHEMA}.report_builder `);
+    const city = await this.leadsRepository.dataSource.execute(`
+
+    select distinct city from ${this.DB_SCHEMA}.report_builder `);
 
     const data = {
       market,
@@ -55,6 +63,8 @@ select distinct (submarket), market from ${this.DB_SCHEMA}.report_builder`);
       status,
       impr_rating,
       loc_rating,
+      p_name,
+      city,
     };
 
     return data;
