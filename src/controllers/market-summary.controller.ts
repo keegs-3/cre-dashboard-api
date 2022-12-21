@@ -35,32 +35,68 @@ order by date
   @get('/userEngagement')
   @response(200, {})
   async usersdetails(): Promise<any> {
-    const devicesDetails = await this.leadsRepository.dataSource.execute(
+    const mapData = await this.leadsRepository.dataSource.execute(
       `
-    select device,count(ue.device)  from ${this.DB_SCHEMA}.user_engagement ue
-    where "Date" > now() - interval '6 month'
-    group by device
+      select state , count(distinct "userName")  from ${this.DB_SCHEMA}.user_engagement ue
+group by state
     `,
     );
-    const monthlyData = await this.leadsRepository.dataSource.execute(
+    const daysUsersData = await this.leadsRepository.dataSource.execute(
       `
       select
-      DATE_TRUNC('month',ue."Date") as monthYear ,
-      count(distinct ue."userName") as totalUsers,
-      count(ue."sessionTime") as totalSessions,
-      sum(ue."sessionTime")::numeric (1000,2)as totalSessions,
-      ((sum(ue."sessionTime")::numeric (1000,2)/count(distinct ue."userName"))/60):: numeric (1000,2) as avgSessionTimeInHours,
-      sum(ue.actions) as sumActions,
-      sum(ue.actions)::numeric (1000,2)/count(distinct ue."userName")  as averageActions
+"userName" ,
+"Date" ,
+((avg("sessionTime"))/60):: numeric (1000,2) as avgsessiontimeinhrs,
+count("sessionTime")
+from ${this.DB_SCHEMA}.user_engagement ue
+where "Date" > now() - interval '8 days'
+group by "userName" ,"Date"
+order by "Date"  desc
+    `,
+    );
 
-      from ${this.DB_SCHEMA}.user_engagement ue
+    const devicesDetails = await this.leadsRepository.dataSource.execute(
+      `
+      select device,count(ue.device)  from ${this.DB_SCHEMA}.user_engagement ue
       where "Date" > now() - interval '6 month'
-      group by  monthYear
+      group by device
+    `,
+    );
+
+    const monthlyAction = await this.leadsRepository.dataSource.execute(
+      `
+      select
+DATE_TRUNC('month',ue."Date") as monthYear ,
+count(distinct ue."userName") as totalUsers,
+count(ue."sessionTime") as totalSessions,
+sum(ue."sessionTime")::numeric (1000,2)as sumtotalSessions,
+((sum(ue."sessionTime")::numeric (1000,2)/count(distinct ue."userName"))/60):: numeric (1000,2) as avgSessionTimeInHours,
+sum(ue.actions) as sumActions,
+sum(ue.actions)::numeric (1000,2)/count(distinct ue."userName")  as averageActions
+from ${this.DB_SCHEMA}.user_engagement ue
+where "Date" > now() - interval '6 month'
+group by  monthYear
+    `,
+    );
+    const dayTimeOnApp = await this.leadsRepository.dataSource.execute(
+      `
+      select DATE_TRUNC('day',ue."Date") as monthday,
+      count(ue."sessionTime") as totalsession ,
+      sum(ue."sessionTime") as sumtotalsessioninminute,
+      sum(ue."sessionTime")/count(distinct ue."userName") as averagesession,
+      count(distinct ue."userName") as totalusersperday
+      from ${this.DB_SCHEMA}.user_engagement ue
+      where "Date" > now() - interval '8 days'
+      group by monthday
+      order by monthday desc
     `,
     );
     const data = {
       devicesDetails,
-      monthlyData,
+      monthlyAction,
+      dayTimeOnApp,
+      daysUsersData,
+      mapData,
     };
 
     return data;
