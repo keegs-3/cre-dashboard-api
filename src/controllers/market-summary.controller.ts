@@ -49,7 +49,7 @@ group by state
 ((avg("sessionTime"))/60):: numeric (1000,2) as avgsessiontimeinhrs,
 count("sessionTime")
 from ${this.DB_SCHEMA}.user_engagement ue
-where "Date" > now() - interval '8 days'
+where "Date" > now() - interval '8 days' and "Date" < now() - interval '1 day'
 group by "userName" ,"Date"
 order by "Date"  desc
     `,
@@ -86,7 +86,7 @@ group by  monthYear
       sum(ue."sessionTime")/count(distinct ue."userName") as averagesession,
       count(distinct ue."userName") as totalusersperday
       from ${this.DB_SCHEMA}.user_engagement ue
-      where "Date" > now() - interval '8 days'
+      where "Date" > now() - interval '8 days' and "Date" < now() - interval '1 day'
       group by monthday
       order by monthday desc
     `,
