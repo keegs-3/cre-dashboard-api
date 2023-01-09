@@ -58,7 +58,7 @@ order by "Date"  desc
     const devicesDetails = await this.leadsRepository.dataSource.execute(
       `
       select device,count(ue.device)  from ${this.DB_SCHEMA}.user_engagement ue
-      where "Date" > now() - interval '6 month'
+      where "Date" > now() - interval '6 month' and "Date" < now() - interval '1 month'
       group by device
     `,
     );
@@ -74,7 +74,7 @@ sum(ue."sessionTime")::numeric (1000,2)as sumtotalSessions,
 sum(ue.actions) as sumActions,
 sum(ue.actions)::numeric (1000,2)/count(distinct ue."userName")  as averageActions
 from ${this.DB_SCHEMA}.user_engagement ue
-where "Date" > now() - interval '6 month'
+where "Date" > now() - interval '6 month' and "Date" < now() - interval '1 month'
 group by  monthYear
     `,
     );
