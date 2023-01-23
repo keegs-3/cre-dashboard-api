@@ -13,7 +13,96 @@ export class LeadsController {
   ) {}
 
   DB_SCHEMA = process.env.DB_SCHEMA;
+  @get('/buyerseller/map')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async map(
+    @param.query.string('segment') segment?: string,
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select owner_state , count(distinct owner_name)as owner_name
+from ${this.DB_SCHEMA}.sellers_buyers_details sbd
+where segment = '${segment}'
+group by owner_state
+`);
+return funnel;
 
+  }
+  @get('/buyerseller/card')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async bschart(
+
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select segment , count(distinct owner_name)as owner_name,
+    sum(total_property_owned)as total_property_owned,
+sum("M12_Highest_Transaction")as "M12_Highest_Transaction",
+round( avg(dollar_value),2)  as avgDollarValue
+from ${this.DB_SCHEMA}.sellers_buyers_details sbd
+group by segment
+`);
+return funnel;
+
+  }
+  @get('/deals/aibased')
+  @response(200, {
+    description: 'Array of aibased model instances',
+  })
+  async aibased(
+    @param.query.number('quater') quater?: number,
+  ): Promise<any> {
+   const aibased =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.deal_analytics_recommendations dar
+where "Increase %" = ${quater}
+`);
+return aibased;
+
+  }
+  @get('/deals/leadsactual')
+  @response(200, {
+    description: 'Array of Leads model instances',
+  })
+  async leadsactual(
+    @param.query.number('quater') quater?: number,
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.deal_analytics_funnel daf
+
+`);
+return funnel;
+
+  }
+  @get('/deals/card')
+  @response(200, {
+    description: 'Array of Leads model instances',
+  })
+  async dealscard(
+    // @param.query.string('quater') quater?: string,
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.deal_analytics_cards dac
+where "Month " = 'February'
+`);
+return funnel;
+
+  }
+  @get('/deals/funnel')
+  @response(200, {
+    description: 'Array of Leads model instances',
+  })
+  async dealsfunnel(
+    @param.query.string('quater') quater?: string,
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.deal_analytics_funnel daf
+   where quarter = '${quater}'
+`);
+return funnel;
+
+  }
   @get('/analyticscard')
   @response(200, {
     description: 'Array of Leads model instances',
