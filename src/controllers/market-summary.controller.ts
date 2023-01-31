@@ -17,7 +17,9 @@ export class MarketSummaryController {
     const alldata = await this.leadsRepository.dataSource.execute(`
 
 select * from ${this.DB_SCHEMA}.market_intelligence
+WHERE date BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
 order by date
+
 
  `);
     return alldata;
