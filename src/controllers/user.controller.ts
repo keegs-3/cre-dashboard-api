@@ -50,7 +50,7 @@ export class CReUserController {
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
 
-  @authenticate('jwt')
+  // @authenticate('jwt')
   @post('/signup', {
     responses: {
       '200': {
@@ -257,7 +257,7 @@ SET   resetkey= '${resetkey}' where email = '${email}'
     return 'reset successful';
   }
 
-  @authenticate('jwt')
+  // @authenticate('jwt')
   @get('/users/me', {
     // security: OPERATION_SECURITY_SPEC,
     responses: {
