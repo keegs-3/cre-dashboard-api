@@ -14,7 +14,7 @@ import {
 } from '@loopback/rest';
 import {Buyerscontact} from '../models';
 import {BuyerscontactRepository} from '../repositories';
-@authenticate("jwt")
+// @authenticate("jwt")
 export class BuyeersContactController {
   constructor(
     @repository(BuyerscontactRepository)

@@ -13,6 +13,48 @@ export class LeadsController {
   ) {}
 
   DB_SCHEMA = process.env.DB_SCHEMA;
+  @get('/leads/byStatus')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async leads(
+    @param.query.string('status') status?: string,
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select *
+from ${this.DB_SCHEMA}.tgt_lead_gen tlg
+left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
+order by property_id , inserted_date desc )
+ tls on tlg.property_id =tls.property_id
+where
+ tls.status = '${status}'
+order by tlg.owner_name
+limit 50
+`);
+return funnel;
+
+  }
+  @get('/leads/buyers/byPropertyId')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async buyersid(
+    @param.query.string('propertyId') propertyId?: string,
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select tlbr.*,most_recent_buyer.connected,most_recent_buyer.interested  from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation tlbr left join
+(
+	select * from ${this.DB_SCHEMA}.buyers_contact bc
+	where date in (
+	select max(date) from ${this.DB_SCHEMA}.buyers_contact b group by property_id
+			)
+) as most_recent_buyer
+on tlbr.property_id = most_recent_buyer.property_id and tlbr.buyers_name = most_recent_buyer.buyer_name
+where tlbr.property_id = '${propertyId}'
+`);
+return funnel;
+
+  }
   @get('/buyerseller/map')
   @response(200, {
     description: 'Array of buyers page chart model instances',
