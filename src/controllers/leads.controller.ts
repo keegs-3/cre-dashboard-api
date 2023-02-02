@@ -71,6 +71,40 @@ group by owner_state
 return funnel;
 
   }
+  @get('/buyerseller/topFive')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async topFive(
+
+  ): Promise<any> {
+   const buyersr =  await this.leadsRepository.dataSource.execute(`
+   select buyers,count(buyers) ,
+COALESCE((select Json_agg(row_to_json(t1))
+      from ( select br.buyer_leads from ${this.DB_SCHEMA}.buyer_recommendation br
+      where br.buyers = b.buyers
+       )t1),
+      '[]')as "cohortdetails"
+from ${this.DB_SCHEMA}.buyer_recommendation b
+group by b.buyers
+order by count(buyers) desc
+limit 5
+`);
+const sellerr =  await this.leadsRepository.dataSource.execute(`
+select seller,count(seller) ,
+COALESCE((select Json_agg(row_to_json(t1))
+   from ( select br.seller_leads from ${this.DB_SCHEMA}.seller_recommendation br
+   where br.seller = b.seller
+    )t1),
+   '[]')as "cohortdetails"
+from ${this.DB_SCHEMA}.seller_recommendation b
+group by b.seller
+order by count(seller) desc
+limit 5
+`);
+return {buyersr,sellerr};
+
+  }
   @get('/buyerseller/card')
   @response(200, {
     description: 'Array of buyers page chart model instances',
