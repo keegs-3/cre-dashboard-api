@@ -12,7 +12,7 @@ import {
 } from '@loopback/rest';
 import {Status} from '../models';
 import {StatusRepository} from '../repositories';
-@authenticate("jwt")
+// @authenticate("jwt")
 export class StatusController {
   constructor(
     @repository(StatusRepository)

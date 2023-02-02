@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
@@ -8,6 +10,137 @@ export class MarketSummaryController {
     public leadsRepository: LeadsRepository,
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
+
+  @get('/marketIntelligence')
+  @response(200, {})
+  async findall(): Promise<any> {
+    const alldata = await this.leadsRepository.dataSource.execute(`
+
+select * from ${this.DB_SCHEMA}.market_intelligence
+WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW()
+order by date
+
+
+ `);
+    return alldata;
+  }
+
+  @get('/marketIntelligence/liveFeeds')
+  @response(200, {})
+  async livefeeds(): Promise<any> {
+    const feeds = await this.leadsRepository.dataSource.execute(`
+
+    SELECT x.* FROM ${this.DB_SCHEMA}.market_intelligence_sales_feed x order by x.sale_date limit 10`);
+    return feeds;
+  }
+
+  @get('/userEngagement')
+  @response(200, {})
+  async usersdetails(): Promise<any> {
+    const mapData = await this.leadsRepository.dataSource.execute(
+      `
+      select state , count(distinct "userName")  from ${this.DB_SCHEMA}.user_engagement ue
+group by state
+    `,
+    );
+    const daysUsersData = await this.leadsRepository.dataSource.execute(
+      `
+      select
+"userName" ,
+"Date" ,
+((avg("sessionTime"))/60):: numeric (1000,2) as avgsessiontimeinhrs,
+count("sessionTime")
+from ${this.DB_SCHEMA}.user_engagement ue
+where "Date" > now() - interval '8 days' and "Date" < now() - interval '1 day'
+group by "userName" ,"Date"
+order by "Date"  desc
+    `,
+    );
+
+    const devicesDetails = await this.leadsRepository.dataSource.execute(
+      `
+      select device,count(ue.device)  from ${this.DB_SCHEMA}.user_engagement ue
+      where "Date" > now() - interval '6 month' and "Date" < now() - interval '1 month'
+      group by device
+    `,
+    );
+
+    const monthlyAction = await this.leadsRepository.dataSource.execute(
+      `
+      select
+DATE_TRUNC('month',ue."Date") as monthYear ,
+count(distinct ue."userName") as totalUsers,
+count(ue."sessionTime") as totalSessions,
+sum(ue."sessionTime")::numeric (1000,2)as sumtotalSessions,
+((sum(ue."sessionTime")::numeric (1000,2)/count(distinct ue."userName"))/60):: numeric (1000,2) as avgSessionTimeInHours,
+sum(ue.actions) as sumActions,
+sum(ue.actions)::numeric (1000,2)/count(distinct ue."userName")  as averageActions
+from ${this.DB_SCHEMA}.user_engagement ue
+where "Date" > now() - interval '6 month' and "Date" < now() - interval '1 month'
+group by  monthYear
+    `,
+    );
+    const dayTimeOnApp = await this.leadsRepository.dataSource.execute(
+      `
+      select DATE_TRUNC('day',ue."Date") as monthday,
+      count(ue."sessionTime") as totalsession ,
+      sum(ue."sessionTime") as sumtotalsessioninminute,
+      sum(ue."sessionTime")/count(distinct ue."userName") as averagesession,
+      count(distinct ue."userName") as totalusersperday
+      from ${this.DB_SCHEMA}.user_engagement ue
+      where "Date" > now() - interval '8 days' and "Date" < now() - interval '1 day'
+      group by monthday
+      order by monthday desc
+    `,
+    );
+    const data = {
+      devicesDetails,
+      monthlyAction,
+      dayTimeOnApp,
+      daysUsersData,
+      mapData,
+    };
+
+    return data;
+  }
+
+  @get('/reportBuilderFilter')
+  @response(200, {})
+  async findfilter(): Promise<any> {
+    const market = await this.leadsRepository.dataSource.execute(`
+
+select distinct market from ${this.DB_SCHEMA}.report_builder`);
+    const submarket = await this.leadsRepository.dataSource.execute(`
+
+select distinct (submarket), market from ${this.DB_SCHEMA}.report_builder`);
+    const status = await this.leadsRepository.dataSource.execute(`
+
+    select distinct   property_special_status  from ${this.DB_SCHEMA}.report_builder order by property_special_status `);
+    const impr_rating = await this.leadsRepository.dataSource.execute(`
+
+    select distinct impr_rating from ${this.DB_SCHEMA}.report_builder `);
+    const loc_rating = await this.leadsRepository.dataSource.execute(`
+
+    select distinct loc_rating from ${this.DB_SCHEMA}.report_builder `);
+    const p_name = await this.leadsRepository.dataSource.execute(`
+
+    select distinct property_name from ${this.DB_SCHEMA}.report_builder `);
+    const city = await this.leadsRepository.dataSource.execute(`
+
+    select distinct city from ${this.DB_SCHEMA}.report_builder `);
+
+    const data = {
+      market,
+      submarket,
+      status,
+      impr_rating,
+      loc_rating,
+      p_name,
+      city,
+    };
+
+    return data;
+  }
   @get('/segmentSummary/topmarket')
   @response(200, {
     description: 'Array of Leads model instances',

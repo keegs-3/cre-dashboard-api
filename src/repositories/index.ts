@@ -8,3 +8,5 @@ export * from './usersession.repository';
 export * from './roles.repository';
 export * from './notification.repository';
 export * from './buyerscontact.repository';
+export * from './userloginlocation.repository';
+export * from './useractions.repository';
