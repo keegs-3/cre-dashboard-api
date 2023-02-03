@@ -28,7 +28,11 @@ order by property_id , inserted_date desc )
  tls on tlg.property_id =tls.property_id
 where
  tls.status = '${status}'
-order by tlg.owner_name
+ order by case tlg.probability
+     when 'Hot' then 1
+      when 'Warm' then 2
+      when 'Cold' then 3
+      end
 limit 50
 `);
 return funnel;
