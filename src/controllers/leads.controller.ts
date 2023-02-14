@@ -13,12 +13,34 @@ export class LeadsController {
   ) {}
 
   DB_SCHEMA = process.env.DB_SCHEMA;
+
+  @get('/reportyBuilder/bySales')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async bysales(
+
+  ): Promise<any> {
+   const funnel =  await this.leadsRepository.dataSource.execute(`
+   select
+distinct on (rbs.market )
+rbs.market ,
+string_agg(distinct rbs.city , ', ') AS city_list
+from ${this.DB_SCHEMA}.report_builder_sales rbs
+group by 1
+`);
+return funnel;
+
+  }
+
+
   @get('/leads/byStatus')
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
   async leads(
     @param.query.string('status') status?: string,
+    @param.query.string('probability') probability?: string,
   ): Promise<any> {
    const funnel =  await this.leadsRepository.dataSource.execute(`
    select *
@@ -28,6 +50,7 @@ order by property_id , inserted_date desc )
  tls on tlg.property_id =tls.property_id
 where
  tls.status = '${status}'
+ and tlg.probability = '${probability}'
  order by case tlg.probability
      when 'Hot' then 1
       when 'Warm' then 2
@@ -50,7 +73,7 @@ return funnel;
 (
 	select * from ${this.DB_SCHEMA}.buyers_contact bc
 	where date in (
-	select max(date) from ${this.DB_SCHEMA}.buyers_contact b group by property_id
+	select max(date) from ${this.DB_SCHEMA}.buyers_contact b group by property_id,buyer_name
 			)
 ) as most_recent_buyer
 on tlbr.property_id = most_recent_buyer.property_id and tlbr.buyers_name = most_recent_buyer.buyer_name
