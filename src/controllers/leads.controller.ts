@@ -14,14 +14,35 @@ export class LeadsController {
 
   DB_SCHEMA = process.env.DB_SCHEMA;
 
-  @get('/reportyBuilder/bySales')
+  @get('/reportyBuilder/byRent/marketCity')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async byRent(
+
+  ): Promise<any> {
+   const marketCity =  await this.leadsRepository.dataSource.execute(`
+   select
+distinct on (rbs.market )
+rbs.market ,
+string_agg(distinct rbs.city , ', ') AS city_list,
+string_agg(distinct rbs.submarket , ', ') AS submarket_list
+from ${this.DB_SCHEMA}.report_builder_rent_occupancy rbs
+group by 1
+`);
+
+return marketCity;
+
+  }
+
+  @get('/reportyBuilder/bySales/marketCity')
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
   async bysales(
 
   ): Promise<any> {
-   const funnel =  await this.leadsRepository.dataSource.execute(`
+   const marketCity =  await this.leadsRepository.dataSource.execute(`
    select
 distinct on (rbs.market )
 rbs.market ,
@@ -29,7 +50,17 @@ string_agg(distinct rbs.city , ', ') AS city_list
 from ${this.DB_SCHEMA}.report_builder_sales rbs
 group by 1
 `);
-return funnel;
+const propertyAssetsClass =  await this.leadsRepository.dataSource.execute(`
+select
+distinct property_asset_class
+from ${this.DB_SCHEMA}.report_builder_sales rbs
+`);
+const imprRating =  await this.leadsRepository.dataSource.execute(`
+select
+distinct impr_rating
+from ${this.DB_SCHEMA}.report_builder_sales rbs
+`);
+return {marketCity,propertyAssetsClass,imprRating};
 
   }
 
