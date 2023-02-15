@@ -11,6 +11,43 @@ export class MarketSummaryController {
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
 
+  @get('/marketIntelligence/byState')
+  @response(200, {})
+  async findBySate(
+    @param.query.string('state') state?: string,
+  ): Promise<any> {
+    const deals_Close = await this.leadsRepository.dataSource.execute(`
+    select date, sum (deals_closed) from ${this.DB_SCHEMA}.market_intelligence
+    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+    group by date
+    order by date
+ `);
+ const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
+ select date, sum (sale_amount) from ${this.DB_SCHEMA}.market_intelligence
+    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+    group by date
+    order by date
+`);
+const underContract = await this.leadsRepository.dataSource.execute(`
+select date, sum (under_contracts) from ${this.DB_SCHEMA}.market_intelligence
+   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+   group by date
+   order by date
+`);
+const expiredContract = await this.leadsRepository.dataSource.execute(`
+select date, sum (expired_contracts) from ${this.DB_SCHEMA}.market_intelligence
+   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+   group by date
+   order by date
+`);
+    return {
+      deals_Close,
+      monthlyRevenue,
+      underContract,
+      expiredContract
+
+    };
+  }
   @get('/marketIntelligence')
   @response(200, {})
   async findall(): Promise<any> {
