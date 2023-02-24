@@ -9,7 +9,7 @@ import {
   patch,
   post,
   requestBody,
-  response,
+  response
 } from '@loopback/rest';
 import {UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
@@ -18,7 +18,7 @@ import {v4 as uuidv4} from 'uuid';
 import {
   PasswordHasherBindings,
   TokenServiceBindings,
-  UserServiceBindings,
+  UserServiceBindings
 } from '../keys';
 import {Usersession} from '../models';
 import {User} from '../models/user.model';
@@ -154,11 +154,11 @@ export class CReUserController {
     },
   })
   async login(@requestBody() credentials: Credentials): Promise<any> {
-    const data = {};
+
     // make sure user exist,password should be valid
     const user = await this.userService.verifyCredentials(credentials);
     // console.log(user);
-    const userProfile = await this.userService.convertToUserProfile(user);
+    const userProfile =  this.userService.convertToUserProfile(user);
     // console.log(userProfile);
 
     const token = await this.jwtService.generateToken(userProfile);
@@ -169,15 +169,18 @@ export class CReUserController {
       VALUES('${credentials.username}' ,'${token}') returning *;
       `,
     );
-    console.log('done');
+    console.log('insert into user session');
     const userdata = await this.userRepository.execute(
       `select * from ${this.DB_SCHEMA}.users u
       left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
       where username = '${userProfile.name}'  `,
     );
+    const userList = await this.userRepository.execute(
+      `select u.username from cre.users u  where u.agent_map_to  = '${userProfile.name}' `,
+    );
     delete userdata[0].password;
 
-    return {token, userdata, session};
+    return {token, userdata, session,userList};
 
     // return Promise.resolve({token: token})
   }
