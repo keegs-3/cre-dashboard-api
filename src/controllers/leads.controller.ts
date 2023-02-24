@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention */
 import {repository} from '@loopback/repository';
-import {get, HttpErrors, param, response} from '@loopback/rest';
+import {get, HttpErrors, param, post, requestBody, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
 // @authenticate("jwt")
 export class LeadsController {
@@ -181,6 +181,39 @@ group by segment
 return funnel;
 
   }
+  @post('/deals/user/recommendation')
+  @response(200, {
+    description: 'users percent for deals recommendation',
+  })
+  async percent(
+    @requestBody()
+    required: {
+     users:string,
+     percent:number
+    },
+  ): Promise<any> {
+    await this.leadsRepository.dataSource.execute(`
+    INSERT INTO ${this.DB_SCHEMA}.deal_user_recomendation
+    (users, "percent") VALUES('${required.users}',${required.percent});
+    `);
+
+
+
+  }
+  @get('/deals/user/recommendation')
+  @response(200, {
+    description: 'Array of aibased model instances',
+  })
+  async users(
+    @param.query.string('users') users?: string,
+  ): Promise<any> {
+   const aibased =  await this.leadsRepository.dataSource.execute(`
+   SELECT * FROM ${this.DB_SCHEMA}.deal_user_recomendation WHERE users = '${users}'
+`);
+return aibased;
+
+  }
+
   @get('/deals/aibased')
   @response(200, {
     description: 'Array of aibased model instances',
