@@ -14,6 +14,36 @@ export class LeadsController {
 
   DB_SCHEMA = process.env.DB_SCHEMA;
 
+  @get('/reportyBuilder/bySales')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async forSales(
+
+  ): Promise<any> {
+   const allSales =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.report_builder_sales limit 4000
+`);
+
+return allSales;
+
+  }
+  @get('/reportyBuilder/byRent')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async allRent(
+
+  ): Promise<any> {
+   const allRent =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.report_builder_rent_occupancy limit 4000
+`);
+
+return allRent;
+
+  }
+
+
   @get('/reportyBuilder/byRent/marketCity')
   @response(200, {
     description: 'Array of buyers page chart model instances',
@@ -193,6 +223,9 @@ return funnel;
     },
   ): Promise<any> {
     await this.leadsRepository.dataSource.execute(`
+
+
+
     INSERT INTO ${this.DB_SCHEMA}.deal_user_recomendation
     (users, "percent") VALUES('${required.users}',${required.percent});
     `);
@@ -208,7 +241,8 @@ return funnel;
     @param.query.string('users') users?: string,
   ): Promise<any> {
    const aibased =  await this.leadsRepository.dataSource.execute(`
-   SELECT * FROM ${this.DB_SCHEMA}.deal_user_recomendation WHERE users = '${users}'
+   SELECT * FROM ${this.DB_SCHEMA}.deal_user_recomendation WHERE  updated_on =
+   (select max(updated_on) from ${this.DB_SCHEMA}.deal_user_recomendation where users = '${users}')
 `);
 return aibased;
 
