@@ -36,7 +36,9 @@ return allSales;
 
   ): Promise<any> {
    const allRent =  await this.leadsRepository.dataSource.execute(`
-   select * from ${this.DB_SCHEMA}.report_builder_rent_occupancy limit 4000
+   select * from ${this.DB_SCHEMA}.report_builder_rent_occupancy where
+   date >= current_date - interval '1' year and
+   date < current_date;
 `);
 
 return allRent;
