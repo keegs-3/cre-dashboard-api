@@ -18,3 +18,4 @@ export * from './usersession.controller';
 
 export * from './userloginlocation.controller';
 export * from './usersactions.controller';
+export * from './userreview.controller';
