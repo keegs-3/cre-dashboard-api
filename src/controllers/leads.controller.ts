@@ -269,13 +269,14 @@ return aibased;
     description: 'Array of Leads model instances',
   })
   async leadsactual(
-    @param.query.number('quater') quater?: number,
   ): Promise<any> {
-   const funnel =  await this.leadsRepository.dataSource.execute(`
-   select * from ${this.DB_SCHEMA}.deal_analytics_funnel daf
+   const forecast =  await this.leadsRepository.dataSource.execute(`
+   select "Date",Actual_Leads,Forecasted_Leads from ${this.DB_SCHEMA}.deal_analytics_funnel
+where "Date" > (select max(daf."Date") from ${this.DB_SCHEMA}.deal_analytics_funnel daf)  - interval '6 month'
+order by "Date"
 
 `);
-return funnel;
+return forecast;
 
   }
   @get('/deals/card')
