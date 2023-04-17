@@ -19,7 +19,9 @@ import {
 } from '@loopback/rest';
 import {Userreview} from '../models';
 import {UserreviewRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
 
+@authenticate('jwt')
 export class UserreviewController {
   constructor(
     @repository(UserreviewRepository)

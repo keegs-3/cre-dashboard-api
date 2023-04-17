@@ -3,7 +3,8 @@
 import {repository} from '@loopback/repository';
 import {post, requestBody, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-// @authenticate("jwt")
+import {authenticate} from '@loopback/authentication';
+@authenticate("jwt")
 export class NedlapiController {
   constructor(
     @repository(LeadsRepository)

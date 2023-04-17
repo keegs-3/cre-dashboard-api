@@ -3,7 +3,8 @@ import {
 } from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {BuyerscontactRepository} from '../repositories';
-// @authenticate("jwt")
+import {authenticate} from '@loopback/authentication';
+@authenticate("jwt")
 export class BuyeersProfileController {
   constructor(
     @repository(BuyerscontactRepository)

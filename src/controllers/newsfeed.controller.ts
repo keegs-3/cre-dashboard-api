@@ -5,7 +5,8 @@
 import {repository} from '@loopback/repository';
 import {get, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-// @authenticate("jwt")
+import {authenticate} from '@loopback/authentication';
+@authenticate("jwt")
 export class NewsFeedController {
   constructor(
     @repository(LeadsRepository)

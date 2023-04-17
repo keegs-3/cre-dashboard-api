@@ -51,7 +51,7 @@ export class CReUserController {
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @post('/signup', {
     responses: {
       '200': {
@@ -63,77 +63,77 @@ export class CReUserController {
     },
   })
   async signup(@requestBody() userData: User) {
-    validateCredentials(_.pick(userData, ['username', 'password']));
+    validateCredentials(_.pick(userData, ['email', 'password']));
     userData.password = await this.hasher.hashPassword(userData.password);
     const savedUser = await this.userRepository.create(userData);
     // delete savedUser.password;
     return savedUser;
   }
-  @authenticate('jwt')
-  @post('/admin/{name}/adduser', {
-    responses: {
-      '200': {
-        description: 'User',
-        content: {
-          schema: getJsonSchemaRef(User),
-        },
-      },
-    },
-  })
-  async adduser(
-    @requestBody() userData: User,
-    @param.path.string('name') name?: string,
-  ) {
-    if (name !== '') {
-      const data = await this.userRepository.dataSource.execute(`
-  select * from ${this.DB_SCHEMA}.users u
-  left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
-  where username = '${name}'
-    `);
-      console.log(data);
+  // @authenticate('jwt')
+  // @post('/admin/{name}/adduser', {
+  //   responses: {
+  //     '200': {
+  //       description: 'User',
+  //       content: {
+  //         schema: getJsonSchemaRef(User),
+  //       },
+  //     },
+  //   },
+  // })
+  // async adduser(
+  //   @requestBody() userData: User,
+  //   @param.path.string('name') name?: string,
+  // ) {
+  //   if (name !== '') {
+  //     const data = await this.userRepository.dataSource.execute(`
+  // select * from ${this.DB_SCHEMA}.users u
+  // left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
+  // where username = '${name}'
+  //   `);
+  //     console.log(data);
 
-      if (data.length > 0 && data[0].role === 'admin') {
-        validateCredentials(_.pick(userData, ['username', 'password']));
-        userData.password = await this.hasher.hashPassword(userData.password);
-        const savedUser: any = await this.userRepository.create(userData);
-        const transporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 465,
-          secure: true, // true for 465, false for other ports
-          auth: {
-            user: 'anilchapagain68@gmail.com', // generated ethereal user
-            pass: 'fssgodreaquqprwb', // generated ethereal password
-          },
-        });
+  //     if (data.length > 0 && data[0].role === 'admin') {
+  //       validateCredentials(_.pick(userData, ['username', 'password']));
+  //       userData.password = await this.hasher.hashPassword(userData.password);
+  //       const savedUser: any = await this.userRepository.create(userData);
+  //       const transporter = nodemailer.createTransport({
+  //         host: 'smtp.gmail.com',
+  //         port: 465,
+  //         secure: true, // true for 465, false for other ports
+  //         auth: {
+  //           user: 'anilchapagain68@gmail.com', // generated ethereal user
+  //           pass: 'fssgodreaquqprwb', // generated ethereal password
+  //         },
+  //       });
 
-        // send mail with defined transport object
-        const info = await transporter.sendMail({
-          from: '"Anil Chapagain" <anilchapagain68@gmail.com>', // sender address
-          to: `${savedUser.email}`, // list of receivers
-          subject: 'Verify Email', // Subject line
-          text: 'Is this your account', // plain text body
-          html: `<h2>User added details ${savedUser.username} </h2>`, // html body
-        });
+  //       // send mail with defined transport object
+  //       const info = await transporter.sendMail({
+  //         from: '"Anil Chapagain" <anilchapagain68@gmail.com>', // sender address
+  //         to: `${savedUser.email}`, // list of receivers
+  //         subject: 'Verify Email', // Subject line
+  //         text: 'Is this your account', // plain text body
+  //         html: `<h2>User added details ${savedUser.username} </h2>`, // html body
+  //       });
 
-        console.log('Message sent: %s', info.messageId);
-        // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+  //       console.log('Message sent: %s', info.messageId);
+  //       // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
-        // Preview only available when sending through an Ethereal account
-        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-        // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-        return 'Successfully Emailed';
+  //       // Preview only available when sending through an Ethereal account
+  //       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+  //       // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+  //       return 'Successfully Emailed';
 
-        delete savedUser.password;
-        delete savedUser.resetkey;
+  //       delete savedUser.password;
+  //       delete savedUser.resetkey;
 
-        return savedUser;
-      } else {
-        return `${name} is not a Admin User`;
-      }
-    } else {
-      return 'Pass UserName On Url';
-    }
-  }
+  //       return savedUser;
+  //     } else {
+  //       return `${name} is not a Admin User`;
+  //     }
+  //   } else {
+  //     return 'Pass UserName On Url';
+  //   }
+  // }
 
   @post('/login', {
     responses: {
@@ -164,30 +164,31 @@ export class CReUserController {
 
     const token = await this.jwtService.generateToken(userProfile);
     // const generatedToken = Promise.resolve({token: token})
-    const session = await this.userRepository.execute(
-      `INSERT INTO ${this.DB_SCHEMA}.user_session
-      (name,  "session")
-      VALUES('${credentials.username}' ,'${token}') returning *;
-      `,
-    );
+    // const session = await this.userRepository.execute(
+    //   `INSERT INTO ${this.DB_SCHEMA}.user_session
+    //   (name,  "session")
+    //   VALUES('${credentials.username}' ,'${token}') returning *;
+    //   `,
+    // );
     console.log('insert into user session');
-    const userdata = await this.userRepository.execute(
-      `select * from ${this.DB_SCHEMA}.users u
-      left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
-      where username = '${userProfile.name}'  `,
-    );
-    const userList = await this.userRepository.execute(
-      `select u.username from cre.users u  where u.agent_map_to  = '${userProfile.name}' `,
-    );
-    delete userdata[0].password;
+    // const userdata = await this.userRepository.execute(
+    //   `select * from ${this.DB_SCHEMA}.users u
+    //   left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
+    //   where username = '${userProfile.name}'  `,
+    // );
+    // const userList = await this.userRepository.execute(
+    //   `select u.username from cre.users u  where u.agent_map_to  = '${userProfile.name}' `,
+    // );
+    // delete userdata[0].password;
 
-    return {token, userdata, session,userList};
+    // return {token, userdata, session,userList};
+    return {token};
 
     // return Promise.resolve({token: token})
   }
 
   // return Promise.resolve({token: token})
-
+  @authenticate('jwt')
   @get('/reset/link')
   @response(204, {
     description: 'Usersession PATCH success',
@@ -237,6 +238,7 @@ SET   resetkey= '${resetkey}' where email = '${email}'
       return 'Successfully Emailed';
     }
   }
+  @authenticate('jwt')
   @patch('/reset/password')
   @response(204, {
     description: 'password PATCH success',
@@ -261,7 +263,7 @@ SET   resetkey= '${resetkey}' where email = '${email}'
     return 'reset successful';
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/users/me', {
     // security: OPERATION_SECURITY_SPEC,
     responses: {
@@ -281,6 +283,7 @@ SET   resetkey= '${resetkey}' where email = '${email}'
   ): Promise<UserProfile> {
     return Promise.resolve(currentUser);
   }
+  @authenticate('jwt')
   @patch('/logout/{id}')
   @response(204, {
     description: 'Usersession PATCH success',
