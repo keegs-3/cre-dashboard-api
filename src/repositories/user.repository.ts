@@ -4,7 +4,7 @@ import {CreDataSource} from '../datasources';
 import {User, UserRelations} from '../models/user.model';
 
 export type Credentials = {
-  username: string;
+  email: string;
   password: string;
 }
 

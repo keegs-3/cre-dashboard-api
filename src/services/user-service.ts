@@ -22,24 +22,28 @@ export class MyUserService implements UserService<User, Credentials>{
     // implement this method
     const foundUser = await this.userRepository.findOne({
       where: {
-        username: credentials.username
+        email: credentials.email
       }
     });
     if (!foundUser) {
-      throw new HttpErrors.NotFound('user not found');
+      throw new HttpErrors.NotFound('Wrong username / password');
     }
     const passwordMatched = await this.hasher.comparePassword(credentials.password, foundUser.password)
     if (!passwordMatched)
-      throw new HttpErrors.Unauthorized('password is not valid');
+      throw new HttpErrors.Unauthorized('Wrong username / password');
     return foundUser;
   }
   convertToUserProfile(user: User): UserProfile {
-    let userName = '';
-    if (user.firstName)
-      userName = user.firstName;
-    if (user.lastName) {
-      userName = user.firstName ? `${user.firstName} ${user.lastName}` : user.lastName;
+
+    if (user.firstName && user.lastName){
+      user.username = user.firstName + user.lastName;
+
     }
+    else {
+      user.username = user.firstName
+    }
+
+
     return {
       [securityId]: user.id!.toString(),
       name: user.username,
