@@ -33,7 +33,6 @@ export class User extends Entity {
 
   @property({
     type: 'string',
-    required: true,
   })
   username: string;
   @property({
@@ -66,6 +65,7 @@ export class User extends Entity {
 
 export interface UserRelations {
   // describe navigational properties here
+
 
 
 }

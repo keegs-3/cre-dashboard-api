@@ -21,8 +21,11 @@ export class MyUserService implements UserService<User, Credentials>{
   async verifyCredentials(credentials: Credentials): Promise<User> {
     // implement this method
     const {email, password} = credentials;
+    if (!email){
+        throw new HttpErrors.NotFound('Wrong username / password')
+    }
     const foundUser = await this.userRepository.findOne({
-      where: {email}
+      where: {email:email}
     });
     console.log('from user service',foundUser)
     if (!foundUser) {
