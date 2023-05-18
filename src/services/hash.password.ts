@@ -20,6 +20,6 @@ export class BcryptHasher implements PasswordHasher<string> {
   // round: number = 10;
   async hashPassword(password: string): Promise<string> {
     const salt = await genSalt(this.rounds);
-    return await hash(password, salt);
+    return hash(password, salt);
   }
 }
