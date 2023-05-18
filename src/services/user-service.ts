@@ -42,7 +42,8 @@ export class MyUserService implements UserService<User, Credentials>{
       name: user.username,
       id: user.id,
       email: user.email,
-      role:user.role
+      role:user.role,
+      firstName: user.firstName
     };
 
   }
