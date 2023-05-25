@@ -106,7 +106,7 @@ order by "Date"  desc
     const monthlyAction = await this.leadsRepository.dataSource.execute(
       `
       select
-DATE_TRUNC('month',ue."Date") as monthYear ,
+DATE_TRUNC('day',ue."Date") as monthYear ,
 count(distinct ue."userName") as totalUsers,
 count(ue."sessionTime") as totalSessions,
 sum(ue."sessionTime")::numeric (1000,2)as sumtotalSessions,
@@ -114,7 +114,7 @@ sum(ue."sessionTime")::numeric (1000,2)as sumtotalSessions,
 sum(ue.actions) as sumActions,
 sum(ue.actions)::numeric (1000,2)/count(distinct ue."userName")  as averageActions
 from ${this.DB_SCHEMA}.user_engagement ue
-where "Date" > now() - interval '6 month' and "Date" < now() - interval '1 month'
+where "Date" > now() - interval '6 days' and "Date" < now() - interval '1 day'
 group by  monthYear
     `,
     );
