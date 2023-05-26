@@ -20,33 +20,38 @@ export class MyUserService implements UserService<User, Credentials>{
   ) { }
   async verifyCredentials(credentials: Credentials): Promise<User> {
     // implement this method
-    const foundUser = await this.userRepository.findOne({
-      where: {
-        username: credentials.username
-      }
-    });
-    if (!foundUser) {
-      throw new HttpErrors.NotFound('user not found');
+    const {email, password} = credentials;
+    if (!email){
+        throw new HttpErrors.NotFound('Wrong username / password')
     }
-    const passwordMatched = await this.hasher.comparePassword(credentials.password, foundUser.password)
+    const foundUser = await this.userRepository.findOne({
+      where: {email:email}
+    });
+    console.log('from user service',foundUser)
+    if (!foundUser) {
+      throw new HttpErrors.NotFound('Wrong username / password');
+    }
+    const passwordMatched = await this.hasher.comparePassword(password, foundUser.password)
     if (!passwordMatched)
-      throw new HttpErrors.Unauthorized('password is not valid');
+      throw new HttpErrors.Unauthorized('Wrong username / password');
     return foundUser;
   }
   convertToUserProfile(user: User): UserProfile {
-    let userName = '';
-    if (user.firstName)
-      userName = user.firstName;
-    if (user.lastName) {
-      userName = user.firstName ? `${user.firstName} ${user.lastName}` : user.lastName;
-    }
     return {
       [securityId]: user.id!.toString(),
       name: user.username,
       id: user.id,
-      email: user.email
+      email: user.email,
+      role:user.role,
+      firstName: user.firstName
     };
-    // throw new Error('Method not implemented.');
+
+  }
+  async createUser(userWithPassword: Credentials): Promise<User> {
+
+    const user = await this.userRepository.create(userWithPassword);
+
+    return user;
   }
 
 }

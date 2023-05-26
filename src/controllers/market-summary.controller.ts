@@ -3,7 +3,8 @@
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
@@ -11,6 +12,43 @@ export class MarketSummaryController {
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
 
+  @get('/marketIntelligence/byState')
+  @response(200, {})
+  async findBySate(
+    @param.query.string('state') state?: string,
+  ): Promise<any> {
+    const deals_Close = await this.leadsRepository.dataSource.execute(`
+    select date, sum (deals_closed) from ${this.DB_SCHEMA}.market_intelligence
+    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+    group by date
+    order by date
+ `);
+ const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
+ select date, sum (sale_amount) from ${this.DB_SCHEMA}.market_intelligence
+    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+    group by date
+    order by date
+`);
+const underContract = await this.leadsRepository.dataSource.execute(`
+select date, sum (under_contracts) from ${this.DB_SCHEMA}.market_intelligence
+   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+   group by date
+   order by date
+`);
+const expiredContract = await this.leadsRepository.dataSource.execute(`
+select date, sum (expired_contracts) from ${this.DB_SCHEMA}.market_intelligence
+   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
+   group by date
+   order by date
+`);
+    return {
+      deals_Close,
+      monthlyRevenue,
+      underContract,
+      expiredContract
+
+    };
+  }
   @get('/marketIntelligence')
   @response(200, {})
   async findall(): Promise<any> {
@@ -68,7 +106,7 @@ order by "Date"  desc
     const monthlyAction = await this.leadsRepository.dataSource.execute(
       `
       select
-DATE_TRUNC('month',ue."Date") as monthYear ,
+DATE_TRUNC('day',ue."Date") as monthYear ,
 count(distinct ue."userName") as totalUsers,
 count(ue."sessionTime") as totalSessions,
 sum(ue."sessionTime")::numeric (1000,2)as sumtotalSessions,
@@ -76,7 +114,7 @@ sum(ue."sessionTime")::numeric (1000,2)as sumtotalSessions,
 sum(ue.actions) as sumActions,
 sum(ue.actions)::numeric (1000,2)/count(distinct ue."userName")  as averageActions
 from ${this.DB_SCHEMA}.user_engagement ue
-where "Date" > now() - interval '6 month' and "Date" < now() - interval '1 month'
+where "Date" > now() - interval '6 days' and "Date" < now() - interval '1 day'
 group by  monthYear
     `,
     );

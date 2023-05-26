@@ -19,7 +19,9 @@ import {
 } from '@loopback/rest';
 import {Roles} from '../models';
 import {RolesRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
 
+@authenticate('jwt')
 export class RolesController {
   constructor(
     @repository(RolesRepository)

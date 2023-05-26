@@ -3,9 +3,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention */
 import {repository} from '@loopback/repository';
-import {get, HttpErrors, param, response} from '@loopback/rest';
+import {get, HttpErrors, param, post, requestBody, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-// @authenticate("jwt")
+import {authenticate} from '@loopback/authentication';
+@authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -13,12 +14,97 @@ export class LeadsController {
   ) {}
 
   DB_SCHEMA = process.env.DB_SCHEMA;
+
+  @get('/reportyBuilder/bySales')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async forSales(
+
+  ): Promise<any> {
+   const allSales =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.report_builder_sales limit 4000
+`);
+
+return allSales;
+
+  }
+  @get('/reportyBuilder/byRent')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async allRent(
+
+  ): Promise<any> {
+   const allRent =  await this.leadsRepository.dataSource.execute(`
+   select * from ${this.DB_SCHEMA}.report_builder_rent_occupancy where
+   date >= current_date - interval '1' year and
+   date < current_date limit 4000
+`);
+
+return allRent;
+
+  }
+
+
+  @get('/reportyBuilder/byRent/marketCity')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async byRent(
+
+  ): Promise<any> {
+   const marketCity =  await this.leadsRepository.dataSource.execute(`
+   select
+distinct on (rbs.market )
+rbs.market ,
+string_agg(distinct rbs.city , ', ') AS city_list,
+string_agg(distinct rbs.submarket , ', ') AS submarket_list
+from ${this.DB_SCHEMA}.report_builder_rent_occupancy rbs
+group by 1
+`);
+
+return marketCity;
+
+  }
+
+  @get('/reportyBuilder/bySales/marketCity')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async bysales(
+
+  ): Promise<any> {
+   const marketCity =  await this.leadsRepository.dataSource.execute(`
+   select
+distinct on (rbs.market )
+rbs.market ,
+string_agg(distinct rbs.city , ', ') AS city_list
+from ${this.DB_SCHEMA}.report_builder_sales rbs
+group by 1
+`);
+const propertyAssetsClass =  await this.leadsRepository.dataSource.execute(`
+select
+distinct property_asset_class
+from ${this.DB_SCHEMA}.report_builder_sales rbs
+`);
+const imprRating =  await this.leadsRepository.dataSource.execute(`
+select
+distinct impr_rating
+from ${this.DB_SCHEMA}.report_builder_sales rbs
+`);
+return {marketCity,propertyAssetsClass,imprRating};
+
+  }
+
+
   @get('/leads/byStatus')
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
   async leads(
     @param.query.string('status') status?: string,
+    @param.query.string('probability') probability?: string,
   ): Promise<any> {
    const funnel =  await this.leadsRepository.dataSource.execute(`
    select *
@@ -28,7 +114,12 @@ order by property_id , inserted_date desc )
  tls on tlg.property_id =tls.property_id
 where
  tls.status = '${status}'
-order by tlg.owner_name
+ and tlg.probability = '${probability}'
+ order by case tlg.probability
+     when 'Hot' then 1
+      when 'Warm' then 2
+      when 'Cold' then 3
+      end
 limit 50
 `);
 return funnel;
@@ -46,7 +137,7 @@ return funnel;
 (
 	select * from ${this.DB_SCHEMA}.buyers_contact bc
 	where date in (
-	select max(date) from ${this.DB_SCHEMA}.buyers_contact b group by property_id
+	select max(date) from ${this.DB_SCHEMA}.buyers_contact b group by property_id,buyer_name
 			)
 ) as most_recent_buyer
 on tlbr.property_id = most_recent_buyer.property_id and tlbr.buyers_name = most_recent_buyer.buyer_name
@@ -123,6 +214,43 @@ group by segment
 return funnel;
 
   }
+  @post('/deals/user/recommendation')
+  @response(200, {
+    description: 'users percent for deals recommendation',
+  })
+  async percent(
+    @requestBody()
+    required: {
+     users:string,
+     percent:number
+    },
+  ): Promise<any> {
+    await this.leadsRepository.dataSource.execute(`
+
+
+
+    INSERT INTO ${this.DB_SCHEMA}.deal_user_recomendation
+    (users, "percent") VALUES('${required.users}',${required.percent});
+    `);
+
+
+
+  }
+  @get('/deals/user/recommendation')
+  @response(200, {
+    description: 'Array of aibased model instances',
+  })
+  async users(
+    @param.query.string('users') users?: string,
+  ): Promise<any> {
+   const aibased =  await this.leadsRepository.dataSource.execute(`
+   SELECT * FROM ${this.DB_SCHEMA}.deal_user_recomendation WHERE  updated_on =
+   (select max(updated_on) from ${this.DB_SCHEMA}.deal_user_recomendation where users = '${users}')
+`);
+return aibased;
+
+  }
+
   @get('/deals/aibased')
   @response(200, {
     description: 'Array of aibased model instances',
@@ -142,13 +270,14 @@ return aibased;
     description: 'Array of Leads model instances',
   })
   async leadsactual(
-    @param.query.number('quater') quater?: number,
   ): Promise<any> {
-   const funnel =  await this.leadsRepository.dataSource.execute(`
-   select * from ${this.DB_SCHEMA}.deal_analytics_funnel daf
+   const forecast =  await this.leadsRepository.dataSource.execute(`
+   select "Date",Actual_Leads,Forecasted_Leads from ${this.DB_SCHEMA}.deal_analytics_funnel
+where "Date" > (select max(daf."Date") from ${this.DB_SCHEMA}.deal_analytics_funnel daf)  - interval '6 month'
+order by "Date"
 
 `);
-return funnel;
+return forecast;
 
   }
   @get('/deals/card')

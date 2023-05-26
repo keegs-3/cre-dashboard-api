@@ -152,6 +152,8 @@ export class StatusController {
     description: 'Array of Leads model instances',
 
   })
+
+  
   async findreport(
   ): Promise<any> {
     const sql = this.statusRepository.dataSource.execute(`
