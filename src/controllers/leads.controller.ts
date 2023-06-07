@@ -3,10 +3,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention */
 import {repository} from '@loopback/repository';
-import {get, HttpErrors, param, post, requestBody, response} from '@loopback/rest';
+import {HttpErrors, get, param, post, requestBody, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
-@authenticate("jwt")
+// @authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -20,13 +19,101 @@ export class LeadsController {
     description: 'Array of buyers page chart model instances',
   })
   async forSales(
+    @param.query.string('market') market?: string ,
+    @param.query.string('city') city?: string,
+    @param.query.number('salePriceFrom') salePriceFrom?: number,
+    @param.query.number('salePriceTo') salePriceTo?: number,
+    @param.query.date('salePeriodFrom',{ default: null }) salePeriodFrom?: Date,
+    @param.query.date('salePeriodTo',{ default: null }) salePeriodTo?: Date,
+    @param.query.date('completeFrom',{ default: null }) completeFrom?: Date,
+    @param.query.date('completeTo',{ default: null }) completeTo?: Date,
+    @param.query.number('propertySizeFrom',{ default: null }) propertySizeFrom?: number,
+    @param.query.number('propertySizeTo',{ default: null }) propertySizeTo?: number,
+    @param.query.string('propertyClass',{ default: null }) propertyClass?: string,
+    @param.query.string('propertyImpr',{ default: null }) propertyImpr?: string,
+    @param.query.number('offset',{ default: 0 }) offset?: number,
+
+
 
   ): Promise<any> {
-   const allSales =  await this.leadsRepository.dataSource.execute(`
-   select * from ${this.DB_SCHEMA}.report_builder_sales limit 4000
-`);
 
-return allSales;
+    if (
+     market === undefined &&
+       city === undefined &&
+      salePriceFrom === undefined &&
+      salePriceTo === undefined &&
+      salePeriodFrom === undefined &&
+      salePeriodTo === undefined &&
+      completeFrom === undefined &&
+      completeTo === undefined &&
+       propertySizeFrom === undefined &&
+       propertySizeTo === undefined
+    )
+    {
+return 'All Filter data are NUll '
+    }
+
+
+let marq:any = '';
+let cityc:any = '';
+let acc:any = '';
+let imprc:any = '';
+if ( market === undefined) { marq = null;}
+else {const mar = market?.split(',');marq = "'" + mar?.join("','") + "'";}
+if ( city === undefined) { cityc = null;}
+else {const cit = city?.split(',');cityc = "'" + cit?.join("','") + "'";}
+if ( propertyClass === undefined) { acc = null;}
+else {const ac = propertyClass?.split(',');acc = "'" + ac?.join("','") + "'";}
+if ( propertyImpr === undefined) { imprc = null;}
+else {const impr = propertyImpr?.split(',');imprc = "'" + impr?.join("','") + "'";}
+
+
+const sp:any=null;
+if(salePriceFrom === undefined) { salePriceFrom = sp}
+if(salePriceTo === undefined) { salePriceTo = sp}
+if(salePeriodFrom === undefined) { salePeriodFrom = sp}
+if(salePeriodTo === undefined) { salePeriodTo = sp}
+if(propertySizeFrom === undefined) { propertySizeFrom = sp}
+if(propertySizeTo === undefined) { propertySizeTo = sp}
+if(completeFrom === undefined) { completeFrom = sp}
+if(completeTo === undefined) { completeTo = sp}
+
+
+
+const sql = `SELECT *
+FROM ${this.DB_SCHEMA}.report_builder_sales_view
+where 1 = 1
+  AND (market IN(${marq}) OR ${marq} IS NULL)
+  AND (city IN(${cityc}) OR ${cityc} IS NULL)
+  AND (sale_price_mm_new between ${salePriceFrom} and ${salePriceTo} OR ${salePriceFrom}  IS null or ${salePriceTo}  IS NULL)
+  AND (sale_date between ${salePeriodFrom} and ${salePeriodTo} OR ${salePeriodFrom} IS null or ${salePeriodTo} is null)
+  AND (unit_count between ${propertySizeFrom} and ${propertySizeTo} OR ${propertySizeFrom} IS null OR ${propertySizeTo} IS NULL)
+   AND (completion_date between ${completeFrom} and ${completeTo} or ${completeFrom} IS null or ${completeTo} IS NULL)
+    AND (property_asset_class IN (${acc}) or ${acc} IS NUll )
+  AND (impr_rating IN (${imprc}) or ${imprc} IS NUll )
+  limit 100 offset ${offset}
+  `
+
+  console.log('sql ', sql)
+const allSales =  await this.leadsRepository.dataSource.execute(`SELECT *
+FROM ${this.DB_SCHEMA}.report_builder_sales_view
+where 1 = 1
+  AND (market IN(${marq}) OR ${marq} IS NULL)
+  AND (city IN(${cityc}) OR ${cityc} IS NULL)
+  AND (sale_price_mm_new between ${salePriceFrom} and ${salePriceTo} OR ${salePriceFrom}  IS null or ${salePriceTo}  IS NULL)
+  AND (sale_date between ${salePeriodFrom} and ${salePeriodTo} OR ${salePeriodFrom} IS null or ${salePeriodTo} is null)
+  AND (unit_count between ${propertySizeFrom} and ${propertySizeTo} OR ${propertySizeFrom} IS null OR ${propertySizeTo} IS NULL)
+   AND (completion_date between ${completeFrom} and ${completeTo} or ${completeFrom} IS null or ${completeTo} IS NULL)
+    AND (property_asset_class IN (${acc}) or ${acc} IS NUll )
+  AND (impr_rating IN (${imprc}) or ${imprc} IS NUll )
+  limit 100 offset ${offset}
+  `);
+
+console.table('data',allSales)
+
+
+return allSales
+
 
   }
   @get('/reportyBuilder/byRent')
