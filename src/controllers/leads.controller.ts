@@ -110,9 +110,14 @@ where 1 = 1
   `);
 
 console.table('data',allSales)
+if (allSales.length > 0 ){
+  return allSales
+}
+else {
+  return 'No Data Available'
+}
 
 
-return allSales
 
 
   }
