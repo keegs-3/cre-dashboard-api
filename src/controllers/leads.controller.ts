@@ -5,8 +5,7 @@
 import {repository} from '@loopback/repository';
 import {HttpErrors, get, param, post, requestBody, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
-@authenticate("jwt")
+// @authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -84,31 +83,19 @@ if(completeTo === undefined) { completeTo = sp}
 const sql = `SELECT *
 FROM ${this.DB_SCHEMA}.report_builder_sales_view
 where 1 = 1
-  AND (market IN(${marq}) OR ${marq} IS NULL)
-  AND (city IN(${cityc}) OR ${cityc} IS NULL)
+  AND (market IN(${marq}) OR market IS NULL)
+  AND (city IN(${cityc}) OR city IS NULL)
   AND (sale_price_mm_new between ${salePriceFrom} and ${salePriceTo} OR ${salePriceFrom}  IS null or ${salePriceTo}  IS NULL)
   AND (sale_date between ${salePeriodFrom} and ${salePeriodTo} OR ${salePeriodFrom} IS null or ${salePeriodTo} is null)
   AND (unit_count between ${propertySizeFrom} and ${propertySizeTo} OR ${propertySizeFrom} IS null OR ${propertySizeTo} IS NULL)
    AND (completion_date between ${completeFrom} and ${completeTo} or ${completeFrom} IS null or ${completeTo} IS NULL)
-    AND (property_asset_class IN (${acc}) or ${acc} IS NUll )
-  AND (impr_rating IN (${imprc}) or ${imprc} IS NUll )
+    AND (property_asset_class IN (${acc}) or property_asset_class IS NUll )
+  AND (impr_rating IN (${imprc}) or impr_rating IS NUll )
   limit 100 offset ${offset}
   `
 
   console.log('sql ', sql)
-const allSales =  await this.leadsRepository.dataSource.execute(`SELECT *
-FROM ${this.DB_SCHEMA}.report_builder_sales_view
-where 1 = 1
-  AND (market IN(${marq}) OR ${marq} IS NULL)
-  AND (city IN(${cityc}) OR ${cityc} IS NULL)
-  AND (sale_price_mm_new between ${salePriceFrom} and ${salePriceTo} OR ${salePriceFrom}  IS null or ${salePriceTo}  IS NULL)
-  AND (sale_date between ${salePeriodFrom} and ${salePeriodTo} OR ${salePeriodFrom} IS null or ${salePeriodTo} is null)
-  AND (unit_count between ${propertySizeFrom} and ${propertySizeTo} OR ${propertySizeFrom} IS null OR ${propertySizeTo} IS NULL)
-   AND (completion_date between ${completeFrom} and ${completeTo} or ${completeFrom} IS null or ${completeTo} IS NULL)
-    AND (property_asset_class IN (${acc}) or ${acc} IS NUll )
-  AND (impr_rating IN (${imprc}) or ${imprc} IS NUll )
-  limit 100 offset ${offset}
-  `);
+const allSales =  await this.leadsRepository.dataSource.execute(sql);
 
 console.table('data',allSales)
 if (allSales.length > 0 ){
@@ -172,21 +159,14 @@ return marketCity;
    select
 distinct on (rbs.market )
 rbs.market ,
-string_agg(distinct rbs.city , ', ') AS city_list
+string_agg(distinct rbs.city , ', ') AS city_list,
+string_agg(distinct rbs.property_asset_class , ', ') AS property_asset_class,
+string_agg(distinct rbs.impr_rating , ', ') AS impr_rating
 from ${this.DB_SCHEMA}.report_builder_sales rbs
 group by 1
 `);
-const propertyAssetsClass =  await this.leadsRepository.dataSource.execute(`
-select
-distinct property_asset_class
-from ${this.DB_SCHEMA}.report_builder_sales rbs
-`);
-const imprRating =  await this.leadsRepository.dataSource.execute(`
-select
-distinct impr_rating
-from ${this.DB_SCHEMA}.report_builder_sales rbs
-`);
-return {marketCity,propertyAssetsClass,imprRating};
+
+return marketCity;
 
   }
 
