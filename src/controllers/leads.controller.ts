@@ -109,20 +109,112 @@ else {
 
 
   }
+  @get('/reportyBuilder/byOccupancy')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async allOccupancy(
+    @param.query.string('market') market?: string ,
+    @param.query.string('submarket') submarket?: string,
+    @param.query.string('city') city?: string,
+    @param.query.string('propertyClass',{ default: null }) propertyClass?: string,
+    @param.query.number('offset',{ default: 0 }) offset?: number,
+  ): Promise<any> {
+    if (
+      market === undefined &&
+        city === undefined &&
+       submarket === undefined &&
+        propertyClass === undefined
+     )
+     {
+ return 'All Filter data are NUll '
+     }
+
+
+ let marq:any = '';
+ let smc:any = '';
+ let cityc:any = '';
+ let acc:any = '';
+ if ( market === undefined) { marq = null;}
+ else {const mar = market?.split(',');marq = "'" + mar?.join("','") + "'";}
+ if ( city === undefined) { cityc = null;}
+ else {const cit = city?.split(',');cityc = "'" + cit?.join("','") + "'";}
+ if ( propertyClass === undefined) { acc = null;}
+ else {const ac = propertyClass?.split(',');acc = "'" + ac?.join("','") + "'";}
+ if ( submarket === undefined) { smc = null;}
+ else {const sm = submarket?.split(',');smc = "'" + sm?.join("','") + "'";}
+ const sql = `SELECT *
+ FROM ${this.DB_SCHEMA}.report_builder_occupancy
+ where 1 = 1
+   AND (market IN(${marq}) OR market IS NULL)
+   AND (submarket IN(${smc}) OR submarket IS NULL)
+   AND (city IN(${cityc}) OR city IS NULL)
+     AND (property_asset_class IN (${acc}) or property_asset_class IS NUll )
+   limit 100 offset ${offset}
+   `
+
+   console.log('sql ', sql)
+ const allRent =  await this.leadsRepository.dataSource.execute(sql);
+ if (allRent.length > 0 ){
+   return allRent
+ }
+ else {
+   return 'No Data Available'
+ }
+
+  }
   @get('/reportyBuilder/byRent')
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
   async allRent(
-
+    @param.query.string('market') market?: string ,
+    @param.query.string('submarket') submarket?: string,
+    @param.query.string('city') city?: string,
+    @param.query.string('propertyClass',{ default: null }) propertyClass?: string,
+    @param.query.number('offset',{ default: 0 }) offset?: number,
   ): Promise<any> {
-   const allRent =  await this.leadsRepository.dataSource.execute(`
-   select * from ${this.DB_SCHEMA}.report_builder_rent_occupancy where
-   date >= current_date - interval '1' year and
-   date < current_date limit 4000
-`);
+    if (
+      market === undefined &&
+        city === undefined &&
+       submarket === undefined &&
+        propertyClass === undefined
+     )
+     {
+ return 'All Filter data are NUll '
+     }
 
-return allRent;
+
+ let marq:any = '';
+ let smc:any = '';
+ let cityc:any = '';
+ let acc:any = '';
+ if ( market === undefined) { marq = null;}
+ else {const mar = market?.split(',');marq = "'" + mar?.join("','") + "'";}
+ if ( city === undefined) { cityc = null;}
+ else {const cit = city?.split(',');cityc = "'" + cit?.join("','") + "'";}
+ if ( propertyClass === undefined) { acc = null;}
+ else {const ac = propertyClass?.split(',');acc = "'" + ac?.join("','") + "'";}
+ if ( submarket === undefined) { smc = null;}
+ else {const sm = submarket?.split(',');smc = "'" + sm?.join("','") + "'";}
+ const sql = `SELECT *
+ FROM ${this.DB_SCHEMA}.report_builder_rent
+ where 1 = 1
+   AND (market IN(${marq}) OR market IS NULL)
+   AND (submarket IN(${smc}) OR submarket IS NULL)
+   AND (city IN(${cityc}) OR city IS NULL)
+     AND (property_asset_class IN (${acc}) or property_asset_class IS NUll )
+   limit 100 offset ${offset}
+   `
+
+   console.log('sql ', sql)
+ const allRent =  await this.leadsRepository.dataSource.execute(sql);
+ if (allRent.length > 0 ){
+   return allRent
+ }
+ else {
+   return 'No Data Available'
+ }
 
   }
 
@@ -139,8 +231,30 @@ return allRent;
 distinct on (rbs.market )
 rbs.market ,
 string_agg(distinct rbs.city , ', ') AS city_list,
-string_agg(distinct rbs.submarket , ', ') AS submarket_list
-from ${this.DB_SCHEMA}.report_builder_rent_occupancy rbs
+string_agg(distinct rbs.submarket , ', ') AS submarket_list,
+string_agg(distinct rbs.property_asset_class , ', ') AS property_asset_class
+from ${this.DB_SCHEMA}.report_builder_rent rbs
+group by 1
+`);
+
+return marketCity;
+
+  }
+  @get('/reportyBuilder/byOccupancy/marketCity')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async byOccupancy(
+
+  ): Promise<any> {
+   const marketCity =  await this.leadsRepository.dataSource.execute(`
+   select
+distinct on (rbs.market )
+rbs.market ,
+string_agg(distinct rbs.city , ', ') AS city_list,
+string_agg(distinct rbs.submarket , ', ') AS submarket_list,
+string_agg(distinct rbs.property_asset_class , ', ') AS property_asset_class
+from ${this.DB_SCHEMA}.report_builder_occupancy rbs
 group by 1
 `);
 
