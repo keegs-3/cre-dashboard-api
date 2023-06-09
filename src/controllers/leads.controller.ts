@@ -292,6 +292,7 @@ return marketCity;
   async leads(
     @param.query.string('status') status?: string,
     @param.query.string('probability') probability?: string,
+    @param.query.string('market') market?: string,
     @param.query.number('offset') offset?: number,
 
   ): Promise<any> {
@@ -306,6 +307,7 @@ order by property_id , inserted_date desc )
  tls on tlg.property_id =tls.property_id
 where
  tls.status = '${status}'
+ and tlg.market = '${market}'
  and tlg.probability in (${propenq})
  order by case tlg.probability
      when 'Hot' then 1
