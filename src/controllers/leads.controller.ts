@@ -86,9 +86,9 @@ where 1 = 1
   AND (market IN(${marq}) OR market IS NULL)
   AND (city IN(${cityc}) OR city IS NULL)
   AND (sale_price_mm_new between ${salePriceFrom} and ${salePriceTo} OR ${salePriceFrom}  IS null or ${salePriceTo}  IS NULL)
-  AND (sale_date between ${salePeriodFrom} and ${salePeriodTo} OR ${salePeriodFrom} IS null or ${salePeriodTo} is null)
+  AND (sale_date between '${salePeriodFrom}' and '${salePeriodTo}' OR '${salePeriodFrom}' IS null or '${salePeriodTo}' is null)
   AND (unit_count between ${propertySizeFrom} and ${propertySizeTo} OR ${propertySizeFrom} IS null OR ${propertySizeTo} IS NULL)
-   AND (completion_date between ${completeFrom} and ${completeTo} or ${completeFrom} IS null or ${completeTo} IS NULL)
+   AND (completion_date between '${completeFrom}' and '${completeTo}' or '${completeFrom}' IS null or '${completeTo}' IS NULL)
     AND (property_asset_class IN (${acc}) or property_asset_class IS NUll )
   AND (impr_rating IN (${imprc}) or impr_rating IS NUll )
   limit 100 offset ${offset}
@@ -292,24 +292,35 @@ return marketCity;
   async leads(
     @param.query.string('status') status?: string,
     @param.query.string('probability') probability?: string,
+    @param.query.number('offset') offset?: number,
+
   ): Promise<any> {
-   const funnel =  await this.leadsRepository.dataSource.execute(`
-   select *
+
+    const propen = probability?.split(',');
+    const propenq = "'" + propen?.join("','") + "'";
+const sql = `
+select *
 from ${this.DB_SCHEMA}.tgt_lead_gen tlg
 left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
 order by property_id , inserted_date desc )
  tls on tlg.property_id =tls.property_id
 where
  tls.status = '${status}'
- and tlg.probability = '${probability}'
+ and tlg.probability in (${propenq})
  order by case tlg.probability
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
       end
-limit 50
-`);
+limit 50 offset ${offset}
+`
+console.log('sql', sql)
+   const funnel =  await this.leadsRepository.dataSource.execute(sql);
 return funnel;
+
+
+
+
 
   }
   @get('/leads/buyers/byPropertyId')
