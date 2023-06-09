@@ -299,6 +299,8 @@ return marketCity;
 
     const propen = probability?.split(',');
     const propenq = "'" + propen?.join("','") + "'";
+    const mark = market?.split(',');
+    const markc = "'" + mark?.join("','") + "'";
 const sql = `
 select *
 from ${this.DB_SCHEMA}.tgt_lead_gen tlg
@@ -307,7 +309,7 @@ order by property_id , inserted_date desc )
  tls on tlg.property_id =tls.property_id
 where
  tls.status = '${status}'
- and tlg.market = '${market}'
+ and tlg.market in (${markc})
  and tlg.probability in (${propenq})
  order by case tlg.probability
      when 'Hot' then 1
