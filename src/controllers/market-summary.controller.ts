@@ -78,7 +78,7 @@ order by year_month
   ): Promise<any> {
     const mapData = await this.leadsRepository.dataSource.execute(
       `
-      select state , count(distinct "userName")  from ${this.DB_SCHEMA}.user_data_group_by_org
+      select state , count(distinct "username")  from ${this.DB_SCHEMA}.user_data_group_by_org
       where organization = '${organization}'
 group by state
     `,
