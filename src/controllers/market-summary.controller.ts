@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-@authenticate('jwt')
+// @authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
@@ -86,15 +85,16 @@ group by state
     const daysUsersData = await this.leadsRepository.dataSource.execute(
       `
       SELECT DISTINCT ON (DATE_TRUNC('day', ust.inserted_on))
-    DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
-    SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
-    COUNT(*) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_session,
-    ust.state
-FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
-WHERE ust.organization = '${organization}'
-GROUP BY ust.inserted_on, ust.total_time, ust.state
-order by DATE_TRUNC('day', ust.inserted_on) desc
-limit 7
+      DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
+      SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
+      COUNT(*) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_session,
+      ust.state,
+      count(distinct ust.username)
+  FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
+  WHERE ust.organization = '${organization}'
+  GROUP BY ust.inserted_on, ust.total_time, ust.state
+  order by DATE_TRUNC('day', ust.inserted_on) desc
+  limit 7
     `,
     );
 
@@ -106,6 +106,7 @@ limit 7
 COUNT(*) OVER (PARTITION BY DATE_TRUNC('day', u.inserted_on)) AS total_action_eachday
 from ${this.DB_SCHEMA}.user_action_by_org u
 where organization='${organization}'
+order by DATE_TRUNC('day', u.inserted_on) desc
 limit 7
     `,
     );
