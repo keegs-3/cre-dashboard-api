@@ -60,6 +60,7 @@ export class MyUserService implements UserService<User, Credentials>{
       email: user.email,
       role:user.role,
       firstName: user.firstName,
+      userName:user.username,
       organization:user.agent_id
     };
 
