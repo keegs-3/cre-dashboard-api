@@ -4,6 +4,7 @@ import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {
   get,
+  del,
   getJsonSchemaRef,
   getModelSchemaRef,
   param,
@@ -12,7 +13,7 @@ import {
   requestBody,
   response
 } from '@loopback/rest';
-import {SecurityBindings, UserProfile} from '@loopback/security';
+import { UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
 import nodemailer from 'nodemailer';
 import {v4 as uuidv4} from 'uuid';
@@ -69,71 +70,7 @@ export class CReUserController {
     // delete savedUser.password;
     return savedUser;
   }
-  // @authenticate('jwt')
-  // @post('/admin/{name}/adduser', {
-  //   responses: {
-  //     '200': {
-  //       description: 'User',
-  //       content: {
-  //         schema: getJsonSchemaRef(User),
-  //       },
-  //     },
-  //   },
-  // })
-  // async adduser(
-  //   @requestBody() userData: User,
-  //   @param.path.string('name') name?: string,
-  // ) {
-  //   if (name !== '') {
-  //     const data = await this.userRepository.dataSource.execute(`
-  // select * from ${this.DB_SCHEMA}.users u
-  // left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
-  // where username = '${name}'
-  //   `);
-  //     console.log(data);
 
-  //     if (data.length > 0 && data[0].role === 'admin') {
-  //       validateCredentials(_.pick(userData, ['username', 'password']));
-  //       userData.password = await this.hasher.hashPassword(userData.password);
-  //       const savedUser: any = await this.userRepository.create(userData);
-  //       const transporter = nodemailer.createTransport({
-  //         host: 'smtp.gmail.com',
-  //         port: 465,
-  //         secure: true, // true for 465, false for other ports
-  //         auth: {
-  //           user: 'anilchapagain68@gmail.com', // generated ethereal user
-  //           pass: 'fssgodreaquqprwb', // generated ethereal password
-  //         },
-  //       });
-
-  //       // send mail with defined transport object
-  //       const info = await transporter.sendMail({
-  //         from: '"Anil Chapagain" <anilchapagain68@gmail.com>', // sender address
-  //         to: `${savedUser.email}`, // list of receivers
-  //         subject: 'Verify Email', // Subject line
-  //         text: 'Is this your account', // plain text body
-  //         html: `<h2>User added details ${savedUser.username} </h2>`, // html body
-  //       });
-
-  //       console.log('Message sent: %s', info.messageId);
-  //       // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
-  //       // Preview only available when sending through an Ethereal account
-  //       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-  //       // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-  //       return 'Successfully Emailed';
-
-  //       delete savedUser.password;
-  //       delete savedUser.resetkey;
-
-  //       return savedUser;
-  //     } else {
-  //       return `${name} is not a Admin User`;
-  //     }
-  //   } else {
-  //     return 'Pass UserName On Url';
-  //   }
-  // }
 
   @post('/login', {
     responses: {
@@ -160,7 +97,7 @@ export class CReUserController {
     const user = await this.userService.verifyCredentials(credentials);
     // console.log(user);
     const userProfile =  this.userService.convertToUserProfile(user);
-    console.log(userProfile);
+    console.log('from login',userProfile);
 
     const token = await this.jwtService.generateToken(userProfile);
     // const generatedToken = Promise.resolve({token: token})
@@ -205,105 +142,36 @@ export class CReUserController {
     currentUser: UserProfile,
   ): Promise<UserProfile> {
     return Promise.resolve(currentUser);
-//   @inject(SecurityBindings.USER)
-//   currentUserProfile: UserProfile,
-// ): Promise<any> {
-//   return {currentUserProfile};
+
   }
-
-  // return Promise.resolve({token: token})
-//   @authenticate('jwt')
-//   @get('/reset/link')
-//   @response(204, {
-//     description: 'Usersession PATCH success',
-//   })
-//   async updateBy(@param.query.string('email') email: any): Promise<any> {
-//     const data = await this.usersRepository.dataSource.execute(`
-//     select * from ${this.DB_SCHEMA}.users where "email" = '${email}'
-//     `);
-//     console.log(data);
-//     if (data.length < 1) {
-//       return 'Email did not match with any user';
-//     } else {
-//       const resetkey = uuidv4();
-//       console.log(resetkey);
-//       await this.userRepository.dataSource.execute(`
-//   UPDATE ${this.DB_SCHEMA}.users
-// SET   resetkey= '${resetkey}' where email = '${email}'
-
-//   `);
-//       console.log('reset key send sucessfull');
-
-//       const transporter = nodemailer.createTransport({
-//         host: 'smtp.gmail.com',
-//         port: 465,
-//         secure: true, // true for 465, false for other ports
-//         auth: {
-//           user: 'anilchapagain68@gmail.com', // generated ethereal user
-//           pass: 'fssgodreaquqprwb', // generated ethereal password
-//         },
-//       });
-
-//       // send mail with defined transport object
-//       const info = await transporter.sendMail({
-//         from: '"Anil Chapagain" <anilchapagain68@gmail.com>', // sender address
-//         to: `${email}`, // list of receivers
-//         subject: 'Verify Email', // Subject line
-//         text: 'Is this your account', // plain text body
-//         html: `<h2>Reset email ${resetkey}</h2>`, // html body
-//       });
-
-//       console.log('Message sent: %s', info.messageId);
-//       // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
-//       // Preview only available when sending through an Ethereal account
-//       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-//       // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-//       return 'Successfully Emailed';
-//     }
-//   }
-  // @authenticate('jwt')
-  // @patch('/reset/password')
-  // @response(204, {
-  //   description: 'password PATCH success',
-  // })
-  // async updateByre(
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {},
-  //     },
-  //   })
-  //   passwordata: {
-  //     password: string;
-  //     repassword: string;
-  //     resetkey: string;
-  //   },
-  // ): Promise<any> {
-  //   const password = await this.hasher.hashPassword(passwordata.password);
-  //   console.log(password);
-  //   await this.userRepository.dataSource.execute(`
-  //  UPDATE ${this.DB_SCHEMA}.users
-  //     SET   password = '${password}' where resetkey = '${passwordata.resetkey}'`);
-  //   return 'reset successful';
-  // }
+  @get('/users/{org}', {
+    // security: OPERATION_SECURITY_SPEC,
+    responses: {
+      '200': {
+        description: 'The current user profile',
+        content: {
+          'application/json': {
+            schema: getJsonSchemaRef(User),
+          },
+        },
+      },
+    },
+  })
+  async org(
+    @param.path.string('org') org: string,
+  ): Promise<UserProfile> {
+    const userList = await this.userService.getUserOrgList(org);
+    return userList
 
 
-  // @authenticate('jwt')
-  // @patch('/logout/{id}')
-  // @response(204, {
-  //   description: 'Usersession PATCH success',
-  // })
-  // async updateById(
-  //   @param.path.string('id') id: string,
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: getModelSchemaRef(Usersession, {partial: true}),
-  //       },
-  //     },
-  //   })
-  //   usersession: Usersession,
-  // ): Promise<void> {
-  //   await this.usersRepository.updateById(id, usersession);
-  // }
+}
+@del('/users/{id}')
+@response(204, {
+  description: 'User DELETE success',
+})
+async deleteById(@param.path.string('id') id: string): Promise<void> {
+  await this.userRepository.deleteById(id);
+}
+
+
 }

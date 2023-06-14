@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/naming-convention */
 import {UserService} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
@@ -36,6 +38,20 @@ export class MyUserService implements UserService<User, Credentials>{
       throw new HttpErrors.Unauthorized('Wrong username / password');
     return foundUser;
   }
+  async getUserOrgList(org:string): Promise<any> {
+    // implement this method
+
+
+    const foundUsers = await this.userRepository.find({
+      where: {agent_id:org}
+    });
+
+    if (!foundUsers) {
+      throw new HttpErrors.NotFound('No users in the organization');
+    }
+
+    return foundUsers;
+  }
   convertToUserProfile(user: User): UserProfile {
     return {
       [securityId]: user.id!.toString(),
@@ -43,7 +59,9 @@ export class MyUserService implements UserService<User, Credentials>{
       id: user.id,
       email: user.email,
       role:user.role,
-      firstName: user.firstName
+      firstName: user.firstName,
+      userName:user.username,
+      organization:user.agent_id
     };
 
   }

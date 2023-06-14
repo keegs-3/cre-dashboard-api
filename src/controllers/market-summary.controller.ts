@@ -3,8 +3,7 @@
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
-@authenticate('jwt')
+// @authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
@@ -18,28 +17,28 @@ export class MarketSummaryController {
     @param.query.string('state') state?: string,
   ): Promise<any> {
     const deals_Close = await this.leadsRepository.dataSource.execute(`
-    select date, sum (deals_closed) from ${this.DB_SCHEMA}.market_intelligence
-    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-    group by date
-    order by date
+    select "date", sum (deals_closed) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+    group by "date"
+    order by "date"
  `);
  const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
- select date, sum (sale_amount) from ${this.DB_SCHEMA}.market_intelligence
-    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-    group by date
-    order by date
+ select "date", sum (sale_amount) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+    group by "date"
+    order by "date"
 `);
 const underContract = await this.leadsRepository.dataSource.execute(`
-select date, sum (under_contracts) from ${this.DB_SCHEMA}.market_intelligence
-   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-   group by date
-   order by date
+select "date", sum (under_contract) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+   group by "date"
+   order by "date"
 `);
 const expiredContract = await this.leadsRepository.dataSource.execute(`
-select date, sum (expired_contracts) from ${this.DB_SCHEMA}.market_intelligence
-   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-   group by date
-   order by date
+select "date", sum (expired_contracts) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+   group by "date"
+   order by "date"
 `);
     return {
       deals_Close,
@@ -54,11 +53,9 @@ select date, sum (expired_contracts) from ${this.DB_SCHEMA}.market_intelligence
   async findall(): Promise<any> {
     const alldata = await this.leadsRepository.dataSource.execute(`
 
-select * from ${this.DB_SCHEMA}.market_intelligence
-WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW()
-order by date
-
-
+select * from ${this.DB_SCHEMA}.vw_mi_allmetrics
+WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW()
+order by "date" desc
  `);
     return alldata;
   }
@@ -68,13 +65,89 @@ order by date
   async livefeeds(): Promise<any> {
     const feeds = await this.leadsRepository.dataSource.execute(`
 
-    SELECT x.* FROM ${this.DB_SCHEMA}.market_intelligence_sales_feed x order by x.sale_date limit 10`);
+    select property_address,document_amount  from ${this.DB_SCHEMA}.vw_recorder
+order by document_recorded_date desc
+limit 15
+    `);
+    return feeds;
+  }
+  @get('/marketIntelligence/newsFeeds')
+  @response(200, {})
+  async newsfeeds(): Promise<any> {
+    const feeds = await this.leadsRepository.dataSource.execute(`
+
+    select * from ${this.DB_SCHEMA}.mi_news_feed
+order by date_of_feeds desc
+limit 15
+    `);
     return feeds;
   }
 
   @get('/userEngagement')
   @response(200, {})
-  async usersdetails(): Promise<any> {
+  async usersdetails(
+
+    @param.query.string('organization') organization?: string ,
+  ): Promise<any> {
+    const mapData = await this.leadsRepository.dataSource.execute(
+      `
+      select state , count(distinct "username")  from ${this.DB_SCHEMA}.user_data_group_by_org
+      where organization = '${organization}'
+group by state
+    `,
+    );
+    const daysUsersData = await this.leadsRepository.dataSource.execute(
+      `
+      SELECT DISTINCT ON (DATE_TRUNC('day', ust.inserted_on))
+      DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
+      SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
+      COUNT(*) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_session,
+      ust.state,
+      count(distinct ust.username)
+  FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
+  WHERE ust.organization = '${organization}'
+  GROUP BY ust.inserted_on, ust.total_time, ust.state
+  order by DATE_TRUNC('day', ust.inserted_on) desc
+  limit 7
+    `,
+    );
+
+
+
+    const actionEachDay  = await this.leadsRepository.dataSource.execute(
+      `
+      select DISTINCT ON (DATE_TRUNC('day', u.inserted_on))DATE_TRUNC('day', u.inserted_on) AS truncated_date,
+COUNT(*) OVER (PARTITION BY DATE_TRUNC('day', u.inserted_on)) AS total_action_eachday
+from ${this.DB_SCHEMA}.user_action_by_org u
+where organization='${organization}'
+order by DATE_TRUNC('day', u.inserted_on) desc
+limit 7
+    `,
+    );
+    const sessionUserTime = await this.leadsRepository.dataSource.execute(
+      `
+      SELECT distinct ust.username,
+    DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
+    SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
+    COUNT(*) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_session
+FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
+WHERE ust.organization = '${organization}'
+GROUP BY ust.username,ust.inserted_on, ust.total_time, ust.state
+order by DATE_TRUNC('day', ust.inserted_on) desc
+    `,
+    );
+    const data = {
+      actionEachDay,
+      daysUsersData,
+      mapData,
+      sessionUserTime
+    };
+
+    return data;
+  }
+  @get('/userEngagement/old')
+  @response(200, {})
+  async usersdetailsold(): Promise<any> {
     const mapData = await this.leadsRepository.dataSource.execute(
       `
       select state , count(distinct "userName")  from ${this.DB_SCHEMA}.user_engagement ue
