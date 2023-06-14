@@ -30,8 +30,8 @@ export class LeadsController {
     @param.query.string('city') city?: string,
     @param.query.number('salePriceFrom') salePriceFrom?: number,
     @param.query.number('salePriceTo') salePriceTo?: number,
-    @param.query.date('salePeriodFrom', {default: null}) salePeriodFrom?: Date,
-    @param.query.date('salePeriodTo', {default: null}) salePeriodTo?: Date,
+    @param.query.string('salePeriodFrom', {default: null}) salePeriodFrom?: string,
+    @param.query.string('salePeriodTo', {default: null}) salePeriodTo?: string,
     @param.query.number('offset', {default: 0}) offset?: number,
   ): Promise<any> {
     let marq: any = '';
@@ -663,8 +663,7 @@ group by 1
    select
    distinct on (vr.state)
    vr.state ,
-   string_agg(distinct vr.city, ',') AS city_list,
-   string_agg(distinct vr.address, ',') AS address_list
+   string_agg(distinct vr.city, ',') AS city_list
    from ${this.DB_SCHEMA}.vw_tax_assessor vr
    group by 1
 `);

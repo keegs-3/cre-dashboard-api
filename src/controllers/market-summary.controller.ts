@@ -17,28 +17,28 @@ export class MarketSummaryController {
     @param.query.string('state') state?: string,
   ): Promise<any> {
     const deals_Close = await this.leadsRepository.dataSource.execute(`
-    select date, sum (deals_closed) from ${this.DB_SCHEMA}.market_intelligence
-    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-    group by date
-    order by date
+    select "date", sum (deals_closed) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+    group by "date"
+    order by "date"
  `);
  const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
- select date, sum (sale_amount) from ${this.DB_SCHEMA}.market_intelligence
-    WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-    group by date
-    order by date
+ select "date", sum (sale_amount) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+    group by "date"
+    order by "date"
 `);
 const underContract = await this.leadsRepository.dataSource.execute(`
-select date, sum (under_contracts) from ${this.DB_SCHEMA}.market_intelligence
-   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-   group by date
-   order by date
+select "date", sum (under_contract) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+   group by "date"
+   order by "date"
 `);
 const expiredContract = await this.leadsRepository.dataSource.execute(`
-select date, sum (expired_contracts) from ${this.DB_SCHEMA}.market_intelligence
-   WHERE date BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and state_abbrevation = '${state}'
-   group by date
-   order by date
+select "date", sum (expired_contracts) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+   group by "date"
+   order by "date"
 `);
     return {
       deals_Close,
@@ -54,8 +54,8 @@ select date, sum (expired_contracts) from ${this.DB_SCHEMA}.market_intelligence
     const alldata = await this.leadsRepository.dataSource.execute(`
 
 select * from ${this.DB_SCHEMA}.vw_mi_allmetrics
-WHERE year_month BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW()
-order by year_month
+WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW()
+order by "date" desc
  `);
     return alldata;
   }
@@ -65,7 +65,21 @@ order by year_month
   async livefeeds(): Promise<any> {
     const feeds = await this.leadsRepository.dataSource.execute(`
 
-    SELECT x.* FROM ${this.DB_SCHEMA}.market_intelligence_sales_feed x order by x.sale_date limit 10`);
+    select property_address,document_amount  from ${this.DB_SCHEMA}.vw_recorder
+order by document_recorded_date desc
+limit 15
+    `);
+    return feeds;
+  }
+  @get('/marketIntelligence/newsFeeds')
+  @response(200, {})
+  async newsfeeds(): Promise<any> {
+    const feeds = await this.leadsRepository.dataSource.execute(`
+
+    select * from ${this.DB_SCHEMA}.mi_news_feed
+order by date_of_feeds desc
+limit 15
+    `);
     return feeds;
   }
 
