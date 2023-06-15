@@ -55,6 +55,10 @@ export class User extends Entity {
     type: 'date',
   })
   agent_map_date: Date;
+  @property({
+    type: 'string',
+  })
+  state?: String;
 
 
 

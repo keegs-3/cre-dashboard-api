@@ -66,6 +66,7 @@ export class CReUserController {
   async signup(@requestBody() userData: User) {
     validateCredentials(_.pick(userData, ['email', 'password']));
     userData.password = await this.hasher.hashPassword(userData.password);
+    
     const savedUser = await this.userService.createUser(userData)
     // delete savedUser.password;
     return savedUser;
@@ -92,36 +93,13 @@ export class CReUserController {
     },
   })
   async login(@requestBody() credentials: Credentials): Promise<any> {
-
-    // make sure user exist,password should be valid
     const user = await this.userService.verifyCredentials(credentials);
-    // console.log(user);
     const userProfile =  this.userService.convertToUserProfile(user);
     console.log('from login',userProfile);
 
     const token = await this.jwtService.generateToken(userProfile);
-    // const generatedToken = Promise.resolve({token: token})
-    // const session = await this.userRepository.execute(
-    //   `INSERT INTO ${this.DB_SCHEMA}.user_session
-    //   (name,  "session")
-    //   VALUES('${credentials.username}' ,'${token}') returning *;
-    //   `,
-    // );
-    // console.log('insert into user session');
-    // const userdata = await this.userRepository.execute(
-    //   `select * from ${this.DB_SCHEMA}.users u
-    //   left join ${this.DB_SCHEMA}.roles r on u."role" = r.id
-    //   where username = '${userProfile.name}'  `,
-    // );
-    // const userList = await this.userRepository.execute(
-    //   `select u.username from cre.users u  where u.agent_map_to  = '${userProfile.name}' `,
-    // );
-    // delete userdata[0].password;
 
-    // return {token, userdata, session,userList};
     return {token};
-
-    // return Promise.resolve({token: token})
   }
   @authenticate('jwt')
   @get('/users/me', {
