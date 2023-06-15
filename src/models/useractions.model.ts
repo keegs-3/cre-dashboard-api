@@ -2,7 +2,7 @@ import {Entity, model, property} from '@loopback/repository';
 
 @model({
   settings: {
-    postgresql: {schema: process.env.DB_SCHEMA, table: 'usersactions'},
+    postgresql: {schema: process.env.DB_SCHEMA, table: 'useractions'},
   },
 })
 export class Useractions extends Entity {
@@ -16,17 +16,13 @@ export class Useractions extends Entity {
   @property({
     type: 'string',
   })
-  name?: string;
+  username?: string;
 
   @property({
     type: 'object',
   })
   actions?: object;
 
-  @property({
-    type: 'date',
-  })
-  updatedon?: string;
 
   constructor(data?: Partial<Useractions>) {
     super(data);
