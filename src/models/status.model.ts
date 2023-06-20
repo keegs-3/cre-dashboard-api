@@ -16,18 +16,14 @@ export class Status extends Entity {
   @property({
     type: 'string',
   })
-  user?: string;
+  userName?: string;
 
   @property({
     type: 'string',
   })
   status?: string;
 
-  @property({
-    type: 'date',
-    required: true,
-  })
-  inserted_date: string;
+ 
   @property({
     type: 'string',
   })
