@@ -14,12 +14,21 @@ export class Buyerscontact extends Entity {
     required: true,
   })
   property_id: string;
+  @property({
+    type: 'string',
+  })
+  userName: string;
 
   @property({
     type: 'string',
     required: true,
   })
   buyer_name: string;
+  @property({
+    type: 'string',
+    required: true,
+  })
+  addNotes: string;
 
   @property({
     type: 'boolean',
