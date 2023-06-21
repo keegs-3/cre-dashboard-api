@@ -702,33 +702,44 @@ SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw
 where agent_id = '${org}'
 `  )
 if (count.length >= 1){
+const s =  `
+SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+where l.tax_assessor_id not in (
+  SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
+  where agent_id = '${org}'
+)
+AND (probability IN (${propenq}) )
+AND (state IN (${markc}) )
+limit 100 offset ${offset}
+`;
 
-  const sql = await this.leadsRepository.dataSource.execute(
-    `
-    SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
-    where l.tax_assessor_id not in (
-      SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
-      where agent_id = '${org}'
-    )
-    AND (probability IN (${propenq}) )
-    AND (state IN (${markc}) )
-    limit 100 offset ${offset}
-
-    `  )
+console.log('ssss',s)
+  const sql = await this.leadsRepository.dataSource.execute(s)
+  if (sql.length >= 1){
     return sql
+  }
+  else {
+    return 'No data Matched'
+  }
 
 }
 else {
-  const sql = await this.leadsRepository.dataSource.execute(
-    `
-    SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
-    where
-    AND (probability IN (${propenq}) )
-    AND (state IN (${markc}) )
-    limit 100 offset ${offset}
+  const s =  `
+  SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+  where
+   (probability IN (${propenq}) )
+  AND (state IN (${markc}) )
+  limit 100 offset ${offset}
 
-    `  )
-return sql
+  `;
+  console.log('sssss',s)
+  const sql = await this.leadsRepository.dataSource.execute(s)
+if (sql.length >= 1){
+  return sql
+}
+else {
+  return 'No data Matched'
+}
 
 }
 
