@@ -65,7 +65,7 @@ order by "date" desc
   async livefeeds(): Promise<any> {
     const feeds = await this.leadsRepository.dataSource.execute(`
 
-    select property_address,document_amount  from ${this.DB_SCHEMA}.vw_recorder
+    select property_address,document_amount,document_recorded_date  from ${this.DB_SCHEMA}.vw_recorder
 order by document_recorded_date desc
 limit 15
     `);
@@ -102,12 +102,12 @@ group by state
       DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
       SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
       (select COUNT(distinct us.session) AS total_session
-      from dev_target.user_data_group_by_org us
+      from ${this.DB_SCHEMA}.user_data_group_by_org us
       where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
       ),
       ust.state,
       (select COUNT(distinct us.username)
-      from dev_target.user_data_group_by_org us
+      from ${this.DB_SCHEMA}.user_data_group_by_org us
       where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
       )
   FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
@@ -134,15 +134,17 @@ limit 7
     const sessionUserTime = await this.leadsRepository.dataSource.execute(
       `
       SELECT distinct ust.username,
+      ust.firstname,
+      ust.lastname,
     DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
     SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
     (select COUNT(distinct us.session) AS total_session
-    from dev_target.user_data_group_by_org us
+    from ${this.DB_SCHEMA}.user_data_group_by_org us
     where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
     )
 FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
 WHERE ust.organization = '${organization}'
-GROUP BY ust.username,ust.inserted_on, ust.total_time, ust.state
+GROUP BY ust.username,ust.inserted_on, ust.total_time, ust.state,ust.firstname, ust.lastname
 order by DATE_TRUNC('day', ust.inserted_on) desc
     `,
     );
