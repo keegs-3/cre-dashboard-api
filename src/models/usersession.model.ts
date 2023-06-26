@@ -28,7 +28,11 @@ export class Usersession extends Entity {
     type: 'string',
   })
   page?: string;
- 
+  @property({
+    type: 'string',
+  })
+  session?: string;
+
 
 
   constructor(data?: Partial<Usersession>) {

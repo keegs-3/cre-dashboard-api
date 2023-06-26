@@ -24,7 +24,8 @@ export class JWTService {
     let token = '';
     try {
       token = await signAsync(userProfile, this.jwtSecret, {
-        expiresIn: this.expiresSecret
+        expiresIn: this.expiresSecret,
+        subject: userProfile[securityId],
       });
       return token;
     } catch (err) {
@@ -47,7 +48,7 @@ export class JWTService {
       const decryptedToken = await verifyAsync(token, this.jwtSecret);
       userProfile = Object.assign(
         {[securityId]: '', id: '', name: '', email : '', role: '',firstName:'',organization:'',userName:''},
-        {[securityId]: decryptedToken.id, id: decryptedToken.id, name: decryptedToken.name,email: decryptedToken.email, role: decryptedToken.role, firstName: decryptedToken.firstName,organization:decryptedToken.organization,userName:decryptedToken.userName}
+        {[securityId]: decryptedToken.sub, id: decryptedToken.sub, name: decryptedToken.name,email: decryptedToken.email, role: decryptedToken.role, firstName: decryptedToken.firstName,organization:decryptedToken.organization,userName:decryptedToken.userName}
       );
     }
     catch (err) {

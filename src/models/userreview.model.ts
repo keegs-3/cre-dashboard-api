@@ -1,6 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'user_reviews'}}, })
+@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'users_chats'}}, })
 export class Userreview extends Entity {
   @property({
     type: 'number',
@@ -12,17 +12,14 @@ export class Userreview extends Entity {
   @property({
     type: 'string',
   })
-  user_id?: string;
+  userName?: string;
 
-  @property({
-    type: 'object',
-  })
-  review?: object;
+
 
   @property({
     type: 'string',
   })
-  other_comments?: string;
+  chats?: string;
 
 
   constructor(data?: Partial<Userreview>) {

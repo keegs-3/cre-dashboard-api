@@ -679,33 +679,141 @@ group by 1
     @param.query.string('status') status?: string,
     @param.query.string('probability') probability?: string,
     @param.query.string('market') market?: string,
+    @param.query.string('org') org?: string,
     @param.query.number('offset') offset?: number,
   ): Promise<any> {
-    const propen = probability?.split(',');
-    const propenq = "'" + propen?.join("','") + "'";
-    const mark = market?.split(',');
-    const markc = "'" + mark?.join("','") + "'";
-    const sql = `
-select *
-from ${this.DB_SCHEMA}.tgt_lead_gen tlg
-left outer join (select distinct on(property_id)property_id ,status ,inserted_date from ${this.DB_SCHEMA}.tgt_lead_status
-order by property_id , inserted_date desc )
- tls on tlg.property_id =tls.property_id
-where
- tls.status = '${status}'
- and tlg.market in (${markc})
- and tlg.probability in (${propenq})
- order by case tlg.probability
+
+
+
+
+      const propen = probability?.split(',');
+      const  propenq = "'" + propen?.join("','") + "'";
+
+
+
+      const mark = market?.split(',');
+       const markc = "'" + mark?.join("','") + "'";
+
+
+if (status === 'LEAD'){
+  const count = await this.leadsRepository.dataSource.execute(
+`
+SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw
+where agent_id = '${org}'
+`  )
+if (count.length >= 1){
+const s =  `
+SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+where l.tax_assessor_id not in (
+  SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
+  where agent_id = '${org}'
+)
+AND (probability IN (${propenq}) )
+AND (state IN (${markc}) )
+order by case probability
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
       end
-limit 50 offset ${offset}
+limit 100 offset ${offset}
 `;
-    console.log('sql', sql);
-    const funnel = await this.leadsRepository.dataSource.execute(sql);
-    return funnel;
+
+console.log('ssss',s)
+  const sql = await this.leadsRepository.dataSource.execute(s)
+  if (sql.length >= 1){
+    return sql
   }
+  else {
+    return 'No data Matched'
+  }
+
+}
+else {
+  const s =  `
+  SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+  where
+   (probability IN (${propenq}) )
+  AND (state IN (${markc}) )
+  order by case probability
+     when 'Hot' then 1
+      when 'Warm' then 2
+      when 'Cold' then 3
+      end
+  limit 100 offset ${offset}
+
+  `;
+  console.log('sssss',s)
+  const sql = await this.leadsRepository.dataSource.execute(s)
+if (sql.length >= 1){
+  return sql
+}
+else {
+  return 'No data Matched'
+}
+
+}
+
+}
+else{
+  const s =  `
+  SELECT DISTINCT ON (l.tax_assessor_id) l.*
+  FROM ${this.DB_SCHEMA}.lead_user_org_vw l
+  WHERE l.agent_id = '${org}'
+and status = '${status}'
+AND (probability IN (${propenq}) )
+AND (state IN (${markc}) )
+  ORDER BY l.tax_assessor_id, l.insert_date DESC;
+
+  `;
+  console.log('sql ',s)
+  const sql = await this.leadsRepository.dataSource.execute(s)
+if(sql.length >= 1){
+  return sql}
+else{
+  return 'No data Found'
+}
+
+
+
+
+}
+
+
+
+
+
+  }
+  @get('/leads/market')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async market(
+
+  ): Promise<any> {
+
+    const sql = await this.leadsRepository.dataSource.execute(
+      `
+      SELECT distinct state from ${this.DB_SCHEMA}.leads_status_leads_vw
+
+      `  )
+
+
+
+
+
+
+
+
+return sql;
+
+
+
+
+
+  }
+
+
+
   @get('/leads/buyers/byPropertyId')
   @response(200, {
     description: 'Array of buyers page chart model instances',
