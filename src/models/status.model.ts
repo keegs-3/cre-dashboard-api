@@ -26,9 +26,9 @@ export class Status extends Entity {
 
 
   @property({
-    type: 'string',
+    type: 'number',
   })
-  deal_value: string;
+  deal_value: Number;
 
 
   constructor(data?: Partial<Status>) {
