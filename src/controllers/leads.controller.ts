@@ -710,6 +710,11 @@ where l.tax_assessor_id not in (
 )
 AND (probability IN (${propenq}) )
 AND (state IN (${markc}) )
+order by case probability
+     when 'Hot' then 1
+      when 'Warm' then 2
+      when 'Cold' then 3
+      end
 limit 100 offset ${offset}
 `;
 
@@ -729,6 +734,11 @@ else {
   where
    (probability IN (${propenq}) )
   AND (state IN (${markc}) )
+  order by case probability
+     when 'Hot' then 1
+      when 'Warm' then 2
+      when 'Cold' then 3
+      end
   limit 100 offset ${offset}
 
   `;
