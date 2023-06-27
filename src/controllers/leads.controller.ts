@@ -841,8 +841,8 @@ where tlbr.property_id = '${propertyId}'
   async map(@param.query.string('segment') segment?: string): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
    select owner_state , count(distinct owner_name)as owner_name
-from ${this.DB_SCHEMA}.sellers_buyers_details sbd
-where segment = '${segment}'
+from ${this.DB_SCHEMA}.vw_owner_profiles sbd
+where owner_segment = '${segment}'
 group by owner_state
 `);
     return funnel;
@@ -884,12 +884,11 @@ limit 5
   })
   async bschart(): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
-   select segment , count(distinct owner_name)as owner_name,
+    select owner_segment , count(distinct owner_name)as owner_name,
     sum(total_property_owned)as total_property_owned,
-sum("M12_Highest_Transaction")as "M12_Highest_Transaction",
-round( avg(dollar_value),2)  as avgDollarValue
-from ${this.DB_SCHEMA}.sellers_buyers_details sbd
-group by segment
+ round(cast (sum(avg_monetary)/count(distinct owner_name)AS numeric),2)  as avgDollarValue
+from ${this.DB_SCHEMA}.vw_owner_profiles sbd
+group by owner_segment
 `);
     return funnel;
   }
