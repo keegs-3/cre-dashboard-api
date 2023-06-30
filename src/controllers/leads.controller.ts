@@ -756,13 +756,24 @@ else {
 }
 else{
   const s =  `
+  SELECT *
+FROM (
   SELECT DISTINCT ON (l.tax_assessor_id) l.*
   FROM ${this.DB_SCHEMA}.lead_user_org_vw l
   WHERE l.agent_id = '${org}'
-and status = '${status}'
-AND (probability IN (${propenq}) )
-AND (state IN (${markc}) )
-  ORDER BY l.tax_assessor_id, l.insert_date DESC;
+  ORDER BY l.tax_assessor_id, l.insert_date DESC
+) subquery
+WHERE subquery.status = '${status}'
+  AND subquery.probability IN (${propenq})
+  AND subquery.state IN (${markc})
+  order by case probability
+  when 'Hot' then 1
+   when 'Warm' then 2
+   when 'Cold' then 3
+   end
+limit 100 offset ${offset}
+
+;
 
   `;
   console.log('sql ',s)
