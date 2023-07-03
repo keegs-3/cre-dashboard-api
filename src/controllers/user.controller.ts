@@ -66,7 +66,7 @@ export class CReUserController {
   async signup(@requestBody() userData: User) {
     validateCredentials(_.pick(userData, ['email', 'password']));
     userData.password = await this.hasher.hashPassword(userData.password);
-    
+
     const savedUser = await this.userService.createUser(userData)
     // delete savedUser.password;
     return savedUser;
@@ -122,6 +122,8 @@ export class CReUserController {
     return Promise.resolve(currentUser);
 
   }
+  @authenticate('jwt')
+
   @get('/users/{org}', {
     // security: OPERATION_SECURITY_SPEC,
     responses: {
@@ -143,6 +145,8 @@ export class CReUserController {
 
 
 }
+@authenticate('jwt')
+
 @del('/users/{id}')
 @response(204, {
   description: 'User DELETE success',

@@ -3,7 +3,8 @@
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-// @authenticate('jwt')
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
