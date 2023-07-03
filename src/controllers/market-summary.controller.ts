@@ -59,6 +59,40 @@ order by "date" desc
  `);
     return alldata;
   }
+  @get('/marketIntelligence/realTime')
+  @response(200, {})
+  async findTime(
+    @param.query.string('org') org?: string,
+  ): Promise<any> {
+    const alldata = await this.leadsRepository.dataSource.execute(`
+
+    SELECT
+    luov.state,
+    SUM(luov.deal_value) AS dealClosed,
+    DATE_TRUNC('month', luov.insert_date) AS month,
+    COUNT(CASE WHEN luov.status = 'CLOSED' THEN 1 END) AS closedCount,
+    COUNT(CASE WHEN luov.status = 'UNDER AGREEMENT' OR luov.status = 'OFFER ACCEPTED' THEN 1 END) AS underContracts,
+    COUNT(CASE WHEN (CURRENT_DATE - luov.insert_date) > INTERVAL '90 days' THEN 1 END) AS expiredContracts
+  FROM
+    ${this.DB_SCHEMA}.lead_user_org_vw luov
+  WHERE
+    (luov.tax_assessor_id, luov.insert_date) IN (
+      SELECT
+        tax_assessor_id,
+        MAX(insert_date)
+      FROM
+        ${this.DB_SCHEMA}.lead_user_org_vw
+      WHERE
+        agent_id = '${org}'
+      GROUP BY
+        tax_assessor_id
+    )
+  GROUP BY
+    luov.state,
+    month;
+ `);
+    return alldata;
+  }
 
   @get('/marketIntelligence/liveFeeds')
   @response(200, {})
