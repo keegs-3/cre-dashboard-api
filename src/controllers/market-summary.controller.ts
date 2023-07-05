@@ -55,7 +55,7 @@ select "date", sum (expired_contracts) from ${this.DB_SCHEMA}.vw_mi_allmetrics
     const alldata = await this.leadsRepository.dataSource.execute(`
 
 select * from ${this.DB_SCHEMA}.vw_mi_allmetrics
-WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW()
+WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
 order by "date" desc
  `);
     return alldata;
