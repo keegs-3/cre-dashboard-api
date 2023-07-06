@@ -3,8 +3,8 @@ import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {
-  get,
   del,
+  get,
   getJsonSchemaRef,
   getModelSchemaRef,
   param,
@@ -13,16 +13,14 @@ import {
   requestBody,
   response
 } from '@loopback/rest';
-import { UserProfile} from '@loopback/security';
+import {UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
 import nodemailer from 'nodemailer';
-import {v4 as uuidv4} from 'uuid';
 import {
   PasswordHasherBindings,
   TokenServiceBindings,
   UserServiceBindings
 } from '../keys';
-import {Usersession} from '../models';
 import {User} from '../models/user.model';
 import {UsersessionRepository} from '../repositories';
 import {Credentials, UserRepository} from '../repositories/user.repository';
@@ -64,10 +62,47 @@ export class CReUserController {
     },
   })
   async signup(@requestBody() userData: User) {
+
+    const pass = userData.password;
     validateCredentials(_.pick(userData, ['email', 'password']));
     userData.password = await this.hasher.hashPassword(userData.password);
 
     const savedUser = await this.userService.createUser(userData)
+// for email
+const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true, // true for 465, false for other ports
+          auth: {
+            user: 'anil.chapagain@cardinality.ai', // generated ethereal user
+            pass: 'eldzjrbbefsfnyfm', // generated ethereal password
+          },
+        });
+
+        // send mail with defined transport object
+        const info = await transporter.sendMail({
+          from: '"Anil Chapagain" <anil.chapagain@cardinality.ai>', // sender address
+          to: `${savedUser.email}`, // list of receivers
+          subject: 'Verify Email', // Subject line
+          text: 'Is this your account', // plain text body
+          html: `<h1>User Login Details</h1>
+          <h2>email: ${savedUser.email} </h2>
+          <h2>Password: ${pass} </h2>
+          `, // html body
+        });
+
+        console.log('Message sent: %s', info.messageId);
+        // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+
+        // Preview only available when sending through an Ethereal account
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+
+
+
+
+
+
     // delete savedUser.password;
     return savedUser;
   }
@@ -153,6 +188,25 @@ export class CReUserController {
 })
 async deleteById(@param.path.string('id') id: string): Promise<void> {
   await this.userRepository.deleteById(id);
+}
+@patch('/user/password/{id}')
+@response(204, {
+  description: 'Usersession PATCH success',
+})
+async updateById(
+  @param.path.string('id') id: string,
+  @requestBody({
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(User, {partial: true}),
+      },
+    },
+  })
+  usersession: User,
+
+): Promise<void> {
+  usersession.password = await this.hasher.hashPassword(usersession.password)
+  await this.userRepository.updateById(id, usersession);
 }
 
 
