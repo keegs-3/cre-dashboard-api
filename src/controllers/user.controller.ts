@@ -6,7 +6,6 @@ import {
   del,
   get,
   getJsonSchemaRef,
-  getModelSchemaRef,
   param,
   patch,
   post,
@@ -83,11 +82,109 @@ const transporter = nodemailer.createTransport({
         const info = await transporter.sendMail({
           from: '"Anil Chapagain" <anil.chapagain@cardinality.ai>', // sender address
           to: `${savedUser.email}`, // list of receivers
-          subject: 'Verify Email', // Subject line
+          subject: 'Nedl User Details', // Subject line
           text: 'Is this your account', // plain text body
-          html: `<h1>User Login Details</h1>
-          <h2>email: ${savedUser.email} </h2>
-          <h2>Password: ${pass} </h2>
+          html: `
+
+          <!DOCTYPE html>
+<html>
+<head>
+  <title>Nedl OnBoarding</title>
+  <style>
+    /* Reset default styles */
+    body,
+    html,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    ul,
+    ol,
+    li {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+      color: #333333;
+    }
+
+    /* Container */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    /* Heading */
+    h1 {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    /* Paragraph */
+    p {
+      margin-bottom: 20px;
+    }
+
+    /* Button */
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    /* Footer */
+    .footer {
+      display:flex;
+      justify-content: center;
+      gap:20px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #dddddd;
+      text-align: center;
+
+    }
+    .footer p {
+      line-height:40px
+    }
+    .logo {
+width:150px;
+height:30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Nedl</h1>
+    <p>Dear Subscriber,</p>
+    <p>Thank you for subscribing to Nedl. Stay tuned for the latest updates and news!</p>
+    <p>
+      <a href="https://nedldev.goldfinch.ai" class="button" style="color:#fff;">Connect With Us</a>
+    </p>
+    <h1>User Login Details</h1>
+    <p>email: ${savedUser.email} </p>
+    <p>Password: ${pass} <p>
+    <div class="footer">
+      <p>© 2023</p> <img class="logo" src="https://nedldev.goldfinch.ai/images/lattest/newlogo.png">.<p> All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+
           `, // html body
         });
 
@@ -189,24 +286,54 @@ const transporter = nodemailer.createTransport({
 async deleteById(@param.path.string('id') id: string): Promise<void> {
   await this.userRepository.deleteById(id);
 }
+// @patch('/user/password/{id}')
+// @response(204, {
+//   description: 'Usersession PATCH success',
+// })
+// async updateById(
+//   @param.path.string('id') id: string,
+//   @requestBody({
+//     content: {
+//       'application/json': {
+//         schema: getModelSchemaRef(User, {partial: true}),
+//       },
+//     },
+//   })
+//   usersession: User,
+
+// ): Promise<void> {
+//   usersession.password = await this.hasher.hashPassword(usersession.password)
+//   await this.userRepository.updateById(id, usersession);
+// }
 @patch('/user/password/{id}')
 @response(204, {
   description: 'Usersession PATCH success',
 })
 async updateById(
   @param.path.string('id') id: string,
-  @requestBody({
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(User, {partial: true}),
-      },
-    },
-  })
-  usersession: User,
+  @requestBody()
+    request: {previousPassword: string,User:User}
 
-): Promise<void> {
-  usersession.password = await this.hasher.hashPassword(usersession.password)
-  await this.userRepository.updateById(id, usersession);
+
+
+): Promise<any> {
+  const user = await this.userRepository.findById(id);
+
+  // Compare previous password if available
+  if (user && user.password) {
+    const previousPasswordMatches = await this.hasher.comparePassword(
+      request.previousPassword,
+      user.password
+    );
+
+    if (!previousPasswordMatches){
+      return 'Previous password does not match';
+    }
+  }
+
+  request.User.password = await this.hasher.hashPassword(request.User.password);
+  await this.userRepository.updateById(id, request.User);
+  return 'Successfully Changed Password'
 }
 
 
