@@ -168,13 +168,13 @@ height:30px;
 <body>
   <div class="container">
     <h1>Welcome to Nedl</h1>
-    <p>Dear ${savedUser.lastName},${savedUser.firstName}</p>
-    <p>You have been added to the ${savedUser.agent_id} organization on the Nedl platform</p>
-    <i>Click the link below and use the provided credentials to log-in.</i>
+    <p>Dear <b>${savedUser.lastName},${savedUser.firstName}</b></p>
+    <p>You have been added to the <b>${savedUser.agent_id}</b> organization on the Nedl platform</p>
+    <i>Click the button below and use the provided credentials to log-in.</i>
     <p>
       <a href="https://nedldev.goldfinch.ai" class="button" style="color:#fff;">Click here to Start</a>
     </p>
-    <h1>User Login Details</h1>
+
     <p>email: ${savedUser.email} </p>
     <p>Password: ${pass} <p>
     <div class="footer">
