@@ -73,14 +73,14 @@ const transporter = nodemailer.createTransport({
           port: 465,
           secure: true, // true for 465, false for other ports
           auth: {
-            user: 'anil.chapagain@cardinality.ai', // generated ethereal user
-            pass: 'eldzjrbbefsfnyfm', // generated ethereal password
+            user: 'support@nedl.us', // generated ethereal user
+            pass: 'jugakgustxkdlucd', // generated ethereal password
           },
         });
 
         // send mail with defined transport object
         const info = await transporter.sendMail({
-          from: '"Anil Chapagain" <anil.chapagain@cardinality.ai>', // sender address
+          from: '"Nedl Support" <support@nedl.us>', // sender address
           to: `${savedUser.email}`, // list of receivers
           subject: 'Nedl User Details', // Subject line
           text: 'Is this your account', // plain text body
@@ -142,6 +142,7 @@ const transporter = nodemailer.createTransport({
       color: #ffffff;
       text-decoration: none;
       border-radius: 5px;
+      margin-top:20px;
     }
 
     /* Footer */
@@ -167,10 +168,11 @@ height:30px;
 <body>
   <div class="container">
     <h1>Welcome to Nedl</h1>
-    <p>Dear Subscriber,</p>
-    <p>Thank you for subscribing to Nedl. Stay tuned for the latest updates and news!</p>
+    <p>Dear ${savedUser.lastName},${savedUser.firstName}</p>
+    <p>You have been added to the ${savedUser.agent_id} organization on the Nedl platform</p>
+    <i>Click the link below and use the provided credentials to log-in.</i>
     <p>
-      <a href="https://nedldev.goldfinch.ai" class="button" style="color:#fff;">Connect With Us</a>
+      <a href="https://nedldev.goldfinch.ai" class="button" style="color:#fff;">Click here to Start</a>
     </p>
     <h1>User Login Details</h1>
     <p>email: ${savedUser.email} </p>
