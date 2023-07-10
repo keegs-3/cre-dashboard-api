@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
 @authenticate('jwt')
 export class MarketSummaryController {
   constructor(
@@ -144,6 +144,7 @@ group by state
       (select COUNT(distinct us.username)
       from ${this.DB_SCHEMA}.user_data_group_by_org us
       where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
+      and us.organization = '${organization}'
       )
   FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
   WHERE ust.organization = '${organization}'
@@ -168,19 +169,23 @@ limit 7
     );
     const sessionUserTime = await this.leadsRepository.dataSource.execute(
       `
-      SELECT distinct ust.username,
+      SELECT
+      DISTINCT ust.username,
       ust.firstname,
       ust.lastname,
-    DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
-    SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
-    (select COUNT(distinct us.session) AS total_session
-    from ${this.DB_SCHEMA}.user_data_group_by_org us
-    where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
-    )
-FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
-WHERE ust.organization = '${organization}'
-GROUP BY ust.username,ust.inserted_on, ust.total_time, ust.state,ust.firstname, ust.lastname
-order by DATE_TRUNC('day', ust.inserted_on) desc
+      DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
+      SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY ust.username, DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
+      (
+        SELECT COUNT(DISTINCT us.session) AS total_session
+        FROM ${this.DB_SCHEMA}.user_data_group_by_org us
+        WHERE DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
+          AND ust.username = us.username
+      ) AS total_session
+    FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
+    WHERE ust.organization = '${organization}'
+    AND ust.inserted_on >= CURRENT_DATE - INTERVAL '6 days'
+    GROUP BY ust.username, ust.inserted_on, ust.total_time, ust.state, ust.firstname, ust.lastname
+    ORDER BY truncated_date DESC;
     `,
     );
     const data = {
