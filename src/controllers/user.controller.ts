@@ -465,7 +465,7 @@ SET   resetkey= '${resetkey}' where email = '${email}'
 
           <i>Click the button below and use the provided reset key  to reset your password.</i>
           <p>
-            <a href="https://nedldev.goldfinch.ai" class="button" style="color:#fff;">Click here to Rest</a>
+            <a href="https://nedldev.goldfinch.ai/forgotpassword" class="button" style="color:#fff;">Click here to Rest</a>
           </p>
 
 
