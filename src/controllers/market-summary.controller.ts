@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-// @authenticate('jwt')
+@authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
@@ -54,8 +55,42 @@ select "date", sum (expired_contracts) from ${this.DB_SCHEMA}.vw_mi_allmetrics
     const alldata = await this.leadsRepository.dataSource.execute(`
 
 select * from ${this.DB_SCHEMA}.vw_mi_allmetrics
-WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW()
+WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
 order by "date" desc
+ `);
+    return alldata;
+  }
+  @get('/marketIntelligence/realTime')
+  @response(200, {})
+  async findTime(
+    @param.query.string('org') org?: string,
+  ): Promise<any> {
+    const alldata = await this.leadsRepository.dataSource.execute(`
+
+    SELECT
+    luov.state,
+    SUM(luov.deal_value) AS dealClosed,
+    DATE_TRUNC('month', luov.insert_date) AS month,
+    COUNT(CASE WHEN luov.status = 'CLOSED' THEN 1 END) AS closedCount,
+    COUNT(CASE WHEN luov.status = 'UNDER AGREEMENT' OR luov.status = 'OFFER ACCEPTED' THEN 1 END) AS underContracts,
+    COUNT(CASE WHEN (CURRENT_DATE - luov.insert_date) > INTERVAL '90 days' THEN 1 END) AS expiredContracts
+  FROM
+    ${this.DB_SCHEMA}.lead_user_org_vw luov
+  WHERE
+    (luov.tax_assessor_id, luov.insert_date) IN (
+      SELECT
+        tax_assessor_id,
+        MAX(insert_date)
+      FROM
+        ${this.DB_SCHEMA}.lead_user_org_vw
+      WHERE
+        agent_id = '${org}'
+      GROUP BY
+        tax_assessor_id
+    )
+  GROUP BY
+    luov.state,
+    month;
  `);
     return alldata;
   }
@@ -109,6 +144,7 @@ group by state
       (select COUNT(distinct us.username)
       from ${this.DB_SCHEMA}.user_data_group_by_org us
       where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
+      and us.organization = '${organization}'
       )
   FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
   WHERE ust.organization = '${organization}'
@@ -133,19 +169,23 @@ limit 7
     );
     const sessionUserTime = await this.leadsRepository.dataSource.execute(
       `
-      SELECT distinct ust.username,
+      SELECT
+      DISTINCT ust.username,
       ust.firstname,
       ust.lastname,
-    DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
-    SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
-    (select COUNT(distinct us.session) AS total_session
-    from ${this.DB_SCHEMA}.user_data_group_by_org us
-    where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
-    )
-FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
-WHERE ust.organization = '${organization}'
-GROUP BY ust.username,ust.inserted_on, ust.total_time, ust.state,ust.firstname, ust.lastname
-order by DATE_TRUNC('day', ust.inserted_on) desc
+      DATE_TRUNC('day', ust.inserted_on) AS truncated_date,
+      SUM(EXTRACT(EPOCH FROM ust.total_time) / 60) OVER (PARTITION BY ust.username, DATE_TRUNC('day', ust.inserted_on)) AS total_time_eachday,
+      (
+        SELECT COUNT(DISTINCT us.session) AS total_session
+        FROM ${this.DB_SCHEMA}.user_data_group_by_org us
+        WHERE DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
+          AND ust.username = us.username
+      ) AS total_session
+    FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
+    WHERE ust.organization = '${organization}'
+    AND ust.inserted_on >= CURRENT_DATE - INTERVAL '6 days'
+    GROUP BY ust.username, ust.inserted_on, ust.total_time, ust.state, ust.firstname, ust.lastname
+    ORDER BY truncated_date DESC;
     `,
     );
     const data = {

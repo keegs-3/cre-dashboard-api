@@ -59,6 +59,11 @@ export class User extends Entity {
     type: 'string',
   })
   state?: String;
+  @property({
+    type: 'Boolean',
+    default:true,
+  })
+  force_reset_password?: Boolean;
 
 
 

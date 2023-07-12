@@ -12,7 +12,8 @@ import {
   response,
 } from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-// @authenticate("jwt")
+import {authenticate} from '@loopback/authentication';
+@authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -715,7 +716,7 @@ order by case probability
       when 'Warm' then 2
       when 'Cold' then 3
       end
-limit 100 offset ${offset}
+limit 102 offset ${offset}
 `;
 
 console.log('ssss',s)
@@ -739,7 +740,7 @@ else {
       when 'Warm' then 2
       when 'Cold' then 3
       end
-  limit 100 offset ${offset}
+  limit 102 offset ${offset}
 
   `;
   console.log('sssss',s)
@@ -756,13 +757,24 @@ else {
 }
 else{
   const s =  `
+  SELECT *
+FROM (
   SELECT DISTINCT ON (l.tax_assessor_id) l.*
   FROM ${this.DB_SCHEMA}.lead_user_org_vw l
   WHERE l.agent_id = '${org}'
-and status = '${status}'
-AND (probability IN (${propenq}) )
-AND (state IN (${markc}) )
-  ORDER BY l.tax_assessor_id, l.insert_date DESC;
+  ORDER BY l.tax_assessor_id, l.insert_date DESC
+) subquery
+WHERE subquery.status = '${status}'
+  AND subquery.probability IN (${propenq})
+  AND subquery.state IN (${markc})
+  order by case probability
+  when 'Hot' then 1
+   when 'Warm' then 2
+   when 'Cold' then 3
+   end
+limit 102 offset ${offset}
+
+;
 
   `;
   console.log('sql ',s)
@@ -841,8 +853,8 @@ where tlbr.property_id = '${propertyId}'
   async map(@param.query.string('segment') segment?: string): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
    select owner_state , count(distinct owner_name)as owner_name
-from ${this.DB_SCHEMA}.sellers_buyers_details sbd
-where segment = '${segment}'
+from ${this.DB_SCHEMA}.vw_owner_profiles sbd
+where owner_segment = '${segment}'
 group by owner_state
 `);
     return funnel;
@@ -884,12 +896,11 @@ limit 5
   })
   async bschart(): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
-   select segment , count(distinct owner_name)as owner_name,
+    select owner_segment , count(distinct owner_name)as owner_name,
     sum(total_property_owned)as total_property_owned,
-sum("M12_Highest_Transaction")as "M12_Highest_Transaction",
-round( avg(dollar_value),2)  as avgDollarValue
-from ${this.DB_SCHEMA}.sellers_buyers_details sbd
-group by segment
+ round(cast (sum(avg_monetary)/count(distinct owner_name)AS numeric),2)  as avgDollarValue
+from ${this.DB_SCHEMA}.vw_owner_profiles sbd
+group by owner_segment
 `);
     return funnel;
   }

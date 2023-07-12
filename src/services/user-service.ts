@@ -61,7 +61,8 @@ export class MyUserService implements UserService<User, Credentials>{
       role:user.role,
       firstName: user.firstName,
       userName:user.username,
-      organization:user.agent_id
+      organization:user.agent_id,
+      reset:user.force_reset_password
     };
 
   }
