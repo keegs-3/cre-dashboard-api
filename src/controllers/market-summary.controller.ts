@@ -139,8 +139,8 @@ group by state
       (select COUNT(distinct us.session) AS total_session
       from ${this.DB_SCHEMA}.user_data_group_by_org us
       where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
+      and us.organization = '${organization}'
       ),
-      ust.state,
       (select COUNT(distinct us.username)
       from ${this.DB_SCHEMA}.user_data_group_by_org us
       where DATE_TRUNC('day', ust.inserted_on) = DATE_TRUNC('day', us.inserted_on)
@@ -149,7 +149,7 @@ group by state
   FROM ${this.DB_SCHEMA}.user_data_group_by_org ust
   WHERE ust.organization = '${organization}'
   GROUP BY ust.session,
-  DATE_TRUNC('day', ust.inserted_on), ust.total_time, ust.state,ust.inserted_on
+  DATE_TRUNC('day', ust.inserted_on), ust.total_time,ust.inserted_on
   order by DATE_TRUNC('day', ust.inserted_on) desc
   limit 7
     `,
