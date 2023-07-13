@@ -467,12 +467,8 @@ SET   resetkey= '${resetkey}' where email = '${email}'
           <h1>Welcome to Nedl</h1>
 
 
-          <i>Click the button below and use the provided reset key  to reset your password.</i>
-          <p>
+          <i>Use the provided reset key given below to reset your password.</i>
 
-            <a href="${this.UI_URL}/forgotpassword" class="button" style="color:#fff;">Click here to Rest</a>
-
-          </p>
 
 
           <p>Reset Key: ${resetkey} <p>
