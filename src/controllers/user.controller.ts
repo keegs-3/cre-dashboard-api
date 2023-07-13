@@ -49,7 +49,7 @@ export class CReUserController {
     public jwtService: JWTService,
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
-
+  UI_URL = process.env.UI_URL;
   @authenticate('jwt')
   @post('/signup', {
     responses: {
@@ -173,13 +173,13 @@ height:30px;
     <p>You have been added to the <b>${savedUser.agent_id}</b> organization on the Nedl platform</p>
     <i>Click the button below and use the provided credentials to log-in.</i>
     <p>
-      <a href="https://nedldev.goldfinch.ai" class="button" style="color:#fff;">Click here to Start</a>
+      <a href="${this.UI_URL}" class="button" style="color:#fff;">Click here to Start</a>
     </p>
 
     <p>email: ${savedUser.email} </p>
     <p>Password: ${pass} <p>
     <div class="footer">
-      <p>© 2023</p> <img class="logo" src="https://nedldev.goldfinch.ai/images/lattest/newlogo.png">.<p> All rights reserved.</p>
+      <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -323,7 +323,7 @@ async updateById(
   const user = await this.userRepository.findById(id);
 
   // Compare previous password if available
-  if (user && user.password) {
+  if ( user?.password) {
     const previousPasswordMatches = await this.hasher.comparePassword(
       request.previousPassword,
       user.password
@@ -465,13 +465,13 @@ SET   resetkey= '${resetkey}' where email = '${email}'
 
           <i>Click the button below and use the provided reset key  to reset your password.</i>
           <p>
-            <a href="https://nedldev.goldfinch.ai/forgotpassword" class="button" style="color:#fff;">Click here to Rest</a>
+            <a href="${this.UI_URL}/forgotpassword" class="button" style="color:#fff;">Click here to Rest</a>
           </p>
 
 
           <p>Reset Key: ${resetkey} <p>
           <div class="footer">
-            <p>© 2023</p> <img class="logo" src="https://nedldev.goldfinch.ai/images/lattest/newlogo.png">.<p> All rights reserved.</p>
+            <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
           </div>
         </div>
       </body>
