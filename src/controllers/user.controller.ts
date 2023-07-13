@@ -173,13 +173,17 @@ height:30px;
     <p>You have been added to the <b>${savedUser.agent_id}</b> organization on the Nedl platform</p>
     <i>Click the button below and use the provided credentials to log-in.</i>
     <p>
+
       <a href="${this.UI_URL}" class="button" style="color:#fff;">Click here to Start</a>
+
     </p>
 
     <p>email: ${savedUser.email} </p>
     <p>Password: ${pass} <p>
     <div class="footer">
+
       <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
+
     </div>
   </div>
 </body>
@@ -465,13 +469,17 @@ SET   resetkey= '${resetkey}' where email = '${email}'
 
           <i>Click the button below and use the provided reset key  to reset your password.</i>
           <p>
+
             <a href="${this.UI_URL}/forgotpassword" class="button" style="color:#fff;">Click here to Rest</a>
+
           </p>
 
 
           <p>Reset Key: ${resetkey} <p>
           <div class="footer">
+
             <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
+
           </div>
         </div>
       </body>
