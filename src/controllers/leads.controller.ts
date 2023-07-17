@@ -466,6 +466,452 @@ limit 100 offset ${offset}
       throw new HttpErrors.InternalServerError();
     }
   }
+  @get('/reportyBuilder/bySales/export')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async forSalesExport(
+    @param.query.string('state') state?: string,
+    @param.query.string('city') city?: string,
+    @param.query.number('salePriceFrom') salePriceFrom?: number,
+    @param.query.number('salePriceTo') salePriceTo?: number,
+    @param.query.string('salePeriodFrom', {default: null}) salePeriodFrom?: string,
+    @param.query.string('salePeriodTo', {default: null}) salePeriodTo?: string,
+
+  ): Promise<any> {
+    let marq: any = '';
+    let cityc: any = '';
+
+      const mar = state?.split(',');
+      marq = "'" + mar?.join("','") + "'";
+
+
+      const cit = city?.split(',');
+      cityc = "'" + cit?.join("','") + "'";
+
+    if (
+      state !== '' &&
+      state !== undefined &&
+      city !== '' &&
+      city !== undefined &&
+      salePriceFrom !== null &&
+      salePriceFrom !== undefined &&
+      salePriceTo !== null &&
+      salePriceTo !== undefined &&
+      salePeriodFrom !== null &&
+      salePeriodFrom !== undefined &&
+      salePeriodTo !== null &&
+      salePeriodTo !== undefined
+    ) {
+      const sql = `SELECT *
+      FROM ${this.DB_SCHEMA}.vw_recorder
+      where 1 = 1
+        AND (property_state IN(${marq}))
+        AND (property_city IN(${cityc}))
+        AND (document_amount between ${salePriceFrom} and ${salePriceTo})
+        AND (document_recorded_date between '${salePeriodFrom}' and '${salePeriodTo}' )
+
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+   else if (
+      state !== '' &&
+      state !== undefined &&
+      city !== '' &&
+      city !== undefined &&
+      salePriceFrom !== null &&
+      salePriceFrom !== undefined &&
+      salePriceTo !== null &&
+      salePriceTo !== undefined
+    ) {
+      const sql = `SELECT *
+FROM ${this.DB_SCHEMA}.vw_recorder
+where 1 = 1
+AND (property_state IN(${marq}))
+AND (property_city IN(${cityc}))
+AND (document_amount between ${salePriceFrom} and ${salePriceTo})
+
+`;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+  else if (
+      state !== '' &&
+      state !== undefined &&
+      city !== '' &&
+      city !== undefined &&
+      salePeriodFrom !== null &&
+      salePeriodFrom !== undefined &&
+      salePeriodTo !== null &&
+      salePeriodTo !== undefined
+    ) {
+      const sql = `SELECT *
+FROM ${this.DB_SCHEMA}.vw_recorder
+where 1 = 1
+AND (property_state IN(${marq}))
+AND (property_city IN(${cityc}))
+AND (document_recorded_date between '${salePeriodFrom}' and '${salePeriodTo}' )
+
+`;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (
+      state !== '' &&
+      state !== undefined &&
+      city !== '' &&
+      city !== undefined
+    ) {
+      const sql = `SELECT *
+FROM ${this.DB_SCHEMA}.vw_recorder
+where 1 = 1
+AND (property_state IN(${marq}))
+AND (property_city IN(${cityc}))
+
+`;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+     else if (
+      state !== '' &&
+      state !== undefined &&
+      salePriceFrom !== null &&
+      salePriceFrom !== undefined &&
+      salePriceTo !== null &&
+      salePriceTo !== undefined &&
+      salePeriodFrom !== null &&
+      salePeriodFrom !== undefined &&
+      salePeriodTo !== null &&
+      salePeriodTo !== undefined
+    ) {
+      const sql = `SELECT *
+  FROM ${this.DB_SCHEMA}.vw_recorder
+  where 1 = 1
+  AND (property_state IN(${marq}))
+  AND (document_amount between ${salePriceFrom} and ${salePriceTo})
+  AND (document_recorded_date between '${salePeriodFrom}' and '${salePeriodTo}' )
+
+  `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (
+      state !== '' &&
+      state !== undefined &&
+      salePriceFrom !== null &&
+      salePriceFrom !== undefined &&
+      salePriceTo !== null &&
+      salePriceTo !== undefined
+    ) {
+      const sql = `SELECT *
+  FROM ${this.DB_SCHEMA}.vw_recorder
+  where 1 = 1
+  AND (property_state IN(${marq}))
+  AND (document_amount between ${salePriceFrom} and ${salePriceTo})
+
+  `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+
+   else if (
+      state !== '' &&
+      state !== undefined &&
+      salePeriodFrom !== null &&
+      salePeriodFrom !== undefined &&
+      salePeriodTo !== null &&
+      salePeriodTo !== undefined
+    ) {
+      const sql = `SELECT *
+FROM ${this.DB_SCHEMA}.vw_recorder
+where 1 = 1
+AND (property_state IN(${marq}))
+AND (document_recorded_date between '${salePeriodFrom}' and '${salePeriodTo}' )
+
+`;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+     else if (
+      salePriceFrom !== null &&
+      salePriceFrom !== undefined &&
+      salePriceTo !== null &&
+      salePriceTo !== undefined &&
+      salePeriodFrom !== null &&
+      salePeriodFrom !== undefined &&
+      salePeriodTo !== null &&
+      salePeriodTo !== undefined
+    ) {
+      const sql = `SELECT *
+        FROM ${this.DB_SCHEMA}.vw_recorder
+        where 1 = 1
+        AND (document_amount between ${salePriceFrom} and ${salePriceTo})
+        AND (document_recorded_date between '${salePeriodFrom}' and '${salePeriodTo}' )
+
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (
+      salePriceFrom !== null &&
+      salePriceFrom !== undefined &&
+      salePriceTo !== null &&
+      salePriceTo !== undefined
+    ) {
+      const sql = `SELECT *
+        FROM ${this.DB_SCHEMA}.vw_recorder
+        where 1 = 1
+        AND (document_amount between ${salePriceFrom} and ${salePriceTo})
+
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (
+      salePeriodFrom !== null &&
+      salePeriodFrom !== undefined &&
+      salePeriodTo !== null &&
+      salePeriodTo !== undefined
+    ) {
+      const sql = `SELECT *
+        FROM ${this.DB_SCHEMA}.vw_recorder
+        where 1 = 1
+        AND (document_recorded_date between '${salePeriodFrom}' and '${salePeriodTo}' )
+
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (
+      state !== '' &&
+      state !== undefined
+    ) {
+      const sql = `SELECT *
+  FROM ${this.DB_SCHEMA}.vw_recorder
+  where 1 = 1
+  AND (property_state IN(${marq}))
+
+  `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (Error()) {
+      throw new HttpErrors.InternalServerError();
+    }
+  }
+  @get('/reportyBuilder/byProperty/export')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async forPropertyExport(
+    @param.query.string('state') state?: string,
+    @param.query.string('city') city?: string,
+    @param.query.string('address') address?: string,
+  ): Promise<any> {
+    let marq: any = '';
+    let cityc: any = '';
+    let addc: any = '';
+      const mar = state?.split(',');
+      marq = "'" + mar?.join("','") + "'";
+      const cit = city?.split(',');
+      cityc = "'" + cit?.join("','") + "'";
+      const add = address?.split(',');
+      addc= "'" + add?.join("','") + "'";
+
+    if (
+      state !== '' &&
+      state !== undefined &&
+      city !== '' &&
+      city !== undefined &&
+      address !== '' &&
+      address !== undefined
+    ) {
+      const sql = `SELECT *
+      FROM ${this.DB_SCHEMA}.vw_tax_assessor
+      where 1 = 1
+        AND (state IN(${marq}))
+        AND (city IN(${cityc}))
+        AND (address IN(${addc}))
+
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else  if (
+      state !== '' &&
+      state !== undefined &&
+      city !== '' &&
+      city !== undefined
+
+    ) {
+      const sql = `SELECT *
+      FROM ${this.DB_SCHEMA}.vw_tax_assessor
+      where 1 = 1
+        AND (state IN(${marq}))
+        AND (city IN(${cityc}))
+
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (
+      state !== '' &&
+      state !== undefined &&
+      address !== '' &&
+      address !== undefined
+    ) {
+      const sql = `SELECT *
+      FROM ${this.DB_SCHEMA}.vw_tax_assessor
+      where 1 = 1
+        AND (state IN(${marq}))
+        AND (address IN(${addc}))
+
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (
+      state !== '' &&
+      state !== undefined
+
+    ) {
+      const sql = `SELECT *
+      FROM ${this.DB_SCHEMA}.vw_tax_assessor
+      where 1 = 1
+        AND (state IN(${marq}))
+      
+        `;
+
+      console.log('sql ', sql);
+      const allSales = await this.leadsRepository.dataSource.execute(sql);
+
+      console.table('data', allSales);
+      if (allSales.length > 0) {
+        return allSales;
+      } else {
+        return 'No Data Available';
+      }
+    }
+    else if (Error()) {
+      throw new HttpErrors.InternalServerError();
+    }
+  }
+
+
+
   @get('/reportyBuilder/byOccupancy')
   @response(200, {
     description: 'Array of buyers page chart model instances',
