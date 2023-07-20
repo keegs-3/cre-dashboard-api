@@ -2,6 +2,7 @@
 /* eslint-disable no-dupe-else-if */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention */
+import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {
   HttpErrors,
@@ -12,7 +13,6 @@ import {
   response,
 } from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
 @authenticate("jwt")
 export class LeadsController {
   constructor(
@@ -1444,28 +1444,13 @@ group by owner_state
   })
   async topFive(): Promise<any> {
     const buyersr = await this.leadsRepository.dataSource.execute(`
-   select buyers,count(buyers) ,
-COALESCE((select Json_agg(row_to_json(t1))
-      from ( select br.buyer_leads from ${this.DB_SCHEMA}.buyer_recommendation br
-      where br.buyers = b.buyers
-       )t1),
-      '[]')as "cohortdetails"
-from ${this.DB_SCHEMA}.buyer_recommendation b
-group by b.buyers
-order by count(buyers) desc
-limit 5
+   select *
+from ${this.DB_SCHEMA}.vw_top_5_buyers
 `);
     const sellerr = await this.leadsRepository.dataSource.execute(`
-select seller,count(seller) ,
-COALESCE((select Json_agg(row_to_json(t1))
-   from ( select br.seller_leads from ${this.DB_SCHEMA}.seller_recommendation br
-   where br.seller = b.seller
-    )t1),
-   '[]')as "cohortdetails"
-from ${this.DB_SCHEMA}.seller_recommendation b
-group by b.seller
-order by count(seller) desc
-limit 5
+select *
+from ${this.DB_SCHEMA}.vw_top_5_sellers
+
 `);
     return {buyersr, sellerr};
   }
