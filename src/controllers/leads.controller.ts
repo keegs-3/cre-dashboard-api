@@ -1411,17 +1411,19 @@ return sql;
   })
   async buyersid(
     @param.query.string('propertyId') propertyId?: string,
+    @param.query.string('org') org?: string,
   ): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
-   select tlbr.*,most_recent_buyer.connected,most_recent_buyer.interested  from ${this.DB_SCHEMA}.tgt_lead_buyers_recommendation tlbr left join
-(
-	select * from ${this.DB_SCHEMA}.buyers_contact bc
-	where date in (
-	select max(date) from ${this.DB_SCHEMA}.buyers_contact b group by property_id,buyer_name
-			)
-) as most_recent_buyer
-on tlbr.property_id = most_recent_buyer.property_id and tlbr.buyers_name = most_recent_buyer.buyer_name
-where tlbr.property_id = '${propertyId}'
+    SELECT DISTINCT tlbr.*, most_recent_buyer.contacted, most_recent_buyer.interested, most_recent_buyer.addnotes, most_recent_buyer.agent_id, most_recent_buyer.rn
+    FROM ${this.DB_SCHEMA}.vw_leads_potential_buyers tlbr
+    LEFT JOIN (
+      SELECT bc.*, u.*, ROW_NUMBER() OVER (PARTITION BY bc.property_id, bc.buyers_name ORDER BY bc.inserted_on DESC) AS rn
+      FROM ${this.DB_SCHEMA}.leads_buyers_contact bc
+      LEFT JOIN ${this.DB_SCHEMA}.users u ON bc.username = u.username
+      WHERE u.agent_id = '${org}'
+    ) AS most_recent_buyer
+    ON tlbr.tax_assessor_id = most_recent_buyer.property_id AND tlbr.buyer_name = most_recent_buyer.buyers_name
+    WHERE tlbr.tax_assessor_id = '${propertyId}' AND most_recent_buyer.rn = 1;
 `);
     return funnel;
   }
