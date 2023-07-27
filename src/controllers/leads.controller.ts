@@ -1414,21 +1414,16 @@ return sql;
     @param.query.string('org') org?: string,
   ): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
-    select tlbr.*,most_recent_buyer.contacted,most_recent_buyer.interested,most_recent_buyer.addnotes
- ,
- most_recent_buyer.agent_id  from ${this.DB_SCHEMA}.vw_leads_potential_buyers tlbr left join
-(
-	select * from ${this.DB_SCHEMA}.leads_buyers_contact bc
-  left join
-  ${this.DB_SCHEMA}.users u on bc.username = u.username
-	where inserted_on in (
-	select max(inserted_on) from ${this.DB_SCHEMA}.leads_buyers_contact b group by property_id,buyers_name
-			)
-      and agent_id = '${org}'
-) as most_recent_buyer
-on tlbr.tax_assessor_id = most_recent_buyer.property_id and tlbr.buyer_name = most_recent_buyer.buyers_name
-where tlbr.tax_assessor_id = '${propertyId}'
- and most_recent_buyer.agent_id = '${org}'
+    SELECT DISTINCT tlbr.*, most_recent_buyer.contacted, most_recent_buyer.interested, most_recent_buyer.addnotes, most_recent_buyer.agent_id, most_recent_buyer.rn
+    FROM ${this.DB_SCHEMA}.vw_leads_potential_buyers tlbr
+    LEFT JOIN (
+      SELECT bc.*, u.*, ROW_NUMBER() OVER (PARTITION BY bc.property_id, bc.buyers_name ORDER BY bc.inserted_on DESC) AS rn
+      FROM ${this.DB_SCHEMA}.leads_buyers_contact bc
+      LEFT JOIN ${this.DB_SCHEMA}.users u ON bc.username = u.username
+      WHERE u.agent_id = '${org}'
+    ) AS most_recent_buyer
+    ON tlbr.tax_assessor_id = most_recent_buyer.property_id AND tlbr.buyer_name = most_recent_buyer.buyers_name
+    WHERE tlbr.tax_assessor_id = '${propertyId}' AND most_recent_buyer.rn = 1;
 `);
     return funnel;
   }
