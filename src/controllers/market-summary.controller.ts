@@ -4,7 +4,7 @@ import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-@authenticate('jwt')
+// @authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
@@ -101,6 +101,7 @@ order by "date" desc
     const feeds = await this.leadsRepository.dataSource.execute(`
 
     select property_name,document_amount,document_recorded_date  from ${this.DB_SCHEMA}.vw_recorder
+    where sale_type not in ('Unpublished','Portfolio')
 order by document_recorded_date desc
 limit 15
     `);
