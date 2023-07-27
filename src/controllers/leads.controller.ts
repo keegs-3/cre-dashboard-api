@@ -1414,7 +1414,9 @@ return sql;
     @param.query.string('org') org?: string,
   ): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
-   select tlbr.*,most_recent_buyer.contacted,most_recent_buyer.interested,most_recent_buyer.addnotes  from ${this.DB_SCHEMA}.vw_leads_potential_buyers tlbr left join
+    select tlbr.*,most_recent_buyer.contacted,most_recent_buyer.interested,most_recent_buyer.addnotes
+ ,
+ most_recent_buyer.agent_id  from ${this.DB_SCHEMA}.vw_leads_potential_buyers tlbr left join
 (
 	select * from ${this.DB_SCHEMA}.leads_buyers_contact bc
   left join
@@ -1426,6 +1428,7 @@ return sql;
 ) as most_recent_buyer
 on tlbr.tax_assessor_id = most_recent_buyer.property_id and tlbr.buyer_name = most_recent_buyer.buyers_name
 where tlbr.tax_assessor_id = '${propertyId}'
+ and most_recent_buyer.agent_id = '${org}'
 `);
     return funnel;
   }
