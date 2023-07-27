@@ -100,7 +100,7 @@ order by "date" desc
   async livefeeds(): Promise<any> {
     const feeds = await this.leadsRepository.dataSource.execute(`
 
-    select property_address,document_amount,document_recorded_date  from ${this.DB_SCHEMA}.vw_recorder
+    select property_name,document_amount,document_recorded_date  from ${this.DB_SCHEMA}.vw_recorder
 order by document_recorded_date desc
 limit 15
     `);

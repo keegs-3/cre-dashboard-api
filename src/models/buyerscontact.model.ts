@@ -24,7 +24,7 @@ export class Buyerscontact extends Entity {
     type: 'string',
     required: true,
   })
-  buyer_name: string;
+  buyers_name: string;
   @property({
     type: 'string',
     required: true,
@@ -35,7 +35,7 @@ export class Buyerscontact extends Entity {
     type: 'boolean',
     default: false,
   })
-  connected?: boolean;
+  contacted?: boolean;
 
   @property({
     type: 'boolean',
