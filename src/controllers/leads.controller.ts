@@ -1423,7 +1423,10 @@ return sql;
       WHERE u.agent_id = '${org}'
     ) AS most_recent_buyer
     ON tlbr.tax_assessor_id = most_recent_buyer.property_id AND tlbr.buyer_name = most_recent_buyer.buyers_name
+
     WHERE tlbr.tax_assessor_id = '${propertyId}' AND (most_recent_buyer.rn = 1 OR most_recent_buyer.rn IS NULL);
+
+
 `);
     return funnel;
   }
