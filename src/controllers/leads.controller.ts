@@ -1427,6 +1427,25 @@ return sql;
 `);
     return funnel;
   }
+  @get('/leads/buyers/notes')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async buyersnaotes(
+    @param.query.string('propertyId') propertyId?: string,
+    @param.query.string('org') org?: string,
+    @param.query.string('buyerName') buyerName?: string,
+  ): Promise<any> {
+    const notes = await this.leadsRepository.dataSource.execute(`
+    SELECT bc.*,u.firstname,u.lastname
+  FROM ${this.DB_SCHEMA}.leads_buyers_contact bc
+  LEFT JOIN ${this.DB_SCHEMA}.users u ON bc.username = u.username
+  WHERE u.agent_id = '${org}'
+  and property_id = '${propertyId}'
+  and buyers_name = '${buyerName}'
+`);
+    return notes;
+  }
   @get('/buyerseller/map')
   @response(200, {
     description: 'Array of buyers page chart model instances',
