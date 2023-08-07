@@ -1294,7 +1294,8 @@ order by case probability
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
-      end
+      end,
+      property_name asc
 limit 102 offset ${offset}
 `;
 
@@ -1318,7 +1319,8 @@ else {
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
-      end
+      end,
+      property_name asc
   limit 102 offset ${offset}
 
   `;
@@ -1350,7 +1352,8 @@ WHERE subquery.status = '${status}'
   when 'Hot' then 1
    when 'Warm' then 2
    when 'Cold' then 3
-   end
+   end,
+   insert_date DESC
 limit 102 offset ${offset}
 
 ;
