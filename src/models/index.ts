@@ -17,5 +17,7 @@ export * from './usersession.model';
 
 
 // export * from './userloginlocation.model';
+export * from './leadsnotes.model';
 export * from './useractions.model';
 export * from './userreview.model';
+

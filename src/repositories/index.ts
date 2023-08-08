@@ -9,5 +9,7 @@ export * from './usersession.repository';
 // export * from './notification.repository';
 export * from './buyerscontact.repository';
 // export * from './userloginlocation.repository';
+export * from './leadsnotes.repository';
 export * from './useractions.repository';
 export * from './userreview.repository';
+
