@@ -1299,7 +1299,11 @@ case probability
       when 'Warm' then 2
       when 'Cold' then 3
       end,
-      latest_inserted_on desc,
+      CASE
+      WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') IS NULL THEN 2
+      ELSE 1
+    END,
+    (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') DESC,
       property_name asc
 limit 102 offset ${offset}
 `;
@@ -1318,20 +1322,24 @@ else {
   const s =  `
   SELECT l.*,
   (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
-       (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
-  FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
-  where
-   (probability IN (${propenq}) )
+  (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
+FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+WHERE
+  (probability IN (${propenq}) )
   AND (state IN (${markc}) )
-  order by
-   case probability
-     when 'Hot' then 1
-      when 'Warm' then 2
-      when 'Cold' then 3
-      end,
-      latest_inserted_on desc,
-      property_name asc
-  limit 102 offset ${offset}
+ORDER BY
+  CASE probability
+    WHEN 'Hot' THEN 1
+    WHEN 'Warm' THEN 2
+    WHEN 'Cold' THEN 3
+  END,
+  CASE
+    WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') IS NULL THEN 2
+    ELSE 1
+  END,
+  (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') DESC,
+  property_name ASC
+LIMIT 102 OFFSET ${offset};
 
   `;
   console.log('sssss',s)
