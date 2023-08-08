@@ -1294,17 +1294,17 @@ where l.tax_assessor_id not in (
 AND (probability IN (${propenq}) )
 AND (state IN (${markc}) )
 order by
-latest_inserted_on desc ,
 case probability
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
       end,
+      latest_inserted_on desc,
       property_name asc
 limit 102 offset ${offset}
 `;
 
-console.log('ssss',s)
+console.log('ssssaaaa',s)
   const sql = await this.leadsRepository.dataSource.execute(s)
   if (sql.length >= 1){
     return sql
@@ -1324,12 +1324,12 @@ else {
    (probability IN (${propenq}) )
   AND (state IN (${markc}) )
   order by
-  latest_inserted_on desc ,
    case probability
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
       end,
+      latest_inserted_on desc,
       property_name asc
   limit 102 offset ${offset}
 
