@@ -23,6 +23,10 @@ export class LEadsNOtes extends Entity {
     type: 'string',
   })
   notes?: string;
+  @property({
+    type: 'string',
+  })
+  org?: string;
 
 
   constructor(data?: Partial<LEadsNOtes>) {
