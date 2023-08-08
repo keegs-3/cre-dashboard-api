@@ -1283,14 +1283,19 @@ where agent_id = '${org}'
 `  )
 if (count.length >= 1){
 const s =  `
-SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+SELECT l.*,
+(SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
+       (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
+FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
 where l.tax_assessor_id not in (
   SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
   where agent_id = '${org}'
 )
 AND (probability IN (${propenq}) )
 AND (state IN (${markc}) )
-order by case probability
+order by
+latest_inserted_on desc ,
+case probability
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
@@ -1311,11 +1316,16 @@ console.log('ssss',s)
 }
 else {
   const s =  `
-  SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+  SELECT l.*,
+  (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
+       (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
+  FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
   where
    (probability IN (${propenq}) )
   AND (state IN (${markc}) )
-  order by case probability
+  order by
+  latest_inserted_on desc ,
+   case probability
      when 'Hot' then 1
       when 'Warm' then 2
       when 'Cold' then 3
