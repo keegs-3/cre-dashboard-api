@@ -1,6 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'leads_notes'}}, })
 export class LEadsNOtes extends Entity {
   @property({
     type: 'number',
