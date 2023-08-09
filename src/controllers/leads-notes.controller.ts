@@ -68,9 +68,10 @@ export class LeadsNotesController {
     @param.query.string('property_id') property_id?: string,
     @param.query.string('org') org?: string,
   ): Promise<any> {
-    await this.lEadsNOtesRepository.execute(` select * from ${this.DB_SCHEMA}.leads_notes_vw
+   const o =   await this.lEadsNOtesRepository.execute(` select * from ${this.DB_SCHEMA}.leads_notes_vw
     WHERE  property_id = '${property_id}'and org ='${org}'
    `)
+return o
 
 
   }
