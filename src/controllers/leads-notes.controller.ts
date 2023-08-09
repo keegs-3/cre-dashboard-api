@@ -1,11 +1,11 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import {authenticate} from '@loopback/authentication';
 import {
   Count,
   CountSchema,
-  Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
   del,
@@ -26,7 +26,7 @@ export class LeadsNotesController {
     @repository(LEadsNOtesRepository)
     public lEadsNOtesRepository : LEadsNOtesRepository,
   ) {}
-
+  DB_SCHEMA = process.env.DB_SCHEMA;
   @post('/leadsNotes')
   @response(200, {
     description: 'LEadsNOtes model instance',
@@ -62,19 +62,17 @@ export class LeadsNotesController {
   @get('/leadsNotes')
   @response(200, {
     description: 'Array of LEadsNOtes model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(LEadsNOtes, {includeRelations: true}),
-        },
-      },
-    },
+
   })
   async find(
-    @param.filter(LEadsNOtes) filter?: Filter<LEadsNOtes>,
-  ): Promise<LEadsNOtes[]> {
-    return this.lEadsNOtesRepository.find(filter);
+    @param.query.string('property_id') property_id?: string,
+    @param.query.string('org') org?: string,
+  ): Promise<any> {
+    await this.lEadsNOtesRepository.execute(` select * from ${this.DB_SCHEMA}.leads_notes_vw
+    WHERE  property_id = '${property_id}'and org =${org}
+   `)
+
+
   }
 
   @patch('/leadsNotes')
