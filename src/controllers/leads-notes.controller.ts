@@ -69,7 +69,7 @@ export class LeadsNotesController {
     @param.query.string('org') org?: string,
   ): Promise<any> {
     await this.lEadsNOtesRepository.execute(` select * from ${this.DB_SCHEMA}.leads_notes_vw
-    WHERE  property_id = '${property_id}'and org =${org}
+    WHERE  property_id = '${property_id}'and org ='${org}'
    `)
 
 
