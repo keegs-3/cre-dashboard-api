@@ -1548,10 +1548,70 @@ group by owner_segment
   @response(200, {
     description: 'Array of aibased model instances',
   })
-  async aibased(@param.query.number('quater') quater?: number): Promise<any> {
+  async aibased(@param.query.string('org') org?: string): Promise<any> {
     const aibased = await this.leadsRepository.dataSource.execute(`
-   select * from ${this.DB_SCHEMA}.deal_analytics_recommendations dar
-where "Increase %" = ${quater}
+    select
+    MAX(coalesce(deal_value, '0'))as highestClosingCurrentMonth,
+
+    (select AVG(deal_value::numeric) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'CLOSED'
+    and insert_date >= date_trunc('month',now()- INTERVAL '3 months')) as averageQuaterSum,
+
+    (select COUNT(tax_assessor_id) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'CLOSED'
+    and insert_date >= date_trunc('month',now()- INTERVAL '3 months'))as averageQuaterCount,
+
+    (select AVG(deal_value::numeric) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'CLOSED'
+    and insert_date >= date_trunc('month',now()- INTERVAL '12 months')) as averageAnnualSum,
+
+    (select COUNT(tax_assessor_id) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'CLOSED'
+    and insert_date >= date_trunc('month',now()- INTERVAL '12 months'))as averageAnnualCount,
+
+    (SELECT count(max_dates.property_id) FROM ( SELECT DISTINCT ON (property_id) property_id,contacted, inserted_on AS max_inserted_on
+  FROM ${this.DB_SCHEMA}.buyers_contact_org_vw WHERE agent_id = '${org}'GROUP BY property_id, contacted,inserted_on ORDER by property_id, contacted,
+  inserted_on DESC) max_dates WHERE max_inserted_on >= date_trunc('month', now()) AND contacted IS true)as totalPeopleContacted,
+
+  (SELECT count(max_dates.property_id) FROM ( Select DISTINCT ON (property_id)  property_id,interested, inserted_on AS max_inserted_on
+  FROM ${this.DB_SCHEMA}.buyers_contact_org_vw WHERE agent_id = '${org}'GROUP BY property_id, interested,inserted_on ORDER by property_id,inserted_on desc,
+  interested ) max_dates WHERE max_inserted_on >= date_trunc('month', now()) AND interested IS true)as totalInterestedBuyers,
+
+
+    COUNT(*) as closedCountCurrentMonth,
+
+    (select COUNT(tax_assessor_id)	from ${this.DB_SCHEMA}.leads_status_leads_vw where	created_date = date_trunc('month',now())) as allLeadsCurrentMonth
+
+
+  --		,
+  --	(
+  --	cast
+  --	(
+  --		(
+  --			select
+  --				COUNT(*)
+  --			from
+  --				${this.DB_SCHEMA}.lead_user_org_vw
+  --			where
+  --				agent_id = '${org}'
+  --				and status = 'CLOSED'
+  --		) as float
+  --	)
+  --    /
+  --	    (
+  --
+  --
+  --			select
+  --				COUNT(tax_assessor_id)
+  --			from
+  --				${this.DB_SCHEMA}.leads_status_leads_vw
+  --				where
+  --		created_date = date_trunc('month',now() )
+  --		)
+  --	) * 100 as CurrentConversionRate
+  from
+    ${this.DB_SCHEMA}.lead_user_org_vw l
+  where
+    agent_id = '${org}'
+    and status = 'CLOSED'
+    and insert_date >= date_trunc('month',
+    now());
 `);
     return aibased;
   }
