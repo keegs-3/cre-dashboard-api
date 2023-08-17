@@ -1649,23 +1649,20 @@ where "Month " = 'February'
     @param.query.string('org') org?: string,
   ): Promise<any> {
     const funnel = await this.leadsRepository.dataSource.execute(`
-    WITH QuarterRange AS (
-      SELECT
-        date_trunc('month', CURRENT_DATE - INTERVAL '${month} months') AS quarter_start,
-        date_trunc('month', CURRENT_DATE) AS quarter_end
-    )
     SELECT
       count(l.tax_assessor_id) as INTERESTED,
-      (SELECT count(l2.tax_assessor_id) FROM ${this.DB_SCHEMA}.lead_user_org_vw l2, QuarterRange qr WHERE l2.agent_id = '${org}' and l2.status = 'OFFER SUBMITTED' AND l2.insert_date >= qr.quarter_start AND l2.insert_date <= qr.quarter_end) as OFFER_SUBMITTED,
-      (SELECT count(l3.tax_assessor_id) FROM ${this.DB_SCHEMA}.lead_user_org_vw l3, QuarterRange qr WHERE l3.agent_id = '${org}' and l3.status = 'OFFER ACCEPTED' AND l3.insert_date >= qr.quarter_start AND l3.insert_date <= qr.quarter_end) as OFFER_ACCEPTED,
-      (SELECT count(l4.tax_assessor_id) FROM ${this.DB_SCHEMA}.lead_user_org_vw l4, QuarterRange qr WHERE l4.agent_id = '${org}' and l4.status = 'UNDER AGREEMENT' AND l4.insert_date >= qr.quarter_start AND l4.insert_date <= qr.quarter_end) as UNDER_AGREEMENT,
-      (SELECT count(l5.tax_assessor_id) FROM ${this.DB_SCHEMA}.lead_user_org_vw l5, QuarterRange qr WHERE l5.agent_id = '${org}' and l5.status = 'CLOSED' AND l5.insert_date >= qr.quarter_start AND l5.insert_date <= qr.quarter_end) as CLOSED,
-      (SELECT count(*) FROM ${this.DB_SCHEMA}.leads_status_leads_vw l6,QuarterRange qr where l6.created_date >= qr.quarter_start AND l6.created_date <= qr.quarter_end) as LEADS
+      (select COUNT(tax_assessor_id) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'OFFER SUBMITTED'
+	and insert_date >= date_trunc('month',now()- INTERVAL '${month} months')) as OFFER_SUBMITTED,
+      (select COUNT(tax_assessor_id) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'OFFER ACCEPTED'
+	and insert_date >= date_trunc('month',now()- INTERVAL '${month} months')) as OFFER_ACCEPTED,
+      (select COUNT(tax_assessor_id) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'UNDER AGREEMENT'
+	and insert_date >= date_trunc('month',now()- INTERVAL '${month} months')) as UNDER_AGREEMENT,
+      (select COUNT(tax_assessor_id) from ${this.DB_SCHEMA}.lead_user_org_vw l where agent_id = '${org}' and status = 'CLOSED'
+	and insert_date >= date_trunc('month',now()- INTERVAL '${month} months')) as CLOSED,
+      (select COUNT(tax_assessor_id)	from ${this.DB_SCHEMA}.leads_status_leads_vw where	created_date = date_trunc('month',now()- INTERVAL '${month} months')) as LEADS
     FROM ${this.DB_SCHEMA}.lead_user_org_vw l
-    WHERE l.agent_id = '${org}'
-      AND l.status = 'INTERESTED'
-      AND l.insert_date >= (SELECT quarter_start FROM QuarterRange)
-      AND l.insert_date < (SELECT quarter_end FROM QuarterRange);
+    where agent_id = '${org}' and status = 'INTERESTED'
+	and insert_date >= date_trunc('month',now()- INTERVAL '${month} months');
 `);
     return funnel;
   }
