@@ -13,6 +13,7 @@ import {
   response
 } from '@loopback/rest';
 import {UserProfile} from '@loopback/security';
+import generateApiKey from 'generate-api-key';
 import * as _ from 'lodash';
 import nodemailer from 'nodemailer';
 import {
@@ -27,7 +28,6 @@ import {validateCredentials} from '../services';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import generateApiKey from 'generate-api-key';
 
 export class CReUserController {
   constructor(
@@ -530,6 +530,36 @@ if(data.length < 1){
 
   return 'reset successful';
 }
+@authenticate('jwt')
+@get('/users/org')
+@response(200, {
+  description: 'Array of org ',
+})
+async market(
+
+): Promise<any> {
+
+  const sql = await this.userRepository.dataSource.execute(
+    `
+    SELECT distinct agent_id from ${this.DB_SCHEMA}.users
+
+    `  )
+
+
+
+
+
+
+
+
+return sql;
+
+
+
+
+
+}
+
 
 
 }
