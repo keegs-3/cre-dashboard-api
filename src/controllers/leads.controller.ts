@@ -1298,16 +1298,15 @@ group by 1
   })
   async byproperty(): Promise<any> {
     const marketCity = await this.leadsRepository.dataSource.execute(`
-    SELECT '[' || STRING_AGG(
-      CONCAT(
-          '{"city": "', view1.city,
-          '", "county": "', view1.county,
-          '", "state": "', view1.state,
-          '", "sub_market": "', view1.sub_market,
-          '", "market": "', view1.market,
-          '"}'
-      ), ',') || ']' AS json_array
-  FROM ${this.DB_SCHEMA}.vw_rb_property_details view1;
+    select
+    distinct on (vr.market)
+    vr.market,
+    string_agg(distinct vr.sub_market, ',') AS sub_market_list,
+    string_agg(distinct vr.state, ',') AS state_list,
+    string_agg(distinct vr.county, ',') AS county_list,
+    string_agg(distinct vr.city, ',') AS city_list
+    from ${this.DB_SCHEMA}.vw_rb_property_details vr
+    group by 1
 
 `);
 
