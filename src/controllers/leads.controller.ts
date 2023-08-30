@@ -2,7 +2,6 @@
 /* eslint-disable no-dupe-else-if */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention */
-import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {
   HttpErrors,
@@ -13,7 +12,7 @@ import {
   response,
 } from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-@authenticate("jwt")
+// @authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -447,6 +446,65 @@ limit 100 offset ${offset}
     description: 'Array of buyers page chart model instances',
   })
   async forProperty(
+    @param.query.string('state') state?: string,
+    @param.query.string('city') city?: string,
+    @param.query.string('address') address?: string,
+    @param.query.number('offset', {default: 0}) offset?: number,
+  ): Promise<any> {
+    let marq: any = '';
+    let cityc: any = '';
+    let addc: any = '';
+      const mar = state?.split(',');
+      marq = "'" + mar?.join("','") + "'";
+      const cit = city?.split(',');
+      cityc = "'" + cit?.join("','") + "'";
+      const add = address?.split(',');
+      addc= "'" + add?.join("','") + "'";
+let allState='' ;
+let allCity='';
+let allAddress='';
+
+    if (
+      state !== '' &&
+      state !== undefined
+
+    ) {
+      allState = `AND (state IN(${marq}))`;
+    }
+    if (
+      city !== '' &&
+      city !== undefined
+
+    ) {
+      allCity = `AND (city IN(${cityc}))`;
+    }
+    if (
+      address !== '' &&
+      address !== undefined
+
+    ) {
+      allAddress = `  AND (address IN(${addc}))`;
+    }
+
+
+
+    const count = `
+                    SELECT count(*) FROM ${this.DB_SCHEMA}.vw_rb_property_details
+                    where 1 = 1
+                    ${allState}
+                    ${allCity}
+                    ${allAddress}
+                  `;
+return count;
+
+
+  }
+
+  @get('/reportyBuilder/byPropertyOLd')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async forPropertyold(
     @param.query.string('state') state?: string,
     @param.query.string('city') city?: string,
     @param.query.string('address') address?: string,
@@ -1240,12 +1298,17 @@ group by 1
   })
   async byproperty(): Promise<any> {
     const marketCity = await this.leadsRepository.dataSource.execute(`
-   select
-   distinct on (vr.state)
-   vr.state ,
-   string_agg(distinct vr.city, ',') AS city_list
-   from ${this.DB_SCHEMA}.vw_tax_assessor vr
-   group by 1
+    SELECT '[' || STRING_AGG(
+      CONCAT(
+          '{"city": "', view1.city,
+          '", "county": "', view1.county,
+          '", "state": "', view1.state,
+          '", "sub_market": "', view1.sub_market,
+          '", "market": "', view1.market,
+          '"}'
+      ), ',') || ']' AS json_array
+  FROM ${this.DB_SCHEMA}.vw_rb_property_details view1;
+
 `);
 
     return marketCity;
