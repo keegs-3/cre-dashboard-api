@@ -448,7 +448,9 @@ limit 100 offset ${offset}
   async forProperty(
     @param.query.string('state') state?: string,
     @param.query.string('city') city?: string,
-    @param.query.string('address') address?: string,
+    @param.query.string('market') market?: string,
+    @param.query.string('submarket') submarket?: string,
+    @param.query.string('county') county?: string,
     @param.query.number('offset', {default: 0}) offset?: number,
   ): Promise<any> {
     let marq: any = '';
@@ -458,11 +460,11 @@ limit 100 offset ${offset}
       marq = "'" + mar?.join("','") + "'";
       const cit = city?.split(',');
       cityc = "'" + cit?.join("','") + "'";
-      const add = address?.split(',');
+      const add = county?.split(',');
       addc= "'" + add?.join("','") + "'";
 let allState='' ;
 let allCity='';
-let allAddress='';
+let allCounty='';
 
     if (
       state !== '' &&
@@ -479,21 +481,21 @@ let allAddress='';
       allCity = `AND (city IN(${cityc}))`;
     }
     if (
-      address !== '' &&
-      address !== undefined
+      county !== '' &&
+      county !== undefined
 
     ) {
-      allAddress = `  AND (address IN(${addc}))`;
+      allCounty = `  AND (address IN(${addc}))`;
     }
 
 
 
     const count = `
-                    SELECT count(*) FROM ${this.DB_SCHEMA}.vw_rb_property_details
+                    SELECT * FROM ${this.DB_SCHEMA}.vw_rb_property_details
                     where 1 = 1
                     ${allState}
                     ${allCity}
-                    ${allAddress}
+                    ${allCounty}
                   `;
 return count;
 
