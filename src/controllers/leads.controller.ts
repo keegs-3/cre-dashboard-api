@@ -451,11 +451,19 @@ limit 100 offset ${offset}
     @param.query.string('market') market?: string,
     @param.query.string('submarket') submarket?: string,
     @param.query.string('county') county?: string,
+    @param.query.number('punits') punits?: number,
+    @param.query.number('punite') punite?: number,
     @param.query.number('offset', {default: 0}) offset?: number,
   ): Promise<any> {
     let marq: any = '';
+    let mmarq: any = '';
+    let smarq: any = '';
     let cityc: any = '';
     let addc: any = '';
+      const mmar = market?.split(',');
+      mmarq = "'" + mmar?.join("','") + "'";
+      const smar = submarket?.split(',');
+      smarq = "'" + smar?.join("','") + "'";
       const mar = state?.split(',');
       marq = "'" + mar?.join("','") + "'";
       const cit = city?.split(',');
@@ -465,6 +473,9 @@ limit 100 offset ${offset}
 let allState='' ;
 let allCity='';
 let allCounty='';
+let allMArket='';
+let allSMArket='';
+let allPunit='';
 
     if (
       state !== '' &&
@@ -487,6 +498,30 @@ let allCounty='';
     ) {
       allCounty = `  AND (address IN(${addc}))`;
     }
+    if (
+      market !== '' &&
+      market !== undefined
+
+    ) {
+      allMArket = `  AND (market IN(${mmarq}))`;
+    }
+    if (
+      submarket !== '' &&
+      submarket !== undefined
+
+    ) {
+      allSMArket = `  AND (market IN(${smarq}))`;
+    }
+    if (
+      punits !== null &&
+      punits !== undefined &&
+      punite !== null &&
+      punite !== undefined
+
+    ) {
+      allPunit = ` and units_count between ${punits} and ${punite}`;
+    }
+
 
 
 
@@ -496,8 +531,11 @@ let allCounty='';
                     ${allState}
                     ${allCity}
                     ${allCounty}
+                    ${allMArket}
+                    ${allSMArket}${allPunit}
                   `;
-return count;
+                  const all = await this.leadsRepository.dataSource.execute(count)
+return all;
 
 
   }
