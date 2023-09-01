@@ -636,7 +636,7 @@ group by market
                   ${allOwner}
                   ${allSeg}
                   ${allYtms}
-order by market
+
                 `;
                   const all = await this.leadsRepository.dataSource.execute(data)
                   const count = await this.leadsRepository.dataSource.execute(countdata)
