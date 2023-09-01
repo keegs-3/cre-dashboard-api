@@ -517,7 +517,7 @@ let allYtms='';
       county !== undefined
 
     ) {
-      allCounty = `  AND (address IN(${addc}))`;
+      allCounty = `  AND (county IN(${addc}))`;
     }
     if (
       market !== '' &&
@@ -531,7 +531,7 @@ let allYtms='';
       submarket !== undefined
 
     ) {
-      allSMArket = `  AND (market IN(${smarq}))`;
+      allSMArket = `  AND (sub_market IN(${smarq}))`;
     }
     if (
       punits !== null &&
@@ -549,7 +549,7 @@ let allYtms='';
       oce !== undefined
 
     ) {
-      allOcr = ` and units_count between ${ocs} and ${oce}`;
+      allOcr = ` and latest_occupancy_rate between ${ocs} and ${oce}`;
     }
     if (
       rrs !== null &&
@@ -558,7 +558,7 @@ let allYtms='';
       rre !== undefined
 
     ) {
-      allRr = ` and units_count between ${ocs} and ${oce}`;
+      allRr = ` and latest_monthly_rent between ${rrs} and ${rre}`;
     }
 
     if (
@@ -619,6 +619,29 @@ allLa=`and loan_maturity_date is not null `;
                     ${allSeg}
                     ${allYtms}
                     limit 100 offset ${offset}
+                  `;
+                  const all = await this.leadsRepository.dataSource.execute(count)
+return all;
+
+
+  }
+  @get('/reportyBuilder/byProperty/minMax')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async minMax(
+
+  ): Promise<any> {
+
+
+
+
+    const count = `
+    SELECT min(units_count)as minUnit,max(units_count)as maxUnit,
+    min(latest_occupancy_rate)as minOccupancy,max(latest_occupancy_rate)as maxOccupancy,
+    min(latest_monthly_rent)as minRent
+    ,max(latest_monthly_rent)as MaxRent
+    FROM ${this.DB_SCHEMA}.vw_rb_property_details
                   `;
                   const all = await this.leadsRepository.dataSource.execute(count)
 return all;
