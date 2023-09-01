@@ -622,7 +622,7 @@ allLa=`and loan_maturity_date is not null `;
                     limit 100 offset ${offset}
                   `;
                   const countdata = `
-                  SELECT * FROM ${this.DB_SCHEMA}.vw_rb_property_details
+                  SELECT count(*) FROM ${this.DB_SCHEMA}.vw_rb_property_details
                   where 1 = 1
                   ${allState}
                   ${allCity}
