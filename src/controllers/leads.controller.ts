@@ -604,7 +604,7 @@ allLa=`and loan_maturity_date is not null `;
 
 
 
-    const count = `
+    const data = `
                     SELECT * FROM ${this.DB_SCHEMA}.vw_rb_property_details
                     where 1 = 1
                     ${allState}
@@ -618,10 +618,34 @@ allLa=`and loan_maturity_date is not null `;
                     ${allOwner}
                     ${allSeg}
                     ${allYtms}
+                    order by market
                     limit 100 offset ${offset}
                   `;
-                  const all = await this.leadsRepository.dataSource.execute(count)
-return all;
+                  const countdata = `
+                  SELECT * FROM ${this.DB_SCHEMA}.vw_rb_property_details
+                  where 1 = 1
+                  ${allState}
+                  ${allCity}
+                  ${allCounty}
+                  ${allMArket}
+                  ${allSMArket}
+                  ${allPunit}
+                  ${allOcr}${allRr}
+                  ${allLa}
+                  ${allOwner}
+                  ${allSeg}
+                  ${allYtms}
+order by market
+                `;
+                  const all = await this.leadsRepository.dataSource.execute(data)
+                  const count = await this.leadsRepository.dataSource.execute(countdata)
+
+                  if (all.length > 0) {
+                    return {all,count};
+                  } else {
+                    return 'No Data Available';
+                  }
+
 
 
   }
@@ -647,6 +671,193 @@ return all;
 return all;
 
 
+  }
+  @get('/reportyBuilder/byProperty/export')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async forPExport(
+    @param.query.string('state') state?: string,
+    @param.query.string('city') city?: string,
+    @param.query.string('market') market?: string,
+    @param.query.string('submarket') submarket?: string,
+    @param.query.string('county') county?: string,
+    @param.query.number('punits') punits?: number,
+    @param.query.number('punite') punite?: number,
+    @param.query.number('ocs') ocs?: number,
+    @param.query.number('oce') oce?: number,
+    @param.query.number('rrs') rrs?: number,
+    @param.query.number('rre') rre?: number,
+    @param.query.string('la') la?: string,
+    @param.query.string('owner') owner?: string,
+    @param.query.string('segement') segment?: string,
+    @param.query.number('ytms') ytms?: number,
+     @param.query.number('ytme') ytme?: number,
+    @param.query.number('offset', {default: 0}) offset?: number,
+  ): Promise<any> {
+    let marq: any = '';
+    let mmarq: any = '';
+    let smarq: any = '';
+    let cityc: any = '';
+    let addc: any = '';
+    let own: any = '';
+    let seg: any = '';
+      const mmar = market?.split(',');
+      mmarq = "'" + mmar?.join("','") + "'";
+      const smar = submarket?.split(',');
+      smarq = "'" + smar?.join("','") + "'";
+      const mar = state?.split(',');
+      marq = "'" + mar?.join("','") + "'";
+      const cit = city?.split(',');
+      cityc = "'" + cit?.join("','") + "'";
+      const add = county?.split(',');
+      addc= "'" + add?.join("','") + "'";
+      const ow = owner?.split(',');
+      own= "'" + ow?.join("','") + "'";
+      const se = segment?.split(',');
+      seg= "'" + se?.join("','") + "'";
+let allState='' ;
+let allCity='';
+let allCounty='';
+let allMArket='';
+let allSMArket='';
+let allPunit='';
+let allOcr='';
+let allRr='';
+let allLa='';
+let allOwner='';
+let allSeg='';
+let allYtms='';
+
+    if (
+      state !== '' &&
+      state !== undefined
+
+    ) {
+      allState = `AND (state IN(${marq}))`;
+    }
+    if (
+      city !== '' &&
+      city !== undefined
+
+    ) {
+      allCity = `AND (city IN(${cityc}))`;
+    }
+    if (
+      county !== '' &&
+      county !== undefined
+
+    ) {
+      allCounty = `  AND (county IN(${addc}))`;
+    }
+    if (
+      market !== '' &&
+      market !== undefined
+
+    ) {
+      allMArket = `  AND (market IN(${mmarq}))`;
+    }
+    if (
+      submarket !== '' &&
+      submarket !== undefined
+
+    ) {
+      allSMArket = `  AND (sub_market IN(${smarq}))`;
+    }
+    if (
+      punits !== null &&
+      punits !== undefined &&
+      punite !== null &&
+      punite !== undefined
+
+    ) {
+      allPunit = ` and units_count between ${punits} and ${punite}`;
+    }
+    if (
+      ocs !== null &&
+      ocs !== undefined &&
+      oce !== null &&
+      oce !== undefined
+
+    ) {
+      allOcr = ` and latest_occupancy_rate between ${ocs} and ${oce}`;
+    }
+    if (
+      rrs !== null &&
+      rrs !== undefined &&
+      rre !== null &&
+      rre !== undefined
+
+    ) {
+      allRr = ` and latest_monthly_rent between ${rrs} and ${rre}`;
+    }
+
+    if (
+      ytms !== null &&
+      ytms !== undefined &&
+      ytme !== null &&
+      ytme !== undefined
+
+    ) {
+      allYtms = `and years_to_mature  between ${ytms} and ${ytme}`;
+    }
+    if (
+      la !== '' &&
+      la !== undefined
+
+
+    ) {
+if (la==='No'){
+
+  allLa=`and loan_maturity_date is  null`;
+
+}
+else if (la==='Yes'){
+allLa=`and loan_maturity_date is not null `;
+}
+
+    }
+    if (
+      owner !== '' &&
+      owner !== undefined
+
+    ) {
+      allOwner = `  AND (owner_name IN(${own}))`;
+    }
+    if (
+      segment !== '' &&
+      segment !== undefined
+
+    ) {
+      allSeg = `  AND (owner_segment IN(${seg}))`;
+    }
+
+
+
+
+    const data = `
+                    SELECT * FROM ${this.DB_SCHEMA}.vw_rb_property_details
+                    where 1 = 1
+                    ${allState}
+                    ${allCity}
+                    ${allCounty}
+                    ${allMArket}
+                    ${allSMArket}
+                    ${allPunit}
+                    ${allOcr}${allRr}
+                    ${allLa}
+                    ${allOwner}
+                    ${allSeg}
+                    ${allYtms}
+                  `;
+
+                  const all = await this.leadsRepository.dataSource.execute(data)
+
+                  if (all.length > 0) {
+                    return all;
+                  } else {
+                    return 'No Data Available';
+                  }
   }
 
   @get('/reportyBuilder/byPropertyOLd')
@@ -806,7 +1017,7 @@ return all;
       throw new HttpErrors.InternalServerError();
     }
   }
-  @get('/reportyBuilder/bySales/export')
+  @get('/reportyBuilder/bySales/exportold')
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
