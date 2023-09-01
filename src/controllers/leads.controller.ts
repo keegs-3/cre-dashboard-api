@@ -7,6 +7,8 @@ import {
   HttpErrors,
   get,
   param,
+  post,
+  requestBody,
   response
 } from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
