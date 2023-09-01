@@ -618,8 +618,6 @@ allLa=`and loan_maturity_date is not null `;
                     ${allOwner}
                     ${allSeg}
                     ${allYtms}
-                    group by market
-                    order by market
                     limit 100 offset ${offset}
                   `;
                   const countdata = `
