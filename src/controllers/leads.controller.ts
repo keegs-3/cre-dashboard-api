@@ -1339,7 +1339,7 @@ AND (document_recorded_date between '${salePeriodFrom}' and '${salePeriodTo}' )
       throw new HttpErrors.InternalServerError();
     }
   }
-  @get('/reportyBuilder/byProperty/export')
+  @get('/reportyBuilder/byProperty/exportold')
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
