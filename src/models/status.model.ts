@@ -29,6 +29,22 @@ export class Status extends Entity {
     type: 'number',
   })
   deal_value: Number;
+  @property({
+    type: 'boolean',
+  })
+  financial_sent: Boolean;
+  @property({
+    type: 'boolean',
+  })
+  financial_notsent: Boolean;
+  @property({
+    type: 'boolean',
+  })
+  listed: Boolean;
+  @property({
+    type: 'boolean',
+  })
+  available_off_market: Boolean;
 
 
   constructor(data?: Partial<Status>) {
