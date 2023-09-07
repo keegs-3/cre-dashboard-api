@@ -1694,6 +1694,10 @@ group by 1
     @param.query.string('probability') probability?: string,
     @param.query.string('market') market?: string,
     @param.query.string('org') org?: string,
+    @param.query.string('financial_sent') financial_sent?: string,
+    @param.query.string('financial_notsent') financial_notsent?: string,
+    @param.query.string('listed') listed?: string,
+    @param.query.string('available_off_market') available_off_market?: string,
     @param.query.number('offset') offset?: number,
   ): Promise<any> {
 
@@ -1789,6 +1793,41 @@ else {
 
 }
 else{
+let afm='';
+let l = '';
+let fns = '';
+let fs = '';
+  if (
+    available_off_market !== '' &&
+    available_off_market !== undefined
+
+  ) {
+    afm = `AND (subquery.available_off_market = ${available_off_market})`;
+  }
+  if (
+    listed !== '' &&
+    listed !== undefined
+
+  ) {
+    l = `AND (subquery.listed = ${listed})`;
+  }
+  if (
+    financial_notsent !== '' &&
+    financial_notsent !== undefined
+
+  ) {
+    fns = `AND (subquery.financial_notsent = ${financial_notsent})`;
+  }
+  if (
+    financial_sent !== '' &&
+    financial_sent !== undefined
+
+  ) {
+    fs = `AND (subquery.financial_sent = ${financial_sent})`;
+  }
+
+
+
   const s =  `
   SELECT *
 FROM (
@@ -1800,6 +1839,7 @@ FROM (
 WHERE subquery.status = '${status}'
   AND subquery.probability IN (${propenq})
   AND subquery.state IN (${markc})
+  ${fns}${fs}${l}${afm}
   order by case probability
   when 'Hot' then 1
    when 'Warm' then 2
