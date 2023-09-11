@@ -1694,6 +1694,7 @@ group by 1
     @param.query.string('status') status?: string,
     @param.query.string('probability') probability?: string,
     @param.query.string('market') market?: string,
+    @param.query.string('owner') owner?: string,
     @param.query.string('org') org?: string,
     @param.query.string('financial_sent') financial_sent?: string,
     @param.query.string('financial_notsent') financial_notsent?: string,
@@ -1708,10 +1709,14 @@ group by 1
       const propen = probability?.split(',');
       const  propenq = "'" + propen?.join("','") + "'";
 
+      const ownern = owner?.split(',');
+      const  ownerc = "'" + ownern?.join("','") + "'";
+
 
 
       const mark = market?.split(',');
        const markc = "'" + mark?.join("','") + "'";
+
 
 
 if (status === 'LEAD'){
@@ -1721,6 +1726,15 @@ SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw
 where agent_id = '${org}'
 `  )
 if (count.length >= 1){
+  let ow = '';
+  if (
+   ownerc !== '' &&
+   ownerc !== undefined
+
+) {
+ow = `AND (owner_name in( ${ownerc}))`;
+}
+
 const s =  `
 SELECT l.*,
 (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
@@ -1732,6 +1746,7 @@ where l.tax_assessor_id not in (
 )
 AND (probability IN (${propenq}) )
 AND (state IN (${markc}) )
+${ow}
 order by
 case probability
      when 'Hot' then 1
@@ -1758,6 +1773,16 @@ console.log('ssssaaaa',s)
 
 }
 else {
+
+  let ow = '';
+  if (
+   ownerc !== '' &&
+   ownerc !== undefined
+
+) {
+ow = `AND (owner_name in( ${ownerc}))`;
+}
+
   const s =  `
   SELECT l.*,
   (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
@@ -1766,6 +1791,7 @@ FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
 WHERE
   (probability IN (${propenq}) )
   AND (state IN (${markc}) )
+  ${ow}
 ORDER BY
   CASE probability
     WHEN 'Hot' THEN 1
@@ -1826,6 +1852,14 @@ let fs = '';
   ) {
     fs = `AND (subquery.financial_sent = ${financial_sent})`;
   }
+  let ow = '';
+  if (
+   ownerc !== '' &&
+   ownerc !== undefined
+
+) {
+ow = `AND (subquery.owner_name in( ${ownerc}))`;
+}
 
 
 
@@ -1840,7 +1874,7 @@ FROM (
 WHERE subquery.status = '${status}'
   AND subquery.probability IN (${propenq})
   AND subquery.state IN (${markc})
-  ${fns}${fs}${l}${afm}
+  ${fns}${fs}${l}${afm}${ow}
   order by case probability
   when 'Hot' then 1
    when 'Warm' then 2
@@ -1864,6 +1898,26 @@ else{
 
 
 }
+
+
+
+
+
+  }
+  @get('/leads/ownername')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async owner(
+
+  ): Promise<any> {
+
+    const sql = await this.leadsRepository.dataSource.execute(
+      `
+      select distinct l.owner_name from ${this.DB_SCHEMA}.leads l  order by l.owner_name asc
+
+      `  )
+return sql;
 
 
 
