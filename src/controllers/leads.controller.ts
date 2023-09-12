@@ -1728,8 +1728,8 @@ where agent_id = '${org}'
 if (count.length >= 1){
   let ow = '';
   if (
-   ownerc !== '' &&
-   ownerc !== undefined
+    owner !== '' &&
+    owner !== undefined
 
 ) {
 ow = `AND (owner_name in( ${ownerc}))`;
@@ -1776,8 +1776,8 @@ else {
 
   let ow = '';
   if (
-   ownerc !== '' &&
-   ownerc !== undefined
+    owner !== '' &&
+    owner !== undefined
 
 ) {
 ow = `AND (owner_name in( ${ownerc}))`;
@@ -1854,8 +1854,8 @@ let fs = '';
   }
   let ow = '';
   if (
-   ownerc !== '' &&
-   ownerc !== undefined
+    owner !== '' &&
+    owner !== undefined
 
 ) {
 ow = `AND (subquery.owner_name in( ${ownerc}))`;
