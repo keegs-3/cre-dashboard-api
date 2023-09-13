@@ -661,11 +661,18 @@ allLa=`and loan_maturity_date is not null `;
 
 
     const count = `
-    SELECT min(units_count)as minUnit,max(units_count)as maxUnit,
-    min(latest_occupancy_rate)as minOccupancy,max(latest_occupancy_rate)as maxOccupancy,
-    min(latest_monthly_rent)as minRent
-    ,max(latest_monthly_rent)as MaxRent
-    FROM ${this.DB_SCHEMA}.vw_rb_property_details
+    SELECT
+    MIN(units_count) AS minUnit,
+    MAX(units_count) AS maxUnit,
+    MIN(latest_occupancy_rate) AS minOccupancy,
+    MAX(latest_occupancy_rate) AS maxOccupancy,
+    MIN(latest_monthly_rent) AS minRent,
+    MAX(latest_monthly_rent) AS MaxRent
+FROM ${this.DB_SCHEMA}.vw_rb_property_details
+WHERE
+    units_count IS NOT NULL
+    AND latest_occupancy_rate IS NOT NULL
+    AND latest_monthly_rent IS NOT NULL;
                   `;
                   const all = await this.leadsRepository.dataSource.execute(count)
 return all;
