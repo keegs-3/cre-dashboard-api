@@ -72,7 +72,7 @@ order by "date" desc
     SUM(luov.deal_value) AS dealClosed,
     DATE_TRUNC('month', luov.insert_date) AS month,
     COUNT(CASE WHEN luov.status = 'CLOSED' THEN 1 END) AS closedCount,
-    COUNT(CASE WHEN luov.status = 'UNDER AGREEMENT' OR luov.status = 'OFFER ACCEPTED' THEN 1 END) AS underContracts,
+    COUNT(CASE WHEN luov.status = 'UNDER AGREEMENT' OR luov.status = 'LISTED' THEN 1 END) AS underContracts,
     COUNT(CASE WHEN (CURRENT_DATE - luov.insert_date) > INTERVAL '90 days' THEN 1 END) AS expiredContracts
   FROM
     ${this.DB_SCHEMA}.lead_user_org_vw luov
