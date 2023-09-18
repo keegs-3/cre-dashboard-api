@@ -6,14 +6,17 @@ import {repository} from '@loopback/repository';
 import {
   HttpErrors,
   get,
+  getJsonSchemaRef,
+  getModelSchemaRef,
   param,
   post,
   requestBody,
   response
 } from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
+import {Leads} from '../models';
 import {authenticate} from '@loopback/authentication';
-@authenticate("jwt")
+// @authenticate("jwt")
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
@@ -21,6 +24,19 @@ export class LeadsController {
   ) {}
 
   DB_SCHEMA = process.env.DB_SCHEMA;
+  @post('/leads/byUser', {
+    responses: {
+      '200': {
+        description: 'User',
+        content: {
+          schema: getJsonSchemaRef(Leads),
+        },
+      },
+    },
+  })
+  async signup(@requestBody() userData: Leads) {
+    return this.leadsRepository.create(userData);
+  }
 
   @get('/reportyBuilder/bySales')
   @response(200, {

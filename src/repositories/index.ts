@@ -13,3 +13,4 @@ export * from './leadsnotes.repository';
 export * from './useractions.repository';
 export * from './userreview.repository';
 
+export * from './leads.repository';
