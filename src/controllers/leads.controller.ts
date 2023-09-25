@@ -2036,7 +2036,7 @@ else{
                 WHERE subquery.status = '${status}'
                 AND subquery.probability IN (${propenq})
                 AND subquery.state IN (${markc})
-                AND (organization IN ('all','${org}'))
+                AND (subquery.organization IN ('all','${org}'))
                 ${fns}${fs}${l}${afm}${ow}
                 order by case probability
                 when 'Hot' then 1
