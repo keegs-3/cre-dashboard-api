@@ -1766,7 +1766,7 @@ group by 1
           SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
           where agent_id = '${org}'
           )
-where property_name LIKE '%${search}%'
+and property_name LIKE '%${search}%'
           limit 102 offset ${offset}
           `;
 
@@ -1902,6 +1902,7 @@ if (status === 'LEAD'){
           )
           AND (probability IN (${propenq}) )
           AND (state IN (${markc}) )
+          AND (organization IN ('all','${org}'))
 
           ${ow}
           order by
@@ -1948,6 +1949,7 @@ else {
         WHERE
         (probability IN (${propenq}) )
         AND (state IN (${markc}) )
+        AND (organization IN ('all','${org}'))
         ${ow}
         ORDER BY
         CASE probability
@@ -2034,6 +2036,7 @@ else{
                 WHERE subquery.status = '${status}'
                 AND subquery.probability IN (${propenq})
                 AND subquery.state IN (${markc})
+                AND (organization IN ('all','${org}'))
                 ${fns}${fs}${l}${afm}${ow}
                 order by case probability
                 when 'Hot' then 1
