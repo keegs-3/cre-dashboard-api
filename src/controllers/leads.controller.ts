@@ -475,6 +475,7 @@ limit 100 offset ${offset}
     @param.query.number('rrs') rrs?: number,
     @param.query.number('rre') rre?: number,
     @param.query.string('la') la?: string,
+    @param.query.string('propertyName') propertyName?: string,
     @param.query.string('owner') owner?: string,
     @param.query.string('segement') segment?: string,
     @param.query.number('ytms') ytms?: number,
@@ -484,6 +485,7 @@ limit 100 offset ${offset}
     let marq: any = '';
     let mmarq: any = '';
     let smarq: any = '';
+    let spname: any = '';
     let cityc: any = '';
     let addc: any = '';
     let own: any = '';
@@ -502,6 +504,8 @@ limit 100 offset ${offset}
       own= "'" + ow?.join("','") + "'";
       const se = segment?.split(',');
       seg= "'" + se?.join("','") + "'";
+      const pn = propertyName?.split(',');
+      spname= "'" + pn?.join("','") + "'";
 let allState='' ;
 let allCity='';
 let allCounty='';
@@ -514,6 +518,7 @@ let allLa='';
 let allOwner='';
 let allSeg='';
 let allYtms='';
+let allPname='';
 
     if (
       state !== '' &&
@@ -549,6 +554,13 @@ let allYtms='';
 
     ) {
       allSMArket = `  AND (sub_market IN(${smarq}))`;
+    }
+    if (
+      propertyName !== '' &&
+      propertyName !== undefined
+
+    ) {
+      allPname = `  AND (property_name IN(${spname}))`;
     }
     if (
       punits !== null &&
@@ -635,6 +647,7 @@ allLa=`and loan_maturity_date is not null `;
                     ${allOwner}
                     ${allSeg}
                     ${allYtms}
+                    ${allPname}
                     limit 100 offset ${offset}
                   `;
                   const countdata = `
@@ -651,6 +664,7 @@ allLa=`and loan_maturity_date is not null `;
                   ${allOwner}
                   ${allSeg}
                   ${allYtms}
+                  ${allPname}
 
                 `;
                   const all = await this.leadsRepository.dataSource.execute(data)
@@ -717,6 +731,7 @@ return all;
     @param.query.number('ytms') ytms?: number,
      @param.query.number('ytme') ytme?: number,
     @param.query.number('offset', {default: 0}) offset?: number,
+    @param.query.string('propertyName') propertyName?: string,
   ): Promise<any> {
     let marq: any = '';
     let mmarq: any = '';
@@ -725,6 +740,7 @@ return all;
     let addc: any = '';
     let own: any = '';
     let seg: any = '';
+    let spname: any = '';
       const mmar = market?.split(',');
       mmarq = "'" + mmar?.join("','") + "'";
       const smar = submarket?.split(',');
@@ -739,6 +755,8 @@ return all;
       own= "'" + ow?.join("','") + "'";
       const se = segment?.split(',');
       seg= "'" + se?.join("','") + "'";
+      const pn = propertyName?.split(',');
+      spname= "'" + pn?.join("','") + "'";
 let allState='' ;
 let allCity='';
 let allCounty='';
@@ -751,6 +769,7 @@ let allLa='';
 let allOwner='';
 let allSeg='';
 let allYtms='';
+let allPname='';
 
     if (
       state !== '' &&
@@ -786,6 +805,13 @@ let allYtms='';
 
     ) {
       allSMArket = `  AND (sub_market IN(${smarq}))`;
+    }
+    if (
+      propertyName !== '' &&
+      propertyName !== undefined
+
+    ) {
+      allPname = `  AND (property_name IN(${spname}))`;
     }
     if (
       punits !== null &&
@@ -872,6 +898,7 @@ allLa=`and loan_maturity_date is not null `;
                     ${allOwner}
                     ${allSeg}
                     ${allYtms}
+                    ${allPname}
                   `;
 
                   const all = await this.leadsRepository.dataSource.execute(data)
