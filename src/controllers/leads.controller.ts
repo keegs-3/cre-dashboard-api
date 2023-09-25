@@ -504,6 +504,8 @@ limit 100 offset ${offset}
       own= "'" + ow?.join("','") + "'";
       const se = segment?.split(',');
       seg= "'" + se?.join("','") + "'";
+
+      // pn = 'anil,anil2,anil3'
       const pn = propertyName?.split(',');
       spname= "'" + pn?.join("','") + "'";
 let allState='' ;
@@ -1900,6 +1902,7 @@ if (status === 'LEAD'){
           )
           AND (probability IN (${propenq}) )
           AND (state IN (${markc}) )
+
           ${ow}
           order by
           case probability

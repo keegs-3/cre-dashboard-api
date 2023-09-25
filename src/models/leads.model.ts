@@ -219,6 +219,14 @@ export class Leads extends Entity {
     type: 'boolean',
   })
   user_added?: Boolean;
+  @property({
+    type: 'string',
+  })
+  username?: string;
+  @property({
+    type: 'string',
+  })
+  organization?: string;
 
 
 
