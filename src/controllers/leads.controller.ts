@@ -1736,6 +1736,120 @@ group by 1
     return marketCity;
   }
 
+  @get('/leads/byStatus/search')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async search(
+
+    @param.query.string('search') search?: string,
+    @param.query.string('status') status?: string,
+    @param.query.string('org') org?: string,
+    @param.query.number('offset') offset?: string,
+
+  ): Promise<any> {
+
+    if (status === 'LEAD'){
+      const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
+      if (count.length >= 1)
+      {
+
+
+          const s =  `
+          SELECT l.*,
+          (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
+          (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
+          FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+          where l.tax_assessor_id not in (
+          SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
+          where agent_id = '${org}'
+          )
+where property_name LIKE '%${search}%'
+          limit 102 offset ${offset}
+          `;
+
+          console.log('ssssaaaa',s)
+          const sql = await this.leadsRepository.dataSource.execute(s)
+          if (sql.length >= 1){
+          return sql
+          }
+          else {
+          return 'No data Matched'
+          }
+
+      }
+else {
+
+
+        const s =  `
+        SELECT l.*,
+        (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
+        (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
+        FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+        WHERE
+        property_name LIKE '%${search}%'
+        LIMIT 102 OFFSET ${offset};
+
+        `;
+        console.log('sssss',s)
+        const sql = await this.leadsRepository.dataSource.execute(s)
+        if (sql.length >= 1){
+        return sql
+        }
+        else {
+        return 'No data Matched'
+        }
+
+}
+
+}
+
+
+// when data is not for leads status
+else{
+
+
+                const s =  `
+                SELECT *
+                FROM (
+                SELECT DISTINCT ON (l.tax_assessor_id) l.*
+                FROM ${this.DB_SCHEMA}.lead_user_org_vw l
+                WHERE l.agent_id = '${org}'
+                ORDER BY l.tax_assessor_id, l.insert_date DESC
+                ) subquery
+               where subquery.property_name LIKE '%${search}%'
+                limit 102 offset ${offset}
+
+                ;
+
+                `;
+                console.log('sql ',s)
+                const sql = await this.leadsRepository.dataSource.execute(s)
+                if(sql.length >= 1){
+                return sql}
+                else{
+                return 'No data Found'
+                }
+
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
   @get('/leads/byStatus')
   @response(200, {
     description: 'Array of buyers page chart model instances',
@@ -1770,179 +1884,172 @@ group by 1
 
 
 if (status === 'LEAD'){
-  const count = await this.leadsRepository.dataSource.execute(
-`
-SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw
-where agent_id = '${org}'
-`  )
-if (count.length >= 1){
-  let ow = '';
-  if (
-    owner !== '' &&
-    owner !== undefined
+      const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
+      if (count.length >= 1)
+      {
+          let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`;}
 
-) {
-ow = `AND (owner_name in( ${ownerc}))`;
-}
+          const s =  `
+          SELECT l.*,
+          (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
+          (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
+          FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+          where l.tax_assessor_id not in (
+          SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
+          where agent_id = '${org}'
+          )
+          AND (probability IN (${propenq}) )
+          AND (state IN (${markc}) )
+          ${ow}
+          order by
+          case probability
+          when 'Hot' then 1
+          when 'Warm' then 2
+          when 'Cold' then 3
+          end,
+          CASE
+          WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') IS NULL THEN 2
+          ELSE 1
+          END,
+          (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') DESC,
+          property_name asc
+          limit 102 offset ${offset}
+          `;
 
-const s =  `
-SELECT l.*,
-(SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
-       (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
-FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
-where l.tax_assessor_id not in (
-  SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
-  where agent_id = '${org}'
-)
-AND (probability IN (${propenq}) )
-AND (state IN (${markc}) )
-${ow}
-order by
-case probability
-     when 'Hot' then 1
-      when 'Warm' then 2
-      when 'Cold' then 3
-      end,
-      CASE
-      WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') IS NULL THEN 2
-      ELSE 1
-    END,
-    (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') DESC,
-      property_name asc
-limit 102 offset ${offset}
-`;
+          console.log('ssssaaaa',s)
+          const sql = await this.leadsRepository.dataSource.execute(s)
+          if (sql.length >= 1){
+          return sql
+          }
+          else {
+          return 'No data Matched'
+          }
 
-console.log('ssssaaaa',s)
-  const sql = await this.leadsRepository.dataSource.execute(s)
-  if (sql.length >= 1){
-    return sql
-  }
-  else {
-    return 'No data Matched'
-  }
-
-}
+      }
 else {
 
-  let ow = '';
-  if (
-    owner !== '' &&
-    owner !== undefined
+        let ow = '';
+        if (
+        owner !== '' &&
+        owner !== undefined
 
-) {
-ow = `AND (owner_name in( ${ownerc}))`;
-}
+        ) {
+        ow = `AND (owner_name in( ${ownerc}))`;
+        }
 
-  const s =  `
-  SELECT l.*,
-  (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
-  (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
-FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
-WHERE
-  (probability IN (${propenq}) )
-  AND (state IN (${markc}) )
-  ${ow}
-ORDER BY
-  CASE probability
-    WHEN 'Hot' THEN 1
-    WHEN 'Warm' THEN 2
-    WHEN 'Cold' THEN 3
-  END,
-  CASE
-    WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') IS NULL THEN 2
-    ELSE 1
-  END,
-  (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') DESC,
-  property_name ASC
-LIMIT 102 OFFSET ${offset};
+        const s =  `
+        SELECT l.*,
+        (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
+        (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
+        FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
+        WHERE
+        (probability IN (${propenq}) )
+        AND (state IN (${markc}) )
+        ${ow}
+        ORDER BY
+        CASE probability
+        WHEN 'Hot' THEN 1
+        WHEN 'Warm' THEN 2
+        WHEN 'Cold' THEN 3
+        END,
+        CASE
+        WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') IS NULL THEN 2
+        ELSE 1
+        END,
+        (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') DESC,
+        property_name ASC
+        LIMIT 102 OFFSET ${offset};
 
-  `;
-  console.log('sssss',s)
-  const sql = await this.leadsRepository.dataSource.execute(s)
-if (sql.length >= 1){
-  return sql
-}
-else {
-  return 'No data Matched'
-}
-
-}
+        `;
+        console.log('sssss',s)
+        const sql = await this.leadsRepository.dataSource.execute(s)
+        if (sql.length >= 1){
+        return sql
+        }
+        else {
+        return 'No data Matched'
+        }
 
 }
+
+}
+
+
+// when data is not for leads status
 else{
-let afm='';
-let l = '';
-let fns = '';
-let fs = '';
-  if (
-    available_off_market !== '' &&
-    available_off_market !== undefined
+                let afm='';
+                let l = '';
+                let fns = '';
+                let fs = '';
+                if (
+                available_off_market !== '' &&
+                available_off_market !== undefined
 
-  ) {
-    afm = `AND (subquery.available_off_market = ${available_off_market})`;
-  }
-  if (
-    listed !== '' &&
-    listed !== undefined
+                ) {
+                afm = `AND (subquery.available_off_market = ${available_off_market})`;
+                }
+                if (
+                listed !== '' &&
+                listed !== undefined
 
-  ) {
-    l = `AND (subquery.listed = ${listed})`;
-  }
-  if (
-    financial_notsent !== '' &&
-    financial_notsent !== undefined
+                ) {
+                l = `AND (subquery.listed = ${listed})`;
+                }
+                if (
+                financial_notsent !== '' &&
+                financial_notsent !== undefined
 
-  ) {
-    fns = `AND (subquery.financial_notsent = ${financial_notsent})`;
-  }
-  if (
-    financial_sent !== '' &&
-    financial_sent !== undefined
+                ) {
+                fns = `AND (subquery.financial_notsent = ${financial_notsent})`;
+                }
+                if (
+                financial_sent !== '' &&
+                financial_sent !== undefined
 
-  ) {
-    fs = `AND (subquery.financial_sent = ${financial_sent})`;
-  }
-  let ow = '';
-  if (
-    owner !== '' &&
-    owner !== undefined
+                ) {
+                fs = `AND (subquery.financial_sent = ${financial_sent})`;
+                }
+                let ow = '';
+                if (
+                owner !== '' &&
+                owner !== undefined
 
-) {
-ow = `AND (subquery.owner_name in( ${ownerc}))`;
-}
+                ) {
+                ow = `AND (subquery.owner_name in( ${ownerc}))`;
+                }
 
 
 
-  const s =  `
-  SELECT *
-FROM (
-  SELECT DISTINCT ON (l.tax_assessor_id) l.*
-  FROM ${this.DB_SCHEMA}.lead_user_org_vw l
-  WHERE l.agent_id = '${org}'
-  ORDER BY l.tax_assessor_id, l.insert_date DESC
-) subquery
-WHERE subquery.status = '${status}'
-  AND subquery.probability IN (${propenq})
-  AND subquery.state IN (${markc})
-  ${fns}${fs}${l}${afm}${ow}
-  order by case probability
-  when 'Hot' then 1
-   when 'Warm' then 2
-   when 'Cold' then 3
-   end,
-   insert_date DESC
-limit 102 offset ${offset}
+                const s =  `
+                SELECT *
+                FROM (
+                SELECT DISTINCT ON (l.tax_assessor_id) l.*
+                FROM ${this.DB_SCHEMA}.lead_user_org_vw l
+                WHERE l.agent_id = '${org}'
+                ORDER BY l.tax_assessor_id, l.insert_date DESC
+                ) subquery
+                WHERE subquery.status = '${status}'
+                AND subquery.probability IN (${propenq})
+                AND subquery.state IN (${markc})
+                ${fns}${fs}${l}${afm}${ow}
+                order by case probability
+                when 'Hot' then 1
+                when 'Warm' then 2
+                when 'Cold' then 3
+                end,
+                insert_date DESC
+                limit 102 offset ${offset}
 
-;
+                ;
 
-  `;
-  console.log('sql ',s)
-  const sql = await this.leadsRepository.dataSource.execute(s)
-if(sql.length >= 1){
-  return sql}
-else{
-  return 'No data Found'
-}
+                `;
+                console.log('sql ',s)
+                const sql = await this.leadsRepository.dataSource.execute(s)
+                if(sql.length >= 1){
+                return sql}
+                else{
+                return 'No data Found'
+                }
 
 
 
