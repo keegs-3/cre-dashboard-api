@@ -1766,6 +1766,7 @@ group by 1
           SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
           where agent_id = '${org}'
           )
+          AND (organization IN ('all','${org}'))
 and property_name LIKE '%${search}%'
           limit 102 offset ${offset}
           `;
@@ -1790,6 +1791,7 @@ else {
         FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
         WHERE
         property_name LIKE '%${search}%'
+        AND (organization IN ('all','${org}'))
         LIMIT 102 OFFSET ${offset};
 
         `;
@@ -1820,6 +1822,7 @@ else{
                 ORDER BY l.tax_assessor_id, l.insert_date DESC
                 ) subquery
                where subquery.property_name LIKE '%${search}%'
+               AND (subquery.organization IN ('all','${org}'))
                 limit 102 offset ${offset}
 
                 ;
