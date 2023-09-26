@@ -19,6 +19,8 @@ import {
 } from '@loopback/rest';
 import {Leads} from '../models';
 import {LeadsRepository} from '../repositories';
+import {authenticate} from '@loopback/authentication';
+@authenticate("jwt")
 
 export class AddleadsController {
   constructor(
@@ -37,7 +39,7 @@ export class AddleadsController {
         'application/json': {
           schema: getModelSchemaRef(Leads, {
             title: 'NewLeads',
-            
+
           }),
         },
       },
