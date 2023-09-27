@@ -1730,7 +1730,7 @@ group by 1
   })
   async byowner(): Promise<any> {
     const marketCity = await this.leadsRepository.dataSource.execute(`
-    select  string_agg(distinct vr.owner_name , ',') AS owner_list, string_agg(distinct vr.owner_segment , ',') AS segment_list
+    select  string_agg(distinct vr.owner_name , ',') AS owner_list
     FROM ${this.DB_SCHEMA}.vw_rb_property_details vr;
 
 `);
