@@ -2146,7 +2146,7 @@ return sql;
 
 
   }
-  @get('/reportybiulder/property')
+  @get('/reportbuilder/property')
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
