@@ -1767,7 +1767,7 @@ group by 1
           where agent_id = '${org}'
           )
           AND (organization IN ('all','${org}'))
-and property_name LIKE '%${search}%'
+and property_name ILIKE '%${search}%'
           limit 102 offset ${offset}
           `;
 
@@ -1790,7 +1790,7 @@ else {
         (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
         FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
         WHERE
-        property_name LIKE '%${search}%'
+        property_name ILIKE '%${search}%'
         AND (organization IN ('all','${org}'))
         LIMIT 102 OFFSET ${offset};
 
@@ -1821,7 +1821,7 @@ else{
                 WHERE l.agent_id = '${org}'
                 ORDER BY l.tax_assessor_id, l.insert_date DESC
                 ) subquery
-               where subquery.property_name LIKE '%${search}%'
+               where subquery.property_name ILIKE '%${search}%'
                AND (subquery.organization IN ('all','${org}'))
                 limit 102 offset ${offset}
 
@@ -2129,6 +2129,34 @@ return sql;
     const sql = await this.leadsRepository.dataSource.execute(
       `
       SELECT distinct property_name from ${this.DB_SCHEMA}.leads_status_leads_vw
+
+      `  )
+
+
+
+
+
+
+
+
+return sql;
+
+
+
+
+
+  }
+  @get('/reportybiulder/property')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async reportproperty(
+
+  ): Promise<any> {
+
+    const sql = await this.leadsRepository.dataSource.execute(
+      `
+      SELECT distinct property_name from ${this.DB_SCHEMA}.vw_rb_property_details
 
       `  )
 
