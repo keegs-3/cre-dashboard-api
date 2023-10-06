@@ -2,6 +2,7 @@
 /* eslint-disable no-dupe-else-if */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention */
+import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {
   HttpErrors,
@@ -13,9 +14,8 @@ import {
   requestBody,
   response
 } from '@loopback/rest';
-import {LeadsRepository} from '../repositories';
 import {Leads} from '../models';
-import {authenticate} from '@loopback/authentication';
+import {LeadsRepository} from '../repositories';
 @authenticate("jwt")
 export class LeadsController {
   constructor(
@@ -2085,8 +2085,9 @@ else{
 if (option === 'owner'){
   const sql = await this.leadsRepository.dataSource.execute(
     `
-    select distinct l.owner_name from ${this.DB_SCHEMA}.leads l  order by l.owner_name asc
+    select distinct l.owner_name from ${this.DB_SCHEMA}.leads l
     where l.owner_name ILIKE '%${search}%'
+    order by l.owner_name asc
 
     `  )
 return sql;
@@ -2097,8 +2098,9 @@ return sql;
 else if (option === 'property'){
   const sql = await this.leadsRepository.dataSource.execute(
     `
-    select distinct l.property_name from ${this.DB_SCHEMA}.leads l  order by l.property_name asc
+    select distinct l.property_name from ${this.DB_SCHEMA}.leads l
     where l.property_name ILIKE '%${search}%'
+    order by l.property_name asc
 
     `  )
 return sql;
