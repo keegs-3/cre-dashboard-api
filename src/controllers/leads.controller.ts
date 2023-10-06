@@ -2070,6 +2070,47 @@ else{
 
 
   }
+
+  @get('/leads/ownernameOrProperty')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async ownerorproperty(
+    @param.query.string('option') option?: string,
+    @param.query.string('search') search?: string,
+
+  ): Promise<any> {
+
+
+if (option === 'owner'){
+  const sql = await this.leadsRepository.dataSource.execute(
+    `
+    select distinct l.owner_name from ${this.DB_SCHEMA}.leads l  order by l.owner_name asc
+    where l.owner_name ILIKE '%${search}%'
+
+    `  )
+return sql;
+}
+
+
+
+else if (option === 'property'){
+  const sql = await this.leadsRepository.dataSource.execute(
+    `
+    select distinct l.property_name from ${this.DB_SCHEMA}.leads l  order by l.property_name asc
+    where l.property_name ILIKE '%${search}%'
+
+    `  )
+return sql;
+}
+
+
+
+
+
+
+
+  }
   @get('/leads/ownername')
   @response(200, {
     description: 'Array of buyers page chart model instances',
