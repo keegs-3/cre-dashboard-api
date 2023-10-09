@@ -1864,6 +1864,7 @@ else{
     @param.query.string('probability') probability?: string,
     @param.query.string('market') market?: string,
     @param.query.string('owner') owner?: string,
+    @param.query.string('property') property?: string,
     @param.query.string('org') org?: string,
     @param.query.string('financial_sent') financial_sent?: string,
     @param.query.string('financial_notsent') financial_notsent?: string,
@@ -1880,6 +1881,8 @@ else{
 
       const ownern = owner?.split(',');
       const  ownerc = "'" + ownern?.join("','") + "'";
+      const propertyn = property?.split(',');
+      const  propertyc = "'" + propertyn?.join("','") + "'";
 
 
 
@@ -1893,6 +1896,7 @@ if (status === 'LEAD'){
       if (count.length >= 1)
       {
           let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`;}
+          let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
 
           const s =  `
           SELECT l.*,
@@ -1908,6 +1912,7 @@ if (status === 'LEAD'){
           AND (organization IN ('all','${org}'))
 
           ${ow}
+          ${pr}
           order by
           case probability
           when 'Hot' then 1
@@ -1943,6 +1948,7 @@ else {
         ) {
         ow = `AND (owner_name in( ${ownerc}))`;
         }
+        let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
 
         const s =  `
         SELECT l.*,
@@ -1954,6 +1960,7 @@ else {
         AND (state IN (${markc}) )
         AND (organization IN ('all','${org}'))
         ${ow}
+        ${pr}
         ORDER BY
         CASE probability
         WHEN 'Hot' THEN 1
@@ -2025,6 +2032,7 @@ else{
                 ) {
                 ow = `AND (subquery.owner_name in( ${ownerc}))`;
                 }
+                let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
 
 
 
@@ -2040,7 +2048,7 @@ else{
                 AND subquery.probability IN (${propenq})
                 AND subquery.state IN (${markc})
                 AND (subquery.organization IN ('all','${org}'))
-                ${fns}${fs}${l}${afm}${ow}
+                ${fns}${fs}${l}${afm}${ow}${pr}
                 order by case probability
                 when 'Hot' then 1
                 when 'Warm' then 2
