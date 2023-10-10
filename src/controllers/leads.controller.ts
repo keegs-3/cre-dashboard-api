@@ -1728,10 +1728,13 @@ group by 1
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
-  async byowner(): Promise<any> {
+  async byowner(
+    @param.query.string('search') search?: string,
+  ): Promise<any> {
     const marketCity = await this.leadsRepository.dataSource.execute(`
-    select  string_agg(distinct vr.owner_name , ',') AS owner_list
-    FROM ${this.DB_SCHEMA}.vw_rb_property_details vr;
+    select distinct l.owner_name from ${this.DB_SCHEMA}.vw_rb_property_details l
+    where l.owner_name ILIKE '%${search}%'
+    order by l.owner_name asc
 
 `);
 
@@ -2202,12 +2205,15 @@ return sql;
     description: 'Array of buyers page chart model instances',
   })
   async reportproperty(
+    @param.query.string('search') search?: string,
 
   ): Promise<any> {
 
     const sql = await this.leadsRepository.dataSource.execute(
       `
-      SELECT distinct property_name from ${this.DB_SCHEMA}.vw_rb_property_details
+      select distinct l.property_name from ${this.DB_SCHEMA}.vw_rb_property_details l
+    where l.property_name ILIKE '%${search}%'
+    order by l.property_name asc
 
       `  )
 
