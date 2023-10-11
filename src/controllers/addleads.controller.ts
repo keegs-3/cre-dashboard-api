@@ -27,7 +27,7 @@ export class AddleadsController {
     @repository(LeadsRepository)
     public leadsRepository : LeadsRepository,
   ) {}
-
+  DB_SCHEMA = process.env.DB_SCHEMA;
   @post('/addleads')
   @response(200, {
     description: 'Leads model instance',
@@ -73,9 +73,20 @@ export class AddleadsController {
     },
   })
   async find(
-    @param.filter(Leads) filter?: Filter<Leads>,
+    @param.query.string('id') id?: string,
+    @param.query.string('org') org?: string,
   ): Promise<Leads[]> {
-    return this.leadsRepository.find(filter);
+
+    const marketCity = await this.leadsRepository.dataSource.execute(`
+    select * from ${this.DB_SCHEMA}.leads l
+    where l.tax_assessor_id = '${id}'
+    where l.organization in ('all','${org}')
+
+
+`);
+
+    return marketCity;
+
   }
 
   @patch('/addleads')
