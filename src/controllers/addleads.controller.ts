@@ -80,7 +80,7 @@ export class AddleadsController {
     const marketCity = await this.leadsRepository.dataSource.execute(`
     select * from ${this.DB_SCHEMA}.leads l
     where l.tax_assessor_id = '${id}'
-    where l.organization in ('all','${org}')
+    and l.organization in ('all','${org}')
 
 
 `);
