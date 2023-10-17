@@ -21,3 +21,4 @@ export * from './leadsnotes.model';
 export * from './useractions.model';
 export * from './userreview.model';
 
+export * from './extraownercontact.model';

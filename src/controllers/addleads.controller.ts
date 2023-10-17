@@ -73,6 +73,7 @@ export class AddleadsController {
     },
   })
   async find(
+    
     @param.query.string('id') id?: string,
     @param.query.string('org') org?: string,
   ): Promise<Leads[]> {

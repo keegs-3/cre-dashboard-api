@@ -14,3 +14,4 @@ export * from './useractions.repository';
 export * from './userreview.repository';
 
 export * from './leads.repository';
+export * from './extraownercontact.repository';

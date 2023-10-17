@@ -21,3 +21,4 @@ export * from './usersactions.controller';
 export * from './userreview.controller';
 export * from './leads-notes.controller';
 export * from './addleads.controller';
+export * from './extraownercontact.controller';
