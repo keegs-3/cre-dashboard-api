@@ -101,10 +101,29 @@ order by "date" desc
     // property_name,document_amount,document_recorded_date
     const feeds = await this.leadsRepository.dataSource.execute(`
 
-    select * from ${this.DB_SCHEMA}.vw_recorder
-    where sale_type not in ('Unpublished','Portfolio')
-order by document_recorded_date desc
-limit 15
+    select
+	document_recorded_date,
+	document_amount,
+	property_address,
+	property_city,
+	property_state,
+	property_zip,
+	market,
+	property_asset_class,
+	property_name,
+	unit_count,
+	buyer,
+	seller,
+	sale_type,
+	loan_amount_mm,
+	latitude,
+	longitude
+from
+	${this.DB_SCHEMA}.vw_recorder
+	where sale_type not in ('Unpublished','Portfolio')
+order by
+	document_recorded_date desc
+  limit 15
     `);
     return feeds;
   }
