@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {authenticate} from '@loopback/authentication';
+// import {authenticate} from '@loopback/authentication';
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-@authenticate('jwt')
+// @authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
@@ -144,13 +144,94 @@ limit 15
   async usersdetails(
 
     @param.query.string('organization') organization?: string ,
+    @param.query.string('users') users?: string ,
+    @param.query.string('page') page?: string ,
+    @param.query.number('sdate') sdate?: number ,
+
+
+
   ): Promise<any> {
+    const u = users?.split(',');
+       const uc = "'" + u?.join("','") + "'";
+       const p = page?.split(',');
+       const pc = "'" + p?.join("','") + "'";
+
+
+    let userd='';
+    let paged='';
+    let tdate='';
+    let ndate='';
+
+
+    if (
+    users !== '' &&
+    users !== undefined
+
+    ) {
+    userd = `AND (ust.username in (${uc}))`;
+    }
+    if (
+      page !== '' &&
+      page !== undefined
+
+      ) {
+      paged = `AND (ust.page in (${pc}))`;
+      }
+
+
+      if (
+        sdate === 1
+
+        ) {
+        tdate = `day`;
+        ndate=`6 day`;
+        }
+        if (
+          sdate === 6
+
+          ) {
+          tdate = `month`;
+          ndate=`5 month`;
+          }
+          if (
+            sdate === 12
+
+            ) {
+            tdate = `month`;
+            ndate=`11 month`;
+            }
+
+
+        const t = `select
+        DATE_TRUNC('${tdate}',
+        ust.inserted_on) as truncated_date,
+        SUM(extract(EPOCH from ust.total_time) / 60) as total_time_inminute_eachmonth,
+        count (distinct ust.session)as totalsession,
+	count (distinct ust.username) totaluser
+      from
+        ${this.DB_SCHEMA}.user_data_group_by_org ust
+      where
+        ust.organization = '${organization}'
+        and ust.inserted_on >= CURRENT_DATE - interval '${ndate}'
+        ${userd}
+        ${paged}
+      group by
+        truncated_date
+      order by
+        truncated_date desc;
+
+
+        `;
+        console.log('months data',t);
+      const trend  = await this.leadsRepository.dataSource.execute(`${t}`);
+
+
     const mapData = await this.leadsRepository.dataSource.execute(
       `
       select state , count(distinct "username")  from ${this.DB_SCHEMA}.user_data_group_by_org
       where organization = '${organization}'
 group by state
-    `,
+    `
     );
     const daysUsersData = await this.leadsRepository.dataSource.execute(
       `
@@ -173,7 +254,7 @@ group by state
   DATE_TRUNC('day', ust.inserted_on), ust.total_time,ust.inserted_on
   order by DATE_TRUNC('day', ust.inserted_on) desc
   limit 7
-    `,
+    `
     );
 
 
@@ -186,7 +267,7 @@ from ${this.DB_SCHEMA}.user_action_by_org u
 where organization='${organization}'
 order by DATE_TRUNC('day', u.inserted_on) desc
 limit 7
-    `,
+    `
     );
     const sessionUserTime = await this.leadsRepository.dataSource.execute(
       `
@@ -207,13 +288,14 @@ limit 7
     AND ust.inserted_on >= CURRENT_DATE - INTERVAL '6 days'
     GROUP BY ust.username, ust.inserted_on, ust.total_time, ust.state, ust.firstname, ust.lastname
     ORDER BY truncated_date DESC;
-    `,
+    `
     );
     const data = {
       actionEachDay,
       daysUsersData,
       mapData,
-      sessionUserTime
+      sessionUserTime,
+      trend
     };
 
     return data;
