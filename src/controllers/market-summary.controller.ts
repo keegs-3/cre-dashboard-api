@@ -158,7 +158,9 @@ limit 15
 
 
     let userd='';
+    let usera='';
     let paged='';
+    let pagea='';
     let tdate='';
     let ndate='';
 
@@ -169,6 +171,7 @@ limit 15
 
     ) {
     userd = `AND (ust.username in (${uc}))`;
+    usera = `AND (u.username in (${uc}))`;
     }
     if (
       page !== '' &&
@@ -176,6 +179,7 @@ limit 15
 
       ) {
       paged = `AND (ust.page in (${pc}))`;
+      pagea =  `AND (u.actions ->> 'page' in(${pc}) )`
       }
 
 
@@ -201,7 +205,15 @@ limit 15
             ndate=`11 month`;
             }
 
-
+const a = `
+select DISTINCT ON (DATE_TRUNC('${tdate}', u.inserted_on))DATE_TRUNC('${tdate}', u.inserted_on) AS truncated_date,
+COUNT(*) OVER (PARTITION BY DATE_TRUNC('${tdate}', u.inserted_on)) AS total_action_eachday
+from ${this.DB_SCHEMA}.user_action_by_org u
+where organization='${organization}'
+and u.inserted_on >= current_date - interval  '${ndate}'
+${pagea}${usera}
+order by DATE_TRUNC('${tdate}', u.inserted_on) desc
+`;
         const t = `select
         DATE_TRUNC('${tdate}',
         ust.inserted_on) as truncated_date,
@@ -224,6 +236,7 @@ limit 15
         `;
         console.log('months data',t);
       const trend  = await this.leadsRepository.dataSource.execute(`${t}`);
+      const action  = await this.leadsRepository.dataSource.execute(`${a}`);
 
 
     const mapData = await this.leadsRepository.dataSource.execute(
@@ -295,7 +308,8 @@ limit 7
       daysUsersData,
       mapData,
       sessionUserTime,
-      trend
+      trend,
+      action
     };
 
     return data;
