@@ -78,8 +78,16 @@ export class MarketSummaryController {
     group by "date"
     order by "date" desc
  `);
+ const map = await this.leadsRepository.dataSource.execute(`
 
-    return alldata;
+    select *
+ from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
+    group by "date"
+    order by "date" desc
+ `);
+
+    return {alldata,map};
   }
   @get('/marketIntelligence/realTime')
   @response(200, {})
