@@ -19,33 +19,48 @@ export class MarketSummaryController {
   ): Promise<any> {
     const deals_Close = await this.leadsRepository.dataSource.execute(`
     select "date", sum (deals_closed) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
     group by "date"
     order by "date"
  `);
  const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
  select "date", sum (sale_amount) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
     group by "date"
     order by "date"
 `);
-const underContract = await this.leadsRepository.dataSource.execute(`
-select "date", sum (under_contract) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-   WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+const avgTS = await this.leadsRepository.dataSource.execute(`
+select "date", sum (avg_transaction_size) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
    group by "date"
    order by "date"
 `);
-const expiredContract = await this.leadsRepository.dataSource.execute(`
-select "date", sum (expired_contracts) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-   WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() and property_state = '${state}'
+const avgTR = await this.leadsRepository.dataSource.execute(`
+select "date", sum (avg_transaction_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
    group by "date"
    order by "date"
 `);
+const avgRR = await this.leadsRepository.dataSource.execute(`
+select "date", sum (avg_rental_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+   group by "date"
+   order by "date"
+`);
+const avgOR = await this.leadsRepository.dataSource.execute(`
+select "date", sum (avg_occupancy_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+   group by "date"
+   order by "date"
+`);
+
     return {
       deals_Close,
       monthlyRevenue,
-      underContract,
-      expiredContract
+      avgOR,
+      avgRR,
+      avgTR,
+      avgTS
 
     };
   }
@@ -54,10 +69,11 @@ select "date", sum (expired_contracts) from ${this.DB_SCHEMA}.vw_mi_allmetrics
   async findall(): Promise<any> {
     const alldata = await this.leadsRepository.dataSource.execute(`
 
-select * from ${this.DB_SCHEMA}.vw_mi_allmetrics
-WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
-order by "date" desc
+    select * from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
+    order by "date" desc
  `);
+
     return alldata;
   }
   @get('/marketIntelligence/realTime')
