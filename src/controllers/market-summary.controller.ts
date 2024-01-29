@@ -4,8 +4,7 @@
 import {repository} from '@loopback/repository';
 import {get, param, response} from '@loopback/rest';
 import {LeadsRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
-@authenticate('jwt')
+// @authenticate('jwt')
 export class MarketSummaryController {
   constructor(
     @repository(LeadsRepository)
@@ -83,7 +82,6 @@ export class MarketSummaryController {
     select *
  from ${this.DB_SCHEMA}.vw_mi_allmetrics
     WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
-    group by "date"
     order by "date" desc
  `);
 
