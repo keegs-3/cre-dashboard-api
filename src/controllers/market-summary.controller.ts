@@ -18,57 +18,51 @@ export class MarketSummaryController {
   async findBySate(
     @param.query.string('state') state?: string,
   ): Promise<any> {
-    const deals_Close = await this.leadsRepository.dataSource.execute(`
-    select "date", sum (deals_closed) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    const allData = await this.leadsRepository.dataSource.execute(`
+    select "date", avg(avg_transaction_rate)as atr, avg(avg_transaction_size) as ats, avg(avg_rental_rate) as arr, avg(avg_occupancy_rate) as aor,sale_amount as sa,deals_closed as dc,leads_generated as lg from ${this.DB_SCHEMA}.vw_mi_allmetrics
     WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
-    group by "date"
-    order by "date"
+ group by "date",leads_generated,deals_closed,sale_amount
+    order by "date" desc
  `);
- const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
- select "date", sum (sale_amount) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
-    group by "date"
-    order by "date"
-`);
-const avgTS = await this.leadsRepository.dataSource.execute(`
-select "date", sum (avg_transaction_size) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
-   group by "date"
-   order by "date"
-`);
-const avgTR = await this.leadsRepository.dataSource.execute(`
-select "date", sum (avg_transaction_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
-   group by "date"
-   order by "date"
-`);
-const avgRR = await this.leadsRepository.dataSource.execute(`
-select "date", sum (avg_rental_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
-   group by "date"
-   order by "date"
-`);
-const avgOR = await this.leadsRepository.dataSource.execute(`
-select "date", sum (avg_occupancy_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
-   group by "date"
-   order by "date"
-`);
-const slead = await this.leadsRepository.dataSource.execute(`
-select "date", sum (leads_generated) from ${this.DB_SCHEMA}.vw_mi_allmetrics
-   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
-   group by "date"
-   order by "date"
-`);
+//  const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
+//  select "date", sum (sale_amount) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+//     WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+//     group by "date"
+//     order by "date"
+// `);
+// const avgTS = await this.leadsRepository.dataSource.execute(`
+// select "date", sum (avg_transaction_size) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+//    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+//    group by "date"
+//    order by "date"
+// `);
+// const avgTR = await this.leadsRepository.dataSource.execute(`
+// select "date", sum (avg_transaction_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+//    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+//    group by "date"
+//    order by "date"
+// `);
+// const avgRR = await this.leadsRepository.dataSource.execute(`
+// select "date", sum (avg_rental_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+//    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+//    group by "date"
+//    order by "date"
+// `);
+// const avgOR = await this.leadsRepository.dataSource.execute(`
+// select "date", sum (avg_occupancy_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+//    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+//    group by "date"
+//    order by "date"
+// `);
+// const slead = await this.leadsRepository.dataSource.execute(`
+// select "date", sum (leads_generated) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+//    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+//    group by "date"
+//    order by "date"
+// `);
 
     return {
-      deals_Close,
-      monthlyRevenue,
-      avgOR,
-      avgRR,
-      avgTR,
-      avgTS,
-      slead
+    allData
 
     };
   }
@@ -77,8 +71,11 @@ select "date", sum (leads_generated) from ${this.DB_SCHEMA}.vw_mi_allmetrics
   async findall(): Promise<any> {
     const alldata = await this.leadsRepository.dataSource.execute(`
 
-    select * from ${this.DB_SCHEMA}.vw_mi_allmetrics
+    select "date", avg(avg_transaction_rate)as atr, avg(avg_transaction_size) as ats, avg(avg_rental_rate) as arr, avg(avg_occupancy_rate) as aor,sum(leads_generated) as lg,
+ sum(deals_closed) as dc,sum(sale_amount) as sa
+ from ${this.DB_SCHEMA}.vw_mi_allmetrics
     WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
+    group by "date"
     order by "date" desc
  `);
 
