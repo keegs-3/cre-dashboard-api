@@ -37,6 +37,10 @@ export class Extraownercontact extends Entity {
     type: 'string',
   })
   contact_email?: string;
+  @property({
+    type: 'number',
+  })
+  list_price: Number;
 
   constructor(data?: Partial<Extraownercontact>) {
     super(data);
