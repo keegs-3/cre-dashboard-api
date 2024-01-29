@@ -54,6 +54,12 @@ select "date", sum (avg_occupancy_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
    group by "date"
    order by "date"
 `);
+const slead = await this.leadsRepository.dataSource.execute(`
+select "date", sum (leads_generated) from ${this.DB_SCHEMA}.vw_mi_allmetrics
+   WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+   group by "date"
+   order by "date"
+`);
 
     return {
       deals_Close,
@@ -61,7 +67,8 @@ select "date", sum (avg_occupancy_rate) from ${this.DB_SCHEMA}.vw_mi_allmetrics
       avgOR,
       avgRR,
       avgTR,
-      avgTS
+      avgTS,
+      slead
 
     };
   }
