@@ -67,7 +67,9 @@ export class MarketSummaryController {
   }
   @get('/marketIntelligence')
   @response(200, {})
-  async findall(): Promise<any> {
+  async findall(
+    @param.query.string('date') date?: string,
+  ): Promise<any> {
     const alldata = await this.leadsRepository.dataSource.execute(`
 
     select "date", avg(avg_transaction_rate)as atr, avg(avg_transaction_size) as ats, avg(avg_rental_rate) as arr, avg(avg_occupancy_rate) as aor,sum(leads_generated) as lg,
@@ -77,6 +79,15 @@ export class MarketSummaryController {
     group by "date"
     order by "date" desc
  `);
+ const monthdata = await this.leadsRepository.dataSource.execute(`
+
+ select "date",sum(leads_generated) as lg,
+sum(deals_closed) as dc
+from ${this.DB_SCHEMA}.vw_mi_allmetrics
+ WHERE "date" BETWEEN DATE '${date}' AND (DATE '${date}' + INTERVAL '5 MONTH')
+ group by "date"
+ order by "date" desc
+`);
  const map = await this.leadsRepository.dataSource.execute(`
 
     select *
@@ -85,7 +96,7 @@ export class MarketSummaryController {
     order by "date" desc
  `);
 
-    return {alldata,map};
+    return {alldata,map,monthdata};
   }
   @get('/marketIntelligence/realTime')
   @response(200, {})
@@ -241,6 +252,27 @@ and u.inserted_on >= current_date - interval  '${ndate}'
 ${pagea}${usera}
 order by DATE_TRUNC('${tdate}', u.inserted_on) desc
 `;
+const pied = `select
+ust.page,
+SUM(extract(EPOCH from ust.total_time) / 60) as total_time_inminute_eachmonth
+from
+${this.DB_SCHEMA}.user_data_group_by_org ust
+where
+ust.organization = '${organization}'
+and ust.inserted_on >= CURRENT_DATE - interval '${ndate}'
+${userd}
+${paged}
+group by
+page
+
+
+
+`;
+
+
+
+
+
         const t = `select
         DATE_TRUNC('${tdate}',
         ust.inserted_on) as truncated_date,
@@ -264,6 +296,7 @@ order by DATE_TRUNC('${tdate}', u.inserted_on) desc
         console.log('months data',t);
       const trend  = await this.leadsRepository.dataSource.execute(`${t}`);
       const action  = await this.leadsRepository.dataSource.execute(`${a}`);
+      const piedata  = await this.leadsRepository.dataSource.execute(`${pied}`);
 
 
     const mapData = await this.leadsRepository.dataSource.execute(
@@ -336,7 +369,8 @@ limit 7
       mapData,
       sessionUserTime,
       trend,
-      action
+      action,
+      piedata
     };
 
     return data;

@@ -75,7 +75,7 @@ const transporter = nodemailer.createTransport({
           secure: true, // true for 465, false for other ports
           auth: {
             user: 'support@nedl.us', // generated ethereal user
-            pass: 'jugakgustxkdlucd', // generated ethereal password
+            pass: 'yhykuyheqykfzjsz', // generated ethereal password
           },
         });
 
@@ -371,7 +371,7 @@ SET   resetkey= '${resetkey}' where email = '${email}'
       secure: true, // true for 465, false for other ports
       auth: {
         user: 'support@nedl.us', // generated ethereal user
-        pass: 'jugakgustxkdlucd', // generated ethereal password
+        pass: 'yhykuyheqykfzjsz', // generated ethereal password
       },
     });
 
