@@ -16,6 +16,7 @@ export class MarketSummaryController {
   @response(200, {})
   async findBySate(
     @param.query.string('state') state?: string,
+    @param.query.string('date') date?: string,
   ): Promise<any> {
     const allData = await this.leadsRepository.dataSource.execute(`
     select "date", avg(avg_transaction_rate)as atr, avg(avg_transaction_size) as ats, avg(avg_rental_rate) as arr, avg(avg_occupancy_rate) as aor,sale_amount as sa,deals_closed as dc,leads_generated as lg from ${this.DB_SCHEMA}.vw_mi_allmetrics
@@ -23,6 +24,16 @@ export class MarketSummaryController {
  group by "date",leads_generated,deals_closed,sale_amount
     order by "date" desc
  `);
+ const monthdata = await this.leadsRepository.dataSource.execute(`
+
+ select "date",sum(leads_generated) as lg,
+sum(deals_closed) as dc
+from ${this.DB_SCHEMA}.vw_mi_allmetrics
+ WHERE "date" BETWEEN DATE '${date}' AND (DATE '${date}' + INTERVAL '5 MONTH')
+ and property_state = '${state}'
+ group by "date"
+ order by "date" desc
+`);
 //  const monthlyRevenue = await this.leadsRepository.dataSource.execute(`
 //  select "date", sum (sale_amount) from ${this.DB_SCHEMA}.vw_mi_allmetrics
 //     WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
@@ -61,7 +72,8 @@ export class MarketSummaryController {
 // `);
 
     return {
-    allData
+    allData,
+    monthdata
 
     };
   }
