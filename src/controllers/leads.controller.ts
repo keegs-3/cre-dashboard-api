@@ -1872,6 +1872,7 @@ else{
     @param.query.string('financial_sent') financial_sent?: string,
     @param.query.string('financial_notsent') financial_notsent?: string,
     @param.query.string('listed') listed?: string,
+    @param.query.string('username') username?: string,
     @param.query.string('available_off_market') available_off_market?: string,
     @param.query.number('offset') offset?: number,
   ): Promise<any> {
@@ -1900,7 +1901,7 @@ if (status === 'LEAD'){
       {
           let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`;}
           let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
-
+         let myList = ''; if (    username !== '' &&    username !== undefined) {myList = `and l.tax_assessor_id not in (select ln.property_id  FROM ${this.DB_SCHEMA}.leads_notes ln where ln.username = ${username})`;}
           const s =  `
           SELECT l.*,
           (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
@@ -1916,6 +1917,7 @@ if (status === 'LEAD'){
 
           ${ow}
           ${pr}
+          ${myList}
           order by
           case probability
           when 'Hot' then 1
@@ -1930,7 +1932,6 @@ if (status === 'LEAD'){
           property_name asc
           limit 102 offset ${offset}
           `;
-
           console.log('ssssaaaa',s)
           const sql = await this.leadsRepository.dataSource.execute(s)
           if (sql.length >= 1){
@@ -2037,6 +2038,7 @@ else{
                 }
                 let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
 
+ let myList = ''; if (    username !== '' &&    username !== undefined) {myList = `and (subquery.statususername in ('${username}'))`;}
 
 
                 const s =  `
@@ -2051,7 +2053,7 @@ else{
                 AND subquery.probability IN (${propenq})
                 AND subquery.state IN (${markc})
                 AND (subquery.organization IN ('all','${org}'))
-                ${fns}${fs}${l}${afm}${ow}${pr}
+                ${fns}${fs}${l}${afm}${ow}${pr}${myList}
                 order by case probability
                 when 'Hot' then 1
                 when 'Warm' then 2
