@@ -1899,9 +1899,9 @@ if (status === 'LEAD'){
       const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
       if (count.length >= 1)
       {
-          let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`;}
-          let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
-         let myList = ''; if (    username !== '' &&    username !== undefined) {myList = `and l.tax_assessor_id not in (select ln.property_id  FROM ${this.DB_SCHEMA}.leads_notes ln where ln.username = ${username})`;}
+          let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`}
+          let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`}
+         let myList = ''; if (    username !== '' &&    username !== undefined) {myList = `and (tax_assessor_id in (select ln.property_id  FROM ${this.DB_SCHEMA}.leads_notes ln where ln.username = '${username}'))`}
           const s =  `
           SELECT l.*,
           (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
@@ -1914,10 +1914,7 @@ if (status === 'LEAD'){
           AND (probability IN (${propenq}) )
           AND (state IN (${markc}) )
           AND (organization IN ('all','${org}'))
-
-          ${ow}
-          ${pr}
-          ${myList}
+          ${ow}${pr}${myList}
           order by
           case probability
           when 'Hot' then 1
