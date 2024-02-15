@@ -1897,7 +1897,7 @@ else{
 
 if (status === 'LEAD'){
       const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
-      if (count.length >= 1)
+      if (count.length >= 1 && username !== '' &&    username !== undefined)
       {
           let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`}
           let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`}
@@ -1939,7 +1939,8 @@ if (status === 'LEAD'){
           }
 
       }
-else {
+else 
+ {
 
         let ow = '';
         if (
@@ -1960,6 +1961,7 @@ else {
         (probability IN (${propenq}) )
         AND (state IN (${markc}) )
         AND (organization IN ('all','${org}'))
+        And (l.tax_assessor_id not in (select distinct property_id FROM ${this.DB_SCHEMA}.leads_notes lnotes ))
         ${ow}
         ${pr}
         ORDER BY
