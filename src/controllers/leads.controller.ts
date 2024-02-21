@@ -1907,11 +1907,9 @@ if (status === 'LEAD'){
           (SELECT COUNT(*) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS notes_count,
           (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
           FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
-          where l.tax_assessor_id not in (
-          SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw
-          where agent_id = '${org}'
-          )
-          AND (probability IN (${propenq}) )
+          where
+
+           (probability IN (${propenq}) )
           AND (state IN (${markc}) )
           AND (organization IN ('all','${org}'))
           ${ow}${pr}${myList}
@@ -1929,7 +1927,7 @@ if (status === 'LEAD'){
           property_name asc
           limit 102 offset ${offset}
           `;
-          console.log('ssssaaaa',s)
+          console.log('from if ',s)
           const sql = await this.leadsRepository.dataSource.execute(s)
           if (sql.length >= 1){
           return sql
@@ -1939,7 +1937,7 @@ if (status === 'LEAD'){
           }
 
       }
-else 
+else
  {
 
         let ow = '';
@@ -1958,7 +1956,7 @@ else
         (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
         FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
         WHERE
-        (probability IN (${propenq}) )
+        (probability IN (${propenq}))
         AND (state IN (${markc}) )
         AND (organization IN ('all','${org}'))
         And (l.tax_assessor_id not in (select distinct property_id FROM ${this.DB_SCHEMA}.leads_notes lnotes ))
@@ -1979,7 +1977,7 @@ else
         LIMIT 102 OFFSET ${offset};
 
         `;
-        console.log('sssss',s)
+        console.log('from else',s)
         const sql = await this.leadsRepository.dataSource.execute(s)
         if (sql.length >= 1){
         return sql
