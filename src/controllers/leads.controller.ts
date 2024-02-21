@@ -1959,7 +1959,7 @@ else
         (probability IN (${propenq}))
         AND (state IN (${markc}) )
         AND (organization IN ('all','${org}'))
-        And (l.tax_assessor_id not in (select distinct property_id FROM ${this.DB_SCHEMA}.leads_notes lnotes ))
+        And (l.tax_assessor_id not in (select distinct property_id FROM ${this.DB_SCHEMA}.leads_notes lnotes where lnotes.org = '${org}'))
         ${ow}
         ${pr}
         ORDER BY
