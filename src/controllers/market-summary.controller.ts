@@ -20,7 +20,7 @@ export class MarketSummaryController {
   ): Promise<any> {
     const allData = await this.leadsRepository.dataSource.execute(`
     select "date", avg(avg_transaction_rate)as atr, avg(avg_transaction_size) as ats, avg(avg_rental_rate) as arr, avg(avg_occupancy_rate) as aor,sale_amount as sa,deals_closed as dc,leads_generated as lg from ${this.DB_SCHEMA}.vw_mi_allmetrics
-    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW() and property_state = '${state}'
+    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() - INTERVAL '1 MONTH' and property_state = '${state}'
  group by "date",leads_generated,deals_closed,sale_amount
     order by "date" desc
  `);
@@ -104,7 +104,7 @@ from ${this.DB_SCHEMA}.vw_mi_allmetrics
 
     select *
  from ${this.DB_SCHEMA}.vw_mi_allmetrics
-    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
+    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() - INTERVAL '1 MONTH'
     order by "date" desc
  `);
 
