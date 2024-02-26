@@ -87,7 +87,7 @@ from ${this.DB_SCHEMA}.vw_mi_allmetrics
     select "date", avg(avg_transaction_rate)as atr, avg(avg_transaction_size) as ats, avg(avg_rental_rate) as arr, avg(avg_occupancy_rate) as aor,sum(leads_generated) as lg,
  sum(deals_closed) as dc,sum(sale_amount) as sa
  from ${this.DB_SCHEMA}.vw_mi_allmetrics
-    WHERE "date" BETWEEN NOW() - INTERVAL '5 MONTH' AND NOW()
+    WHERE "date" BETWEEN NOW() - INTERVAL '6 MONTH' AND NOW() - INTERVAL '1 MONTH'
     group by "date"
     order by "date" desc
  `);
