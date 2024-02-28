@@ -1896,8 +1896,8 @@ else{
 
 
 if (status === 'LEAD'){
-      const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
-      if (count.length >= 1 && username !== '' &&    username !== undefined)
+      // const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
+      if (username !== '' && username !== undefined)
       {
           let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`}
           let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`}
@@ -1908,8 +1908,8 @@ if (status === 'LEAD'){
           (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.leads_notes lnotes WHERE lnotes.property_id = l.tax_assessor_id and lnotes.org = '${org}') AS latest_inserted_on
           FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
           where
-
-           (probability IN (${propenq}) )
+           (probability IN (${propenq}))
+          and l.tax_assessor_id not in (SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw)
           AND (state IN (${markc}) )
           AND (organization IN ('all','${org}'))
           ${ow}${pr}${myList}
