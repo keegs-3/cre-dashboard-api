@@ -15,3 +15,4 @@ export * from './userreview.repository';
 
 export * from './leads.repository';
 export * from './extraownercontact.repository';
+export * from './loginsession.repository';

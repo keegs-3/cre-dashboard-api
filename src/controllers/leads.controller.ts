@@ -476,6 +476,7 @@ limit 100 offset ${offset}
     @param.query.number('rre') rre?: number,
     @param.query.string('la') la?: string,
     @param.query.string('propertyName') propertyName?: string,
+    @param.query.string('address') address?: string,
     @param.query.string('owner') owner?: string,
     @param.query.string('segement') segment?: string,
     @param.query.number('ytms') ytms?: number,
@@ -485,7 +486,7 @@ limit 100 offset ${offset}
     let marq: any = '';
     let mmarq: any = '';
     let smarq: any = '';
-    let spname: any = '';
+    // let spname: any = '';
     let cityc: any = '';
     let addc: any = '';
     let own: any = '';
@@ -507,7 +508,7 @@ limit 100 offset ${offset}
 
       // pn = 'anil,anil2,anil3'
       const pn = propertyName?.split(',');
-      spname= "'" + pn?.join("','") + "'";
+      // spname= "'" + pn?.join("','") + "'";
 let allState='' ;
 let allCity='';
 let allCounty='';
@@ -521,6 +522,7 @@ let allOwner='';
 let allSeg='';
 let allYtms='';
 let allPname='';
+let allAddress='';
 
     if (
       state !== '' &&
@@ -528,6 +530,13 @@ let allPname='';
 
     ) {
       allState = `AND (state IN(${marq}))`;
+    }
+    if (
+      address !== '' &&
+      address !== undefined
+
+    ) {
+      allAddress = `AND (address ILIKE '%${address}%')`;
     }
     if (
       city !== '' &&
@@ -562,7 +571,7 @@ let allPname='';
       propertyName !== undefined
 
     ) {
-      allPname = `  AND (property_name IN(${spname}))`;
+      allPname = `  AND (property_name ILIKE '%${propertyName}%')`;
     }
     if (
       punits !== null &&
@@ -650,8 +659,11 @@ allLa=`and loan_maturity_date is not null `;
                     ${allSeg}
                     ${allYtms}
                     ${allPname}
+                    ${allAddress}
                     limit 100 offset ${offset}
                   `;
+
+
                   const countdata = `
                   SELECT count(*) FROM ${this.DB_SCHEMA}.vw_rb_property_details
                   where 1 = 1
@@ -667,8 +679,11 @@ allLa=`and loan_maturity_date is not null `;
                   ${allSeg}
                   ${allYtms}
                   ${allPname}
+                  ${allAddress}
 
                 `;
+                console.log('for search ',data);
+                console.log('for count ',countdata);
                   const all = await this.leadsRepository.dataSource.execute(data)
                   const count = await this.leadsRepository.dataSource.execute(countdata)
 

@@ -22,3 +22,4 @@ export * from './useractions.model';
 export * from './userreview.model';
 
 export * from './extraownercontact.model';
+export * from './loginsession.model';
