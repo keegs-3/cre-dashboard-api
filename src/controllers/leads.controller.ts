@@ -1880,7 +1880,9 @@ else{
   async leads(
     @param.query.string('status') status?: string,
     @param.query.string('probability') probability?: string,
+    @param.query.string('state') state?: string,
     @param.query.string('market') market?: string,
+    @param.query.string('submarket') submarket?: string,
     @param.query.string('owner') owner?: string,
     @param.query.string('property') property?: string,
     @param.query.string('org') org?: string,
@@ -1890,6 +1892,11 @@ else{
     @param.query.string('username') username?: string,
     @param.query.string('available_off_market') available_off_market?: string,
     @param.query.number('offset') offset?: number,
+    @param.query.number('punits') punits?: number,
+    @param.query.number('punite') punite?: number,
+    @param.query.number('yearbuilds') yearbuilds?: number,
+    @param.query.number('yearbuilde') yearbuilde?: number,
+
   ): Promise<any> {
 
 
@@ -1907,6 +1914,10 @@ else{
 
       const mark = market?.split(',');
        const markc = "'" + mark?.join("','") + "'";
+       const states = state?.split(',');
+       const statec = "'" + states?.join("','") + "'";
+       const submarkets = submarket?.split(',');
+       const submarketc = "'" + submarkets?.join("','") + "'";
 
 
 
@@ -1914,6 +1925,11 @@ if (status === 'LEAD'){
       // const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
       if (username !== '' && username !== undefined)
       {
+         let pu = '';  if (    punits !== null &&    punits !== undefined && punite !== null &&    punite !== undefined) {pu = `AND (units_count between ${punits} and ${punite}  )`}
+         let yb = '';  if (    yearbuilds !== null &&    yearbuilds !== undefined && yearbuilde !== null &&    yearbuilde !== undefined) {yb = `AND (year_built between ${yearbuilds} and ${yearbuilde}  )`}
+         let st = '';  if (    state !== '' &&    state !== undefined) {st = `AND (state IN (${statec}) )`}
+         let mk = '';  if (    market !== '' &&    market !== undefined) {mk = `AND (market IN (${markc}) )`}
+         let sm = '';  if (    submarket !== '' &&    submarket !== undefined) {sm = `AND (sub_market IN (${submarketc}) )`}
           let ow = '';  if (    owner !== '' &&    owner !== undefined) {ow = `AND (owner_name in( ${ownerc}))`}
           let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`}
          let myList = ''; if (    username !== '' &&    username !== undefined) {myList = `and (tax_assessor_id in (select ln.property_id  FROM ${this.DB_SCHEMA}.leads_notes ln where ln.username = '${username}'))`}
@@ -1925,9 +1941,8 @@ if (status === 'LEAD'){
           where
            (probability IN (${propenq}))
           and l.tax_assessor_id not in (SELECT tax_assessor_id FROM ${this.DB_SCHEMA}.lead_user_org_vw)
-          AND (state IN (${markc}) )
           AND (organization IN ('all','${org}'))
-          ${ow}${pr}${myList}
+          ${st}${ow}${pr}${myList}${mk}${sm}${yb}${pu}
           order by
           case probability
           when 'Hot' then 1
@@ -1963,6 +1978,11 @@ else
         ) {
         ow = `AND (owner_name in( ${ownerc}))`;
         }
+         let pu = '';  if (    punits !== null &&    punits !== undefined && punite !== null &&    punite !== undefined) {pu = `AND (units_count between ${punits} and ${punite}  )`}
+         let yb = '';  if (    yearbuilds !== null &&    yearbuilds !== undefined && yearbuilde !== null &&    yearbuilde !== undefined) {yb = `AND (year_built between ${yearbuilds} and ${yearbuilde}  )`}
+         let mk = '';  if (    market !== '' &&    market !== undefined) {mk = `AND (market IN (${markc}) )`}
+         let sm = '';  if (    submarket !== '' &&    submarket !== undefined) {sm = `AND (sub_market IN (${submarketc}) )`}
+        let st = '';  if (    state !== '' &&    state !== undefined) {st = `AND (state IN (${statec}) )`}
         let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
 
         const s =  `
@@ -1972,11 +1992,9 @@ else
         FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
         WHERE
         (probability IN (${propenq}))
-        AND (state IN (${markc}) )
         AND (organization IN ('all','${org}'))
         And (l.tax_assessor_id not in (select distinct property_id FROM ${this.DB_SCHEMA}.leads_notes lnotes where lnotes.org = '${org}'))
-        ${ow}
-        ${pr}
+        ${ow}${st}${pr}${sm}${mk}${yb}${pu}
         ORDER BY
         CASE probability
         WHEN 'Hot' THEN 1
@@ -2049,8 +2067,12 @@ else{
                 ow = `AND (subquery.owner_name in( ${ownerc}))`;
                 }
                 let pr = '';  if (    property !== '' &&    property !== undefined) {pr = `AND (property_name in( ${propertyc}))`;}
-
- let myList = ''; if (    username !== '' &&    username !== undefined) {myList = `and (subquery.statususername in ('${username}'))`;}
+                let pu = '';  if (    punits !== null &&    punits !== undefined && punite !== null &&    punite !== undefined) {pu = `AND (subquery.units_count between ${punits} and ${punite}  )`}
+                let yb = '';  if (    yearbuilds !== null &&    yearbuilds !== undefined && yearbuilde !== null &&    yearbuilde !== undefined) {yb = `AND (subquery.year_built between ${yearbuilds} and ${yearbuilde}  )`}
+                let st = '';  if (    state !== '' &&    state !== undefined) {st = `AND (subquery.state IN (${statec}) )`}
+                let mk = '';  if (    market !== '' &&    market !== undefined) {mk = `AND (subquery.market IN (${markc}) )`}
+                let sm = '';  if (    submarket !== '' &&    submarket !== undefined) {sm = `AND (subquery.sub_market IN (${submarketc}) )`}
+                let myList = ''; if (    username !== '' &&    username !== undefined) {myList = `and (subquery.statususername in ('${username}'))`;}
 
 
                 const s =  `
@@ -2063,9 +2085,8 @@ else{
                 ) subquery
                 WHERE subquery.status = '${status}'
                 AND subquery.probability IN (${propenq})
-                AND subquery.state IN (${markc})
                 AND (subquery.organization IN ('all','${org}'))
-                ${fns}${fs}${l}${afm}${ow}${pr}${myList}
+                ${st}${fns}${fs}${l}${afm}${ow}${pr}${myList}${pu}${yb}${mk}${sm}
                 order by case probability
                 when 'Hot' then 1
                 when 'Warm' then 2
