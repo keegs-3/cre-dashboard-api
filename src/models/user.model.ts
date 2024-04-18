@@ -64,6 +64,19 @@ export class User extends Entity {
     default:true,
   })
   force_reset_password?: Boolean;
+  @property({
+    type: 'Boolean',
+    default:false,
+  })
+  isLogedIn?: Boolean;
+  @property({
+    type: 'number',
+  })
+  userOtp?: Number;
+  @property({
+    type: 'number',
+  })
+  loginOtp?: Number;
 
 
 

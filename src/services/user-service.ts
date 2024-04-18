@@ -20,6 +20,19 @@ export class MyUserService implements UserService<User, Credentials>{
     public hasher: BcryptHasher
 
   ) { }
+  async verifyLogin(email:string) : Promise <any>{
+     const user = await this.userRepository.findOne({
+      where: {email:email}
+    });
+    if(user){
+      if (user.isLogedIn === true){
+        return 'User Already Logged In'
+      }
+    }
+    else {
+      return 'Email Not Present'
+    }
+  }
   async verifyCredentials(credentials: Credentials): Promise<User> {
     // implement this method
     const {email, password} = credentials;
@@ -67,6 +80,7 @@ export class MyUserService implements UserService<User, Credentials>{
 
   }
   async createUser(userWithPassword: Credentials): Promise<User> {
+
 
     const user = await this.userRepository.create(userWithPassword);
 

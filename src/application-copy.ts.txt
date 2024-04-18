@@ -1,0 +1,216 @@
+// import {AuthenticationComponent, registerAuthenticationStrategy} from '@loopback/authentication';
+// import { JWTAuthenticationComponent, JWTService, SECURITY_SCHEME_SPEC,  } from '@loopback/authentication-jwt';
+// import {BootMixin} from '@loopback/boot';
+// import {ApplicationConfig, createBindingFromClass} from '@loopback/core';
+// import {RepositoryMixin} from '@loopback/repository';
+// import {RestApplication} from '@loopback/rest';
+// import {
+//   RestExplorerBindings,
+//   RestExplorerComponent
+// } from '@loopback/rest-explorer';
+// import {ServiceMixin} from '@loopback/service-proxy';
+// import dotEnvExtended from 'dotenv-extended';
+// import path from 'path';
+// import {CustomJwtAuthenticationStrategy} from './authentication-stratgies/jwt-stratgies';
+// import {PasswordHasherBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings} from './keys';
+// import {MySequence} from './sequence';
+// import {BcryptHasher} from './services/hash.password';
+// // import {JWTService} from './services/jwt-service';
+// import {MyUserService} from './services/user-service';
+
+// export {ApplicationConfig};
+
+// export class CreaigithubApplication extends BootMixin(
+//   ServiceMixin(RepositoryMixin(RestApplication)),
+// ) {
+//   constructor(options: ApplicationConfig = {}) {
+//     super(options);
+
+
+//     dotEnvExtended.load({
+//       schema: '.env',
+//       errorOnMissing: true,
+//     });
+//     // Set up the custom sequence
+
+//     // setup binding
+//     this.setupBinding();
+
+//     // Add security spec
+//     // this.addSecuritySpec();
+
+//     // this.component(AuthenticationComponent);
+//     // registerAuthenticationStrategy(this, JWTStrategy)
+//     // this.component(JWTAuthenticationComponent);
+//     // registerAuthenticationStrategy(this, JWTStrategy)
+
+
+//     this.sequence(MySequence);
+
+//     // Set up default home page
+//     this.static('/', path.join(__dirname, '../public'));
+
+//     // Customize @loopback/rest-explorer configuration here
+//     this.configure(RestExplorerBindings.COMPONENT).to({
+//       path: '/explorer',
+//     });
+//     this.component(RestExplorerComponent);
+
+//     this.projectRoot = __dirname;
+//     // Customize @loopback/boot Booter Conventions here
+//     this.bootOptions = {
+//       controllers: {
+//         // Customize ControllerBooter Conventions here
+//         dirs: ['controllers'],
+//         extensions: ['.controller.js'],
+//         nested: true,
+//       },
+//     };
+
+
+
+//     // this.bind('service.hasher').toClass(BcryptHasher);
+//     // this.bind('rounds').to(10);
+//     // this.bind('service.user.service').toClass(MyUserService)
+//     // this.bind('service.jwt.service').toClass(JWTService);
+//     // this.bind('authentication.jwt.secret').to('dvchgdvcjsdbhcbdjbvjb');
+//     // this.bind('authentication.jwt.expiresIn').to('7h');
+
+//     const token = process.env.TOKEN_SECRET_VALUE;
+
+//   }
+
+//   setupBinding(): void {
+//     // this.bind('service.hasher').toClass(BcryptHasher);
+//     // this.bind('rounds').to(10);
+//     // this.bind('service.user.service').toClass(MyUserService)
+//     // this.bind('service.jwt.service').toClass(JWTService);
+//     // this.bind('authentication.jwt.secret').to('dvchgdvcjsdbhcbdjbvjb');
+//     // this.bind('authentication.jwt.expiresIn').to('7h');
+
+//     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
+//     this.bind(PasswordHasherBindings.ROUNDS).to(10)
+//     this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
+
+//     this.bind(TokenServiceBindings.TOKEN_SECRET).to(TokenServiceConstants.TOKEN_SECRET_VALUE)
+//     this.bind(TokenServiceBindings.TOKEN_EXPIRES_IN).to(TokenServiceConstants.TOKEN_EXPIRES_IN_VALUE);
+
+//     // Mount jwt component
+
+//       this.component(JWTAuthenticationComponent); // Use JWTAuthenticationComponent from @loopback/authentication-jwt
+//       this.add(createBindingFromClass(CustomJwtAuthenticationStrategy)); // Bind your custom strategy
+//       this.bind('jwt.service').toClass(JWTService); // Bind JWTService from @loopback/authentication-jwt
+//       this.sequence(MySequence);
+
+//   }
+
+//   // addSecuritySpec(): void {
+//   //   this.api({
+//   //     openapi: '3.0.0',
+//   //     info: {
+//   //       title: 'test application',
+//   //       version: '1.0.0',
+//   //     },
+//   //     paths: {},
+//   //     components: {securitySchemes: SECURITY_SCHEME_SPEC},
+//   //     security: [
+//   //       {
+//   //         // secure all endpoints with 'jwt'
+//   //         jwt: [],
+//   //       },
+//   //     ],
+//   //     servers: [{url: '/'}],
+//   //   });
+//   // }
+// }
+
+// application.ts
+import { BootMixin } from '@loopback/boot';
+import { ApplicationConfig } from '@loopback/core';
+import { RepositoryMixin } from '@loopback/repository';
+import { RestApplication } from '@loopback/rest';
+import { ServiceMixin } from '@loopback/service-proxy';
+import { JWTAuthenticationComponent } from '@loopback/authentication-jwt';
+import { JWTAuthenticationStrategy } from './authentication-stratgies/jwt-stratgies';
+import { MyUserService } from './services/user-service';
+import dotEnvExtended from 'dotenv-extended';
+import path from 'path';
+import {RestExplorerBindings, RestExplorerComponent} from '@loopback/rest-explorer';
+import {BcryptHasher} from './services/hash.password';
+import {PasswordHasherBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings} from './keys';
+import {JWTService} from './services/jwt-service';
+export {ApplicationConfig};
+export class CreaigithubApplication extends BootMixin(ServiceMixin(RepositoryMixin(RestApplication))) {
+  constructor(options: ApplicationConfig = {}) {
+    super(options);
+
+    // Set up authentication
+    this.setUpAuthentication();
+
+    dotEnvExtended.load({
+      schema: '.env',
+      errorOnMissing: true,
+    });
+    // Set up the custom sequence
+
+    // setup binding
+    // this.setupBinding();
+
+    // Add security spec
+    // this.addSecuritySpec();
+
+    // this.component(AuthenticationComponent);
+    // registerAuthenticationStrategy(this, JWTStrategy)
+    // this.component(JWTAuthenticationComponent);
+    // registerAuthenticationStrategy(this, JWTStrategy)
+
+
+    // this.sequence(MySequence);
+
+    // Set up default home page
+    this.static('/', path.join(__dirname, '../public'));
+
+    // Customize @loopback/rest-explorer configuration here
+    this.configure(RestExplorerBindings.COMPONENT).to({
+      path: '/explorer',
+    });
+    this.component(RestExplorerComponent);
+
+    this.projectRoot = __dirname;
+    // Customize @loopback/boot Booter Conventions here
+    this.bootOptions = {
+      controllers: {
+        // Customize ControllerBooter Conventions here
+        dirs: ['controllers'],
+        extensions: ['.controller.js'],
+        nested: true,
+      },
+    };
+
+
+
+
+  }
+
+  setUpAuthentication() {
+    // Use JWTAuthenticationComponent from @loopback/authentication-jwt
+    this.component(JWTAuthenticationComponent);
+
+    // Bind your custom user service
+    this.bind('services.UserService').toClass(MyUserService);
+
+    // Bind JWTService from @loopback/authentication-jwt
+    this.bind('services.jwt.service').toClass(JWTService);
+    //  this.bind('service.hasher').toClass(BcryptHasher);
+     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
+         this.bind(PasswordHasherBindings.ROUNDS).to(10)
+         this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
+
+             this.bind(TokenServiceBindings.TOKEN_SECRET).to(TokenServiceConstants.TOKEN_SECRET_VALUE)
+             this.bind(TokenServiceBindings.TOKEN_EXPIRES_IN).to(TokenServiceConstants.TOKEN_EXPIRES_IN_VALUE);
+
+    // Bind your custom JWT authentication strategy
+    this.bind('authentication.strategies.jwt').toClass(JWTAuthenticationStrategy);
+    this.bind('security.user').toClass(MyUserService);
+  }
+}
