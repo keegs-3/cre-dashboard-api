@@ -60,6 +60,7 @@
     "@loopback/service-proxy": "^3.1.0",
     "axios": "^0.21.4",
     "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
     "dotenv-extended": "^2.9.0",
     "generate-api-key": "^1.0.2",
     "isemail": "^3.2.0",

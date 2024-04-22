@@ -1,5 +1,6 @@
+import dotenv from 'dotenv';
 import {ApplicationConfig, CreaigithubApplication} from './application';
-
+dotenv.config({debug: true});
 export * from './application';
 
 export async function main(options: ApplicationConfig = {}) {
