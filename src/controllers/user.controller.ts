@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {generateOTP} from "@eternaljs/otp-generator";
+import {generateOTP} from '@eternaljs/otp-generator';
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
@@ -12,7 +12,7 @@ import {
   patch,
   post,
   requestBody,
-  response
+  response,
 } from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
@@ -20,16 +20,15 @@ import nodemailer from 'nodemailer';
 import {
   PasswordHasherBindings,
   TokenServiceBindings,
-  UserServiceBindings
+  UserServiceBindings,
 } from '../keys';
 import {User} from '../models/user.model';
 import {LoginsessionRepository, UsersessionRepository} from '../repositories';
-import {Credentials, UserRepository} from '../repositories/user.repository';
+import {UserRepository} from '../repositories/user.repository';
 import {validateCredentials} from '../services';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import { Loginsession } from '../models/loginsession.model';
 
 export class CReUserController {
   constructor(
@@ -66,25 +65,20 @@ export class CReUserController {
     },
   })
   async signup(@requestBody() userData: User) {
+    try {
+      const data = await this.userRepository.findOne({
+        where: {email: userData.email},
+      });
+      if (data) {
+        throw new Error('User Already Exist');
+      }
 
-try {
-  const data  = await this.userRepository.findOne({
-    where: {email:userData.email}
-  });
-  if (data){
-    throw new Error('User Already Exist');
-  }
+      validateCredentials(_.pick(userData, ['email', 'password']));
+      userData.password = await this.hasher.hashPassword(userData.password);
 
-
-
-
-
-  validateCredentials(_.pick(userData, ['email', 'password']));
-  userData.password = await this.hasher.hashPassword(userData.password);
-
-  const savedUser = await this.userService.createUser(userData)
-// for email
-const transporter = nodemailer.createTransport({
+      const savedUser = await this.userService.createUser(userData);
+      // for email
+      const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
         secure: true, // true for 465, false for other ports
@@ -216,20 +210,13 @@ height:30px;
       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
       // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 
-
-
-
-
-
-  // delete savedUser.password;
-  return savedUser;
-}
-catch (error) {
-  // Handle errors here
-  console.error('Error during signup:', error.message);
-  throw new HttpErrors.BadRequest(error.message); // You can customize the error response as needed
-}
-
+      // delete savedUser.password;
+      return savedUser;
+    } catch (error) {
+      // Handle errors here
+      console.error('Error during signup:', error.message);
+      throw new HttpErrors.BadRequest(error.message); // You can customize the error response as needed
+    }
   }
 
   @post('/verify', {
@@ -251,56 +238,56 @@ catch (error) {
       },
     },
   })
-  async verify( @requestBody({
-    responses: {
-      '200': {
-        description: 'User',
-        content: {
-          schema: {email:"string"},
+  async verify(
+    @requestBody({
+      responses: {
+        '200': {
+          description: 'User',
+          content: {
+            schema: {email: 'string'},
+          },
         },
       },
+    })
+    emaild: {
+      email: string;
     },
-  })
-  emaild: {
-    email:string;
-  },): Promise<boolean> {
+  ): Promise<boolean> {
     try {
       const verify = await this.userRepository.findOne({
-        where: {email:emaild.email}
+        where: {email: emaild.email},
       });
 
       if (!verify) {
         throw new Error('Invalid email');
       }
       if (verify.force_reset_password === true) {
-
-
-          const userotp =generateOTP(6);
-          console.log(userotp);
-          await this.userRepository.dataSource.execute(`
+        const userotp = generateOTP(6);
+        console.log(userotp);
+        await this.userRepository.dataSource.execute(`
       UPDATE ${this.DB_SCHEMA}.users
       SET   userotp= '${userotp}' where email = '${emaild.email}'
 
       `);
-          console.log('reset key send successfully');
+        console.log('reset key send successfully');
 
-          const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // true for 465, false for other ports
-            auth: {
-              user: 'support@nedl.us', // generated ethereal user
-              pass: 'yhykuyheqykfzjsz', // generated ethereal password
-            },
-          });
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true, // true for 465, false for other ports
+          auth: {
+            user: 'support@nedl.us', // generated ethereal user
+            pass: 'yhykuyheqykfzjsz', // generated ethereal password
+          },
+        });
 
-          // send mail with defined transport object
-          const info = await transporter.sendMail({
-            from: '"Nedl Support" <support@nedl.us>', // sender address
-            to: `${emaild.email}`, // list of receivers
-            subject: 'Verify Email', // Subject line
-            text: 'Is this your account', // plain text body
-            html: `
+        // send mail with defined transport object
+        const info = await transporter.sendMail({
+          from: '"Nedl Support" <support@nedl.us>', // sender address
+          to: `${emaild.email}`, // list of receivers
+          subject: 'Verify Email', // Subject line
+          text: 'Is this your account', // plain text body
+          html: `
 
             <!DOCTYPE html>
             <html>
@@ -403,23 +390,19 @@ catch (error) {
 
 
             `, // html body
-          });
+        });
 
-          console.log('Message sent: %s', info.messageId);
-          // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+        console.log('Message sent: %s', info.messageId);
+        // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
-          // Preview only available when sending through an Ethereal account
-          console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-          // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+        // Preview only available when sending through an Ethereal account
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 
-
-
-
-        return true
+        return true;
       }
 
-
-      const loginotp =generateOTP(6);
+      const loginotp = generateOTP(6);
       console.log(loginotp);
       await this.userRepository.dataSource.execute(`
   UPDATE ${this.DB_SCHEMA}.users
@@ -556,9 +539,6 @@ catch (error) {
       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
       // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 
-
-
-
       return false;
     } catch (error) {
       // Handle errors here
@@ -567,45 +547,44 @@ catch (error) {
     }
   }
   @get('/passwordEmail')
-@response(204, {
-  description: 'Usersession PATCH success',
-})
-async passwordEmail(@param.query.string('email') email: any): Promise<any> {
-  const data  = await this.userRepository.findOne({
-    where: {email:email}
-  });
+  @response(204, {
+    description: 'Usersession PATCH success',
+  })
+  async passwordEmail(@param.query.string('email') email: any): Promise<any> {
+    const data = await this.userRepository.findOne({
+      where: {email: email},
+    });
 
-  if (!data) {
-    return 'Email did not match with any user';
-  }
-  if (data.force_reset_password === true)
-  {
-    const otp =generateOTP(6);
+    if (!data) {
+      return 'Email did not match with any user';
+    }
+    if (data.force_reset_password === true) {
+      const otp = generateOTP(6);
 
-    await this.userRepository.dataSource.execute(`
+      await this.userRepository.dataSource.execute(`
 UPDATE ${this.DB_SCHEMA}.users
 SET   userotp= '${otp}' where email = '${email}'
 
 `);
-    console.log('reset key send successfully');
+      console.log('reset key send successfully');
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // true for 465, false for other ports
-      auth: {
-        user: 'support@nedl.us', // generated ethereal user
-        pass: 'yhykuyheqykfzjsz', // generated ethereal password
-      },
-    });
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // true for 465, false for other ports
+        auth: {
+          user: 'support@nedl.us', // generated ethereal user
+          pass: 'yhykuyheqykfzjsz', // generated ethereal password
+        },
+      });
 
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-      from: '"Nedl Support" <support@nedl.us>', // sender address
-      to: `${email}`, // list of receivers
-      subject: 'Verify Email', // Subject line
-      text: 'Is this your account', // plain text body
-      html: `
+      // send mail with defined transport object
+      const info = await transporter.sendMail({
+        from: '"Nedl Support" <support@nedl.us>', // sender address
+        to: `${email}`, // list of receivers
+        subject: 'Verify Email', // Subject line
+        text: 'Is this your account', // plain text body
+        html: `
 
       <!DOCTYPE html>
       <html>
@@ -708,101 +687,92 @@ SET   userotp= '${otp}' where email = '${email}'
 
 
       `, // html body
-    });
+      });
 
-    console.log('Message sent: %s', info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+      console.log('Message sent: %s', info.messageId);
+      // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
-    // Preview only available when sending through an Ethereal account
-    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-    return 'Successfully Emailed';
-  }
-}
-@post('/add/password')
-
-
-@response(204, {
-  description: 'Add PAssword',
-  content: {
-    'application/json': {
-      schema: {
-        type: 'object',
-        properties: {
-          email: { type: 'string' },
-          password: { type: 'string' },
-          otp: { type: 'number' }
-        },
-        required: ['email', 'password', 'otp']
-      }
+      // Preview only available when sending through an Ethereal account
+      console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+      return 'Successfully Emailed';
     }
   }
-
-})
-
-async addPassword(
-  @requestBody({
-    description: 'Password data',
-    required: true,
+  @post('/add/password')
+  @response(204, {
+    description: 'Add PAssword',
     content: {
       'application/json': {
         schema: {
           type: 'object',
           properties: {
-            email: { type: 'string' },
-            password: { type: 'string' },
-            otp: { type: 'number' }
+            email: {type: 'string'},
+            password: {type: 'string'},
+            otp: {type: 'number'},
           },
-          required: ['email', 'password', 'otp']
-        }
-      }
-    }
+          required: ['email', 'password', 'otp'],
+        },
+      },
+    },
   })
-  passwordata: {
-    email:string;
-    password: string;
-    otp: number;
-  },
-): Promise<any> {
+  async addPassword(
+    @requestBody({
+      description: 'Password data',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              email: {type: 'string'},
+              password: {type: 'string'},
+              otp: {type: 'number'},
+            },
+            required: ['email', 'password', 'otp'],
+          },
+        },
+      },
+    })
+    passwordata: {
+      email: string;
+      password: string;
+      otp: number;
+    },
+  ): Promise<any> {
+    try {
+      const data = await this.userRepository.findOne({
+        where: {email: passwordata.email},
+      });
 
+      // console.log("data from add password",data)
+      if (!data) {
+        throw new Error('Invalid email');
+      }
 
-try{
-  const data  = await this.userRepository.findOne({
-    where: {email:passwordata.email}
-  });
+      const storedOTP = data.userOtp;
+      const providedOTP = passwordata.otp * 1;
+      console.log('Stored OTP:', storedOTP);
+      console.log('Provided OTP:', providedOTP);
+      if (storedOTP !== providedOTP * 1) {
+        throw new Error('Invalid user OTP');
+      }
 
-  // console.log("data from add password",data)
-if(!data){
-  throw new Error('Invalid email');
-}
-
-const storedOTP = data.userOtp;
-const providedOTP = passwordata.otp*1;
-console.log("Stored OTP:", storedOTP);
-  console.log("Provided OTP:", providedOTP);
-  if (storedOTP !== providedOTP*1) {
-    throw new Error('Invalid user OTP');
-  }
-
-  console.log('before hash',passwordata.password);
-  const password = await this.hasher.hashPassword(passwordata.password);
-  console.log('after hash',password);
-  const sql = `
+      console.log('before hash', passwordata.password);
+      const password = await this.hasher.hashPassword(passwordata.password);
+      console.log('after hash', password);
+      const sql = `
   UPDATE ${this.DB_SCHEMA}.users
      SET   password = '${password}',userotp=null,force_reset_password = false where email = '${passwordata.email}'`;
-     console.log('sql',sql)
-  await this.userRepository.dataSource.execute(sql);
+      console.log('sql', sql);
+      await this.userRepository.dataSource.execute(sql);
 
-  return 'reset successful';
-}
-catch (error) {
-  // Handle errors here
-  console.error('Error during add password:', error.message);
-  throw new HttpErrors.BadRequest(error.message); // You can customize the error response as needed
-}
-
-}
-
+      return 'reset successful';
+    } catch (error) {
+      // Handle errors here
+      console.error('Error during add password:', error.message);
+      throw new HttpErrors.BadRequest(error.message); // You can customize the error response as needed
+    }
+  }
 
   @post('/login', {
     responses: {
@@ -832,24 +802,24 @@ catch (error) {
           schema: {
             type: 'object',
             properties: {
-              email: { type: 'string' },
-              password: { type: 'string' },
-              otp: { type: 'number' }
+              email: {type: 'string'},
+              password: {type: 'string'},
+              otp: {type: 'number'},
             },
-            required: ['email', 'password', 'otp']
-          }
-        }
-      }
+            required: ['email', 'password', 'otp'],
+          },
+        },
+      },
     })
     passwordata: {
-      email:string;
+      email: string;
       password: string;
       otp: number;
     },
-    ): Promise<any> {
+  ): Promise<any> {
     try {
       const verify = await this.userRepository.findOne({
-        where: {email:passwordata.email}
+        where: {email: passwordata.email},
       });
 
       if (!verify) {
@@ -858,10 +828,9 @@ catch (error) {
       if (verify.isLogedIn === true) {
         throw new Error('User is already Signed In to another System');
       }
-if(verify.loginOtp !== passwordata.otp){
-  throw new Error('Login OTP did not matched');
-
-}
+      if (verify.loginOtp !== passwordata.otp) {
+        throw new Error('Login OTP did not matched');
+      }
 
       const user = await this.userService.verifyCredentials(passwordata);
       if (!user) {
@@ -873,24 +842,22 @@ if(verify.loginOtp !== passwordata.otp){
 
       const token = await this.jwtService.generateToken(userProfile);
 
+      const loginsession = {
+        email: userProfile.email,
+        token: token,
+        loginid: userProfile[securityId],
+      };
 
-        const loginsession = {
-          "email":userProfile.email,
-          "token": token,
-          "loginid":userProfile[securityId]
-        }
+      const lsession = await this.loginSession.create(loginsession);
 
-       const lsession =  await this.loginSession.create(loginsession);
-
-       const updatelogin =  await this.userRepository.dataSource.execute(`
+      const updatelogin = await this.userRepository.dataSource.execute(`
       UPDATE ${this.DB_SCHEMA}.users
       SET islogedin= true , loginotp = null where email = '${passwordata.email}'
 
       `);
-      console.log({"loginsession":lsession,"updatelogin":updatelogin});
+      console.log({loginsession: lsession, updatelogin: updatelogin});
 
-
-      return { token };
+      return {token};
     } catch (error) {
       // Handle errors here
       console.error('Error during user login:', error.message);
@@ -917,52 +884,48 @@ if(verify.loginOtp !== passwordata.otp){
       },
     },
   })
-  async logout(@requestBody({
-    content: {
-      'application/json': {},
+  async logout(
+    @requestBody({
+      content: {
+        'application/json': {},
+      },
+    })
+    emaild: {
+      email: string;
     },
-  })
-  emaild: {
-    email:string;
-  },): Promise<any> {
+  ): Promise<any> {
     try {
       const verify = await this.userRepository.findOne({
-        where: {email:emaild.email}
+        where: {email: emaild.email},
       });
 
       if (!verify) {
         throw new Error('Invalid email');
       }
 
-
-
-if(verify.isLogedIn === false){
-  throw new Error('The User is already logged out');
-}
-const login = await this.userRepository.dataSource.execute(`
+      if (verify.isLogedIn === false) {
+        throw new Error('The User is already logged out');
+      }
+      const login = await this.userRepository.dataSource.execute(`
       select * from ${this.DB_SCHEMA}.loginsession
       where email = '${emaild.email}'
 
       `);
-      console.log('login',login[0].id);
+      console.log('login', login[0].id);
 
-if(login){
-  await this.loginSession.deleteById(login[0].id);
-  const logout = await this.userRepository.dataSource.execute(`
+      if (login) {
+        await this.loginSession.deleteById(login[0].id);
+        const logout = await this.userRepository.dataSource.execute(`
   UPDATE ${this.DB_SCHEMA}.users
   SET   islogedin= false where email = '${emaild.email}'
 
   `);
-  if(!logout){
-    throw new Error('Issue login out ');
-  }
-}
+        if (!logout) {
+          throw new Error('Issue login out ');
+        }
+      }
 
-
-
-
-      return 'Logged Out Successfully'
-
+      return 'Logged Out Successfully';
     } catch (error) {
       // Handle errors here
       console.error('Error during login:', error.message);
@@ -988,10 +951,8 @@ if(login){
     currentUser: UserProfile,
   ): Promise<UserProfile> {
     return Promise.resolve(currentUser);
-
   }
   @authenticate('jwt')
-
   @get('/users/{org}', {
     // security: OPERATION_SECURITY_SPEC,
     responses: {
@@ -1005,112 +966,86 @@ if(login){
       },
     },
   })
-  async org(
-    @param.path.string('org') org: string,
-  ): Promise<UserProfile> {
+  async org(@param.path.string('org') org: string): Promise<UserProfile> {
     const userList = await this.userService.getUserOrgList(org);
-    return userList
+    return userList;
+  }
+  @authenticate('jwt')
+  @del('/users/{id}')
+  @response(204, {
+    description: 'User DELETE success',
+  })
+  async deleteById(@param.path.string('id') id: string): Promise<void> {
+    await this.userRepository.deleteById(id);
+  }
+  @patch('/user/password/{id}')
+  @response(204, {
+    description: 'Usersession PATCH success',
+  })
+  async updateById(
+    @param.path.string('id') id: string,
+    @requestBody()
+    request: {previousPassword: string; User: User},
+  ): Promise<any> {
+    const user = await this.userRepository.findById(id);
 
+    // Compare previous password if available
+    if (user?.password) {
+      const previousPasswordMatches = await this.hasher.comparePassword(
+        request.previousPassword,
+        user.password,
+      );
 
-}
-@authenticate('jwt')
-
-@del('/users/{id}')
-@response(204, {
-  description: 'User DELETE success',
-})
-async deleteById(@param.path.string('id') id: string): Promise<void> {
-  await this.userRepository.deleteById(id);
-}
-// @patch('/user/password/{id}')
-// @response(204, {
-//   description: 'Usersession PATCH success',
-// })
-// async updateById(
-//   @param.path.string('id') id: string,
-//   @requestBody({
-//     content: {
-//       'application/json': {
-//         schema: getModelSchemaRef(User, {partial: true}),
-//       },
-//     },
-//   })
-//   usersession: User,
-
-// ): Promise<void> {
-//   usersession.password = await this.hasher.hashPassword(usersession.password)
-//   await this.userRepository.updateById(id, usersession);
-// }
-@patch('/user/password/{id}')
-@response(204, {
-  description: 'Usersession PATCH success',
-})
-async updateById(
-  @param.path.string('id') id: string,
-  @requestBody()
-    request: {previousPassword: string,User:User}
-
-
-
-): Promise<any> {
-  const user = await this.userRepository.findById(id);
-
-  // Compare previous password if available
-  if ( user?.password) {
-    const previousPasswordMatches = await this.hasher.comparePassword(
-      request.previousPassword,
-      user.password
-    );
-
-    if (!previousPasswordMatches){
-      return 'Previous password does not match';
+      if (!previousPasswordMatches) {
+        return 'Previous password does not match';
+      }
     }
+
+    request.User.password = await this.hasher.hashPassword(
+      request.User.password,
+    );
+    await this.userRepository.updateById(id, request.User);
+    return 'Successfully Changed Password';
   }
 
-  request.User.password = await this.hasher.hashPassword(request.User.password);
-  await this.userRepository.updateById(id, request.User);
-  return 'Successfully Changed Password'
-}
-
-
-@get('/reset/link')
-@response(204, {
-  description: 'Usersession PATCH success',
-})
-async updateBy(@param.query.string('email') email: any): Promise<any> {
-  const data  = await this.userRepository.find({
-    where: {email:email}
-  });
-  console.log(data);
-  if (data.length < 1) {
-    return 'Email did not match with any user';
-  } else {
-    const resetkey =generateOTP(6);
-    console.log(resetkey);
-    await this.userRepository.dataSource.execute(`
+  @get('/reset/link')
+  @response(204, {
+    description: 'Usersession PATCH success',
+  })
+  async updateBy(@param.query.string('email') email: any): Promise<any> {
+    const data = await this.userRepository.find({
+      where: {email: email},
+    });
+    console.log(data);
+    if (data.length < 1) {
+      return 'Email did not match with any user';
+    } else {
+      const resetkey = generateOTP(6);
+      console.log(resetkey);
+      await this.userRepository.dataSource.execute(`
 UPDATE ${this.DB_SCHEMA}.users
 SET   resetkey= '${resetkey}' where email = '${email}'
 
 `);
-    console.log('reset key send successfully');
+      console.log('reset key send successfully');
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // true for 465, false for other ports
-      auth: {
-        user: 'support@nedl.us', // generated ethereal user
-        pass: 'yhykuyheqykfzjsz', // generated ethereal password
-      },
-    });
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // true for 465, false for other ports
+        auth: {
+          user: 'support@nedl.us', // generated ethereal user
+          pass: 'yhykuyheqykfzjsz', // generated ethereal password
+        },
+      });
 
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-      from: '"Nedl Support" <support@nedl.us>', // sender address
-      to: `${email}`, // list of receivers
-      subject: 'Verify Email', // Subject line
-      text: 'Is this your account', // plain text body
-      html: `
+      // send mail with defined transport object
+      const info = await transporter.sendMail({
+        from: '"Nedl Support" <support@nedl.us>', // sender address
+        to: `${email}`, // list of receivers
+        subject: 'Verify Email', // Subject line
+        text: 'Is this your account', // plain text body
+        html: `
 
       <!DOCTYPE html>
       <html>
@@ -1213,82 +1148,60 @@ SET   resetkey= '${resetkey}' where email = '${email}'
 
 
       `, // html body
-    });
+      });
 
-    console.log('Message sent: %s', info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+      console.log('Message sent: %s', info.messageId);
+      // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
-    // Preview only available when sending through an Ethereal account
-    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-    return 'Successfully Emailed';
+      // Preview only available when sending through an Ethereal account
+      console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+      return 'Successfully Emailed';
+    }
   }
-}
-@patch('/reset/password')
-@response(204, {
-  description: 'password PATCH success',
-})
-async updateByre(
-  @requestBody({
-    content: {
-      'application/json': {},
-    },
+  @patch('/reset/password')
+  @response(204, {
+    description: 'password PATCH success',
   })
-  passwordata: {
-    password: string;
-    resetkey: string;
-  },
-): Promise<any> {
+  async updateByre(
+    @requestBody({
+      content: {
+        'application/json': {},
+      },
+    })
+    passwordata: {
+      password: string;
+      resetkey: string;
+    },
+  ): Promise<any> {
+    const data = await this.userRepository.find({
+      where: {resetkey: passwordata.resetkey},
+    });
+    if (data.length < 1) {
+      return 'Invalid reset key';
+    }
 
-
-  const data  = await this.userRepository.find({
-    where: {resetkey:passwordata.resetkey}
-  });
-if(data.length < 1){
-  return 'Invalid reset key'
-}
-
-
-
-
-  const password = await this.hasher.hashPassword(passwordata.password);
-  console.log(password);
-  await this.userRepository.dataSource.execute(`
+    const password = await this.hasher.hashPassword(passwordata.password);
+    console.log(password);
+    await this.userRepository.dataSource.execute(`
  UPDATE ${this.DB_SCHEMA}.users
     SET   password = '${password}',resetkey=null where resetkey = '${passwordata.resetkey}'`);
 
-  return 'reset successful';
-}
-@authenticate('jwt')
-@get('/users/org')
-@response(200, {
-  description: 'Array of org ',
-})
-async market(
-
-): Promise<any> {
-
-  const sql = await this.userRepository.dataSource.execute(
-    `
+    return 'reset successful';
+  }
+  @authenticate('jwt')
+  @get('/users/org')
+  @response(200, {
+    description: 'Array of org ',
+  })
+  async market(): Promise<any> {
+    const sql = await this.userRepository.dataSource.execute(
+      `
     SELECT distinct agent_id from ${this.DB_SCHEMA}.users
 
-    `  )
+    `,
+    );
 
-
-
-
-
-
-
-
-return sql;
-
-
-
-
-
-}
-
-
-
+    return sql;
+  }
 }
