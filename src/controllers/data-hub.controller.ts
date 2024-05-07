@@ -1,10 +1,8 @@
 // Uncomment these imports to begin using these cool features!
 
-import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {UserRepository} from '../repositories';
 import {get, param, response} from '@loopback/rest';
-
+import {UserRepository} from '../repositories';
 
 export class DataHubController {
   constructor(
@@ -198,6 +196,34 @@ export class DataHubController {
 
     if (all.length > 0) {
       return {all, count};
+    } else {
+      return 'No Data Available';
+    }
+  }
+
+  @get('/dataHub/average')
+  @response(200, {
+    description: 'Array dataHUb',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+        },
+      },
+    },
+  })
+  async avg(@param.query.string('property') property?: string): Promise<any> {
+    const data = `
+                    SELECT * FROM ${this.DB_SCHEMA}.rent_comparables
+                    where 1 = 1
+                    and nedl_property_id = '${property}'
+                    order by year_quarter asc
+                  `;
+
+    const all = await this.userRepository.dataSource.execute(data);
+
+    if (all.length > 0) {
+      return {all};
     } else {
       return 'No Data Available';
     }
