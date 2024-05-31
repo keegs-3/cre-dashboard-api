@@ -51,12 +51,12 @@ export class MyUserService implements UserService<User, Credentials>{
       throw new HttpErrors.Unauthorized('Wrong username / password');
     return foundUser;
   }
-  async getUserOrgList(org:string): Promise<any> {
+  async getUserOrgList(org:number): Promise<any> {
     // implement this method
 
 
     const foundUsers = await this.userRepository.find({
-      where: {agent_id:org}
+      where: {org:org}
     });
 
     if (!foundUsers) {
@@ -74,8 +74,8 @@ export class MyUserService implements UserService<User, Credentials>{
       role:user.role,
       firstName: user.firstName,
       userName:user.username,
-      organization:user.agent_id,
-      reset:user.force_reset_password
+      organization:user.org,
+      reset:user.forceReset
     };
 
   }

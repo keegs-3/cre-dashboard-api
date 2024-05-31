@@ -23,12 +23,12 @@ export class JWTStrategy implements AuthenticationStrategy {
 
     const token: string = this.extractCredentials(request);
     const userProfile = await this.jwtService.verifyToken(token);
-    const usertoken = await this.loginSession.findOne({
-      where: {token:token}
-    });
-    if (!usertoken){
-      throw new HttpErrors.Unauthorized(`This token has expired`)
-    }
+    // const usertoken = await this.loginSession.findOne({
+    //   where: {token:token}
+    // });
+    // if (!usertoken){
+    //   throw new HttpErrors.Unauthorized(`This token has expired`)
+    // }
     return Promise.resolve(userProfile);
 
   }

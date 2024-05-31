@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Uncomment these imports to begin using these cool features!
 
 import {repository} from '@loopback/repository';
@@ -46,7 +47,7 @@ export class DataHubController {
     let marq: any = '';
     let mmarq: any = '';
     let smarq: any = '';
-    // let spname: any = '';
+
     let cityc: any = '';
     let addc: any = '';
     let own: any = '';
@@ -66,9 +67,8 @@ export class DataHubController {
     const se = segment?.split(',');
     seg = "'" + se?.join("','") + "'";
 
-    // pn = 'anil,anil2,anil3'
-    const pn = propertyName?.split(',');
-    // spname= "'" + pn?.join("','") + "'";
+    
+
     let allState = '';
     let allCity = '';
     let allCounty = '';

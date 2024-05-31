@@ -23,3 +23,5 @@ export * from './userreview.model';
 
 export * from './extraownercontact.model';
 export * from './loginsession.model';
+export * from './role.model';
+export * from './organization.model';

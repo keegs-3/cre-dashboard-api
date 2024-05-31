@@ -12,7 +12,6 @@ import {
 } from '@loopback/rest-explorer';
 import {ServiceMixin} from '@loopback/service-proxy';
 import dotenv from 'dotenv';
-import dotEnvExtended from 'dotenv-extended';
 import path from 'path';
 import {JWTStrategy} from './authentication-stratgies/jwt-stratgies';
 import {
@@ -34,10 +33,10 @@ export class CreaigithubApplication extends BootMixin(
   constructor(options: ApplicationConfig = {}) {
     super(options);
 
-    dotEnvExtended.load({
-      path: '../.env',
-      errorOnMissing: true,
-    });
+    // dotEnvExtended.load({
+    //   path: '../.env',
+    //   errorOnMissing: true,
+    // });
     dotenv.config({debug: true});
 
     console.log(process.env.TOKEN_SECRET_VALUE, 'secret');
