@@ -1,6 +1,10 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({
+  settings: {
+    postgresql: {schema: process.env.DB_SCHEMA, table: 'app_msa_region'},
+  },
+})
 export class AppMsaRegion extends Entity {
   @property({
     type: 'number',
@@ -28,7 +32,6 @@ export class AppMsaRegion extends Entity {
     type: 'string',
   })
   region?: string;
-
 
   constructor(data?: Partial<AppMsaRegion>) {
     super(data);
