@@ -28,3 +28,4 @@ export * from './organization.model';
 export * from './subscription-type.model';
 export * from './user-subscription.model';
 export * from './subscription-data.model';
+export * from './app-msa-region.model';

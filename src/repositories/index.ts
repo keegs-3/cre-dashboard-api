@@ -21,3 +21,4 @@ export * from './organization.repository';
 export * from './subscription-data.repository';
 export * from './subscription-type.repository';
 export * from './user-subscription.repository';
+export * from './app-msa-region.repository';

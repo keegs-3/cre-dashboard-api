@@ -11,3 +11,4 @@ export * from './organization.controller';
 export * from './subscription-type.controller';
 export * from './user-subscription.controller';
 export * from './subscription-data.controller';
+export * from './app-msa-r-egion.controller';
