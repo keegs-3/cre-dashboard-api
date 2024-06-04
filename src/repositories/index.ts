@@ -18,3 +18,6 @@ export * from './extraownercontact.repository';
 export * from './loginsession.repository';
 export * from './role.repository';
 export * from './organization.repository';
+export * from './subscription-data.repository';
+export * from './subscription-type.repository';
+export * from './user-subscription.repository';

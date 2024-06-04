@@ -25,3 +25,6 @@ export * from './extraownercontact.model';
 export * from './loginsession.model';
 export * from './role.model';
 export * from './organization.model';
+export * from './subscription-type.model';
+export * from './user-subscription.model';
+export * from './subscription-data.model';
