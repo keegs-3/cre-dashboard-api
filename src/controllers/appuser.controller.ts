@@ -666,7 +666,7 @@ To finish setting up your nëdl account, follow the steps below.
       const verify = await this.userRepository.findOne({
         where: {email: passwordata.email},
       });
-console.log('verify',verify)
+      console.log('verify', verify);
       if (!verify) {
         throw new Error('Invalid email');
       }
@@ -738,7 +738,7 @@ console.log('verify',verify)
       const verify = await this.userRepository.findOne({
         where: {email: emaild.email},
       });
-      console.log('aaaaa',verify)
+      console.log('aaaaa', verify);
 
       if (!verify) {
         throw new Error('Invalid email');
@@ -765,7 +765,6 @@ console.log('verify',verify)
     }
   }
   @authenticate('jwt')
-
   @get('/users/me', {
     // security: OPERATION_SECURITY_SPEC,
     responses: {
@@ -785,9 +784,43 @@ console.log('verify',verify)
   ): Promise<any> {
     try {
       const user = await Promise.resolve(currentUser);
-      const subs = await this.userService.getSubscription(user[securityId])
-console.log('sdfxdgcfg',subs)
-      return {user,subs};
+      const subs = await this.userService.getSubscription(user[securityId]);
+      console.log('sdfxdgcfg', subs);
+      return {user, subs};
+    } catch (error: any) {
+      console.error('Error during login:', error.message);
+      throw new HttpErrors.Unauthorized(error.message);
+    }
+  }
+  @authenticate('jwt')
+  @get('/users/list', {
+    // security: OPERATION_SECURITY_SPEC,
+    responses: {
+      '200': {
+        description: 'The current user profile',
+        content: {
+          'application/json': {
+            schema: getJsonSchemaRef(User),
+          },
+        },
+      },
+    },
+  })
+  async list(
+    @inject(AuthenticationBindings.CURRENT_USER)
+    currentUser: UserProfile,
+  ): Promise<any> {
+    try {
+      const user = await Promise.resolve(currentUser);
+      if(user.role !== 1){
+return`'You don't have right to access this route`
+      }
+      const list = await this.userRepository.dataSource.execute(`
+select * from ${this.DB_SCHEMA}.app_users au left join ${this.DB_SCHEMA}.app_subscription_data asd on au.id = asd.userid
+
+        `);
+
+      return list;
     } catch (error: any) {
       console.error('Error during login:', error.message);
       throw new HttpErrors.Unauthorized(error.message);
