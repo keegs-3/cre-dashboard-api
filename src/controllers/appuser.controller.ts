@@ -813,7 +813,7 @@ To finish setting up your nëdl account, follow the steps below.
     try {
       const user = await Promise.resolve(currentUser);
       if(user.role !== 1){
-return`'You don't have right to access this route`
+return`You don't have right to access this route`
       }
       const list = await this.userRepository.dataSource.execute(`
 select * from ${this.DB_SCHEMA}.app_users au left join ${this.DB_SCHEMA}.app_subscription_data asd on au.id = asd.userid
