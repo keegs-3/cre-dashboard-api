@@ -7,6 +7,7 @@ import {
   get,
   getJsonSchemaRef,
   HttpErrors,
+  param,
   post,
   requestBody,
   response,
@@ -26,6 +27,7 @@ import {validateCredentials} from '../services';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
+import { SubscriptionData } from './../models/subscription-data.model';
 
 export class AppUserController {
   constructor(
@@ -793,7 +795,7 @@ To finish setting up your nëdl account, follow the steps below.
     }
   }
   @authenticate('jwt')
-  @get('/users/list', {
+  @get('/users/list/{org}', {
     // security: OPERATION_SECURITY_SPEC,
     responses: {
       '200': {
@@ -807,19 +809,49 @@ To finish setting up your nëdl account, follow the steps below.
     },
   })
   async list(
+    @param.path.number('org') org: number,
     @inject(AuthenticationBindings.CURRENT_USER)
     currentUser: UserProfile,
   ): Promise<any> {
     try {
       const user = await Promise.resolve(currentUser);
-      if(user.role !== 1){
-return`You don't have right to access this route`
+      if (user.role !== 1) {
+        return `You don't have right to access this route`;
       }
       const list = await this.userRepository.dataSource.execute(`
-select * from ${this.DB_SCHEMA}.app_users au left join ${this.DB_SCHEMA}.app_subscription_data asd on au.id = asd.userid
-
-        `);
-
+select * from ${this.DB_SCHEMA}.app_users where org=${org}`);
+      return list;
+    } catch (error: any) {
+      console.error('Error during login:', error.message);
+      throw new HttpErrors.Unauthorized(error.message);
+    }
+  }
+  @authenticate('jwt')
+  @get('/users/subscription/list/{org}', {
+    // security: OPERATION_SECURITY_SPEC,
+    responses: {
+      '200': {
+        description: 'Subscription List according to organization',
+        content: {
+          'application/json': {
+            schema: getJsonSchemaRef(SubscriptionData),
+          },
+        },
+      },
+    },
+  })
+  async subscription(
+    @param.path.number('org') org: number,
+    @inject(AuthenticationBindings.CURRENT_USER)
+    currentUser: UserProfile,
+  ): Promise<any> {
+    try {
+      const user = await Promise.resolve(currentUser);
+      if (user.role !== 1) {
+        return `You don't have right to access this route`;
+      }
+      const list = await this.userRepository.dataSource.execute(`
+select * from ${this.DB_SCHEMA}.app_subscription_data where org=${org}`);
       return list;
     } catch (error: any) {
       console.error('Error during login:', error.message);
