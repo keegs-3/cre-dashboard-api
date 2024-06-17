@@ -49,7 +49,14 @@ export class SubscriptionData extends Entity {
     type: 'number',
   })
   userLimit?: number;
-
+  @property({
+    type: 'date',
+  })
+  endDate?: Date;
+  @property({
+    type: 'string',
+  })
+  subFor?: string;
   constructor(data?: Partial<SubscriptionData>) {
     super(data);
   }
