@@ -86,11 +86,11 @@ export class MyUserService implements UserService<User, Credentials> {
 
     return user;
   }
-  async getSubscription(userId: string): Promise<any> {
-    const subs = await this.subData.findOne({
-      where: {userId: userId},
-    });
-    if(subs) return subs;
+  // async getSubscription(userId: string): Promise<any> {
+  //   const subs = await this.subData.findOne({
+  //     where: {userId: userId},
+  //   });
+  //   if(subs) return subs;
 
-  }
+  // }
 }

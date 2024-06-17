@@ -784,9 +784,9 @@ To finish setting up your nëdl account, follow the steps below.
   ): Promise<any> {
     try {
       const user = await Promise.resolve(currentUser);
-      const subs = await this.userService.getSubscription(user[securityId]);
-      console.log('sdfxdgcfg', subs);
-      return {user, subs};
+      // const subs = await this.userService.getSubscription(user[securityId]);
+      // console.log('sdfxdgcfg', subs);
+      return {user};
     } catch (error: any) {
       console.error('Error during login:', error.message);
       throw new HttpErrors.Unauthorized(error.message);
