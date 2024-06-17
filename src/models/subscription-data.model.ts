@@ -21,10 +21,6 @@ export class SubscriptionData extends Entity {
   @property({
     type: 'number',
   })
-  user_Sub_Id?: number;
-  @property({
-    type: 'number',
-  })
   typeId?: number;
 
   @property({
@@ -41,6 +37,18 @@ export class SubscriptionData extends Entity {
     type: 'string',
   })
   addedBy?: string;
+  @property({
+    type: 'string',
+  })
+  subscriptionName?: string;
+  @property({
+    type: 'object',
+  })
+  users?: object;
+  @property({
+    type: 'number',
+  })
+  userLimit?: number;
 
   constructor(data?: Partial<SubscriptionData>) {
     super(data);
