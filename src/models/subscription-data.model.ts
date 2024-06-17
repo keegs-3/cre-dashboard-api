@@ -14,9 +14,9 @@ export class SubscriptionData extends Entity {
   id?: number;
 
   @property({
-    type: 'string',
+    type: 'number',
   })
-  userId?: string;
+  org?: number;
 
   @property({
     type: 'number',
