@@ -827,6 +827,46 @@ select * from ${this.DB_SCHEMA}.app_users where org=${org}`);
     }
   }
   @authenticate('jwt')
+  @get('/users/list/nosubscription/{org}', {
+    // security: OPERATION_SECURITY_SPEC,
+    responses: {
+      '200': {
+        description: 'The current user profile',
+        content: {
+          'application/json': {
+            schema: getJsonSchemaRef(User),
+          },
+        },
+      },
+    },
+  })
+  async notSubscribed(
+    @param.path.number('org') org: number,
+    @inject(AuthenticationBindings.CURRENT_USER)
+    currentUser: UserProfile,
+  ): Promise<any> {
+    try {
+      const user = await Promise.resolve(currentUser);
+      if (user.role !== 1) {
+        return `You don't have right to access this route`;
+      }
+      const list = await this.userRepository.dataSource.execute(`
+SELECT *
+FROM ${this.DB_SCHEMA}.app_users au
+WHERE au.org = ${org}
+  AND au.id::text NOT IN (
+    SELECT DISTINCT jsonb_array_elements_text(users->'users')
+    FROM ${this.DB_SCHEMA}.app_subscription_data asd
+    WHERE asd.org = ${org}
+      AND jsonb_typeof(asd.users->'users') = 'array'
+  )`);
+      return list;
+    } catch (error: any) {
+      console.error('Error during login:', error.message);
+      throw new HttpErrors.Unauthorized(error.message);
+    }
+  }
+  @authenticate('jwt')
   @get('/users/subscription/list/{org}', {
     // security: OPERATION_SECURITY_SPEC,
     responses: {

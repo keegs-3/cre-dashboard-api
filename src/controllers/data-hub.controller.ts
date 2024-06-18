@@ -99,9 +99,19 @@ export class DataHubController {
 
     const user = await Promise.resolve(currentUser);
     const subs = await this.subData.dataSource.execute(
-      `select * from ${this.DB_SCHEMA}.app_subscription_data where userid = '${user[securityId]}'`,
+      `
+      SELECT *
+FROM ${this.DB_SCHEMA}.app_subscription_data
+WHERE org = 1
+  AND jsonb_typeof(users->'users') = 'array'
+  AND EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements_text(users->'users') AS elem
+    WHERE elem = '${user[securityId]}'
+  );
+      `,
     );
-    // console.log('ddddd', subs[0].sub_data.MSA?);
+    console.log('ddddd', subs);
 
     if (subs && subs.length > 0) {
       console.log('zsdfsdfsdf', subs[0].typeid);
@@ -227,7 +237,8 @@ ${allMSA}
         return 'No Data Available';
       }
     } else return 'Please ADD Subscription to access Data';
-  }
+
+}
 
   @get('/dataHub/average')
   @response(200, {
