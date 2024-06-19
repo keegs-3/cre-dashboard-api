@@ -799,13 +799,13 @@ WHERE org = 1
   );
       `,
        );
-      
+
 const date = new Date();
       if(subs.length > 0){
         if (new Date(subs[0].enddate) > date) return {user, subs};
-        else return 'Subscription Expired please renew';
+        else return {user,"message":'Subscription Expired please renew'};
       }
-      return "Please add Subscription";
+      return {user,"message":"Please add a Subscription"};
     } catch (error: any) {
       console.error('Error during login:', error.message);
       throw new HttpErrors.Unauthorized(error.message);

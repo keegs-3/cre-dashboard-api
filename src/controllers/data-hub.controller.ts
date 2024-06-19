@@ -116,7 +116,7 @@ WHERE org = 1
     if (subs && subs.length > 0) {
       console.log('zsdfsdfsdf', subs[0].typeid);
       if (subs[0].typeid !== 3) {
-        const msa = subs.subs_data.MSA?.split(',');
+        const msa = subs[0].sub_data.MSA?.split(',');
         msac = "'" + msa?.join("','") + "'";
         allMSA = `and msa_code in (${msac})`;
       }
