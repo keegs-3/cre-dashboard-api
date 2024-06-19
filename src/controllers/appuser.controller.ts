@@ -786,9 +786,26 @@ To finish setting up your nëdl account, follow the steps below.
   ): Promise<any> {
     try {
       const user = await Promise.resolve(currentUser);
-      // const subs = await this.userService.getSubscription(user[securityId]);
-      // console.log('sdfxdgcfg', subs);
-      return {user};
+       const subs = await this.subData.dataSource.execute(
+         `
+      SELECT *
+FROM ${this.DB_SCHEMA}.app_subscription_data
+WHERE org = 1
+  AND jsonb_typeof(users->'users') = 'array'
+  AND EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements_text(users->'users') AS elem
+    WHERE elem = '${user[securityId]}'
+  );
+      `,
+       );
+      
+const date = new Date();
+      if(subs.length > 0){
+        if (new Date(subs[0].enddate) > date) return {user, subs};
+        else return 'Subscription Expired please renew';
+      }
+      return "Please add Subscription";
     } catch (error: any) {
       console.error('Error during login:', error.message);
       throw new HttpErrors.Unauthorized(error.message);
