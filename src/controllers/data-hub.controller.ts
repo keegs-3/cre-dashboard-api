@@ -67,18 +67,25 @@ export class DataHubController {
     let seg: any = '';
     let msac: any = '';
     const mmar = market?.split(',');
+    console.log(mmar,"market");
     mmarq = "'" + mmar?.join("','") + "'";
     const smar = submarket?.split(',');
+    console.log(smar,"submarket");
     smarq = "'" + smar?.join("','") + "'";
     const mar = state?.split(',');
+    console.log(mar,"state");
     marq = "'" + mar?.join("','") + "'";
     const cit = city?.split(',');
+    console.log(cit,"city");
     cityc = "'" + cit?.join("','") + "'";
     const add = county?.split(',');
+    console.log(add,"county");
     addc = "'" + add?.join("','") + "'";
     const ow = owner?.split(',');
+    console.log(ow,"owner");
     own = "'" + ow?.join("','") + "'";
     const se = segment?.split(',');
+    console.log(se,"segment");
     seg = "'" + se?.join("','") + "'";
 
     let allState = '';
@@ -116,7 +123,10 @@ WHERE org = 1
     if (subs && subs.length > 0) {
       console.log('zsdfsdfsdf', subs[0].typeid);
       if (subs[0].typeid !== 3) {
-        const msa = subs[0].sub_data.MSA?.split(',');
+        console.log(subs[0].typeid,"type");
+        console.log(subs[0].sub_data.MSA,"msa");
+        const msa = subs[0].sub_data.MSA;
+        console.log(msa,"msa");
         msac = "'" + msa?.join("','") + "'";
         allMSA = `and msa_code in (${msac})`;
       }
