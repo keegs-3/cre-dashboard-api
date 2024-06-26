@@ -34,4 +34,28 @@ export class MarketIntelligenceController {
 
     return sql;
   }
+  @get('/marketIntelligence/all')
+  @response(200, {
+    description: 'Array of Market data',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+        },
+      },
+    },
+  })
+  async all(): Promise<JSON> {
+    const sql = await this.userRepository.dataSource.execute(
+      `
+   SELECT *
+FROM ${this.DB_SCHEMA}.market_kpis
+WHERE to_date(recording_month, 'YYYY-MM-DD') BETWEEN (current_date - INTERVAL '6 months') AND (current_date - INTERVAL '1 month')
+ORDER BY to_date(recording_month, 'YYYY-MM-DD') DESC;
+
+    `,
+    );
+
+    return sql;
+  }
 }
