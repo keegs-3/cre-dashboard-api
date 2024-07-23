@@ -440,7 +440,7 @@ FROM ${this.DB_SCHEMA}.data_hub
     @param.query.string('owner_name') owner_name?: string,
   ): Promise<any> {
     const data = `
-                   select grantee_name from ${this.DB_SCHEMA}.data_hub where grantee_name ILIKE '%${owner_name}%')
+                   select grantee_name from ${this.DB_SCHEMA}.data_hub where grantee_name ILIKE '%${owner_name}%'
                   `;
 
     const all = await this.userRepository.dataSource.execute(data);
