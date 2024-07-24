@@ -56,8 +56,7 @@ export class DataHubController {
     @param.query.string('la') la?: string,
     @param.query.number('ytms') ytms?: number,
     @param.query.number('ytme') ytme?: number,
-    @param.query.number('latvs') latvs?: number,
-    @param.query.number('latve') latve?: number,
+    @param.query.string('latv') latv?: string,
     @param.query.number('las') las?: number,
     @param.query.number('lae') lae?: number,
     @param.query.number('ts') ts?: number,
@@ -231,14 +230,14 @@ WHERE org = ${user.organization}
           allLa = `and mortgage_due_date is not null `;
         }
       }
-       if (
-         latvs !== null &&
-         latvs !== undefined &&
-         latve !== null &&
-         latve !== undefined
-       ) {
-         allLoanAmountToValue = `and transfer_purchase_loan_to_value  between ${latvs} and ${latve}`;
-       }
+      if (latv !== '' && latv !== undefined) {
+        if (latv === 'No') {
+          allLoanAmountToValue = `and transfer_purchase_loan_to_value is  null`;
+        } else if (latv === 'Yes') {
+          allLoanAmountToValue = `and transfer_purchase_loan_to_value is not null `;
+        }
+      }
+
         if (
           las !== null &&
           las !== undefined &&
@@ -262,7 +261,7 @@ WHERE org = ${user.organization}
             allInterestRate = `and interest_rate >= ${ir}`;
           }
       if (owner !== '' && owner !== undefined) {
-        allOwner = `  AND (owner_name IN(${own}))`;
+        allOwner = `  AND (grantee_name IN(${own}))`;
       }
        if (hcs !== null && hcs !== undefined && hce !== null && hce !== undefined) {
          allHouseHoldCount = `and household_count  between ${hcs} and ${hce}`;
