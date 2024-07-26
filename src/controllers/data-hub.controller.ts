@@ -138,6 +138,14 @@ WHERE org = ${user.organization}
       `,
     );
     console.log('ddddd', subs);
+    const date = new Date();
+
+
+        if (new Date(subs[0].enddate) < date)
+        return 'Subscription Expired please renew';
+
+
+
 
     if (subs && subs.length > 0) {
       console.log('zsdfsdfsdf', subs[0].typeid);
