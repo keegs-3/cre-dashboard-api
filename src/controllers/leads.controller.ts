@@ -11,14 +11,21 @@ import {
   response,
 } from '@loopback/rest';
 import {Leads} from '../models';
-import {LeadsRepository} from '../repositories';
+import {LeadsRepository, SubscriptionDataRepository} from '../repositories';
 import {inject} from '@loopback/core';
-import {UserProfile} from '@loopback/security';
+import {securityId, UserProfile} from '@loopback/security';
+import {UserServiceBindings} from '../keys';
+import {MyUserService} from '@loopback/authentication-jwt';
 @authenticate('jwt')
 export class LeadsController {
   constructor(
     @repository(LeadsRepository)
     public leadsRepository: LeadsRepository,
+
+    @inject(UserServiceBindings.USER_SERVICE)
+    public userService: MyUserService,
+    @repository(SubscriptionDataRepository)
+    public subData: SubscriptionDataRepository,
   ) {}
 
   DB_SCHEMA = process.env.DB_SCHEMA;
@@ -155,7 +162,7 @@ and property_name ILIKE '%${search}%'
 
 
       const user = await Promise.resolve(currentUser);
-      const subs = await this.leadsRepository.dataSource.execute(
+      const subs = await this.subData.dataSource.execute(
         `
       SELECT *
 FROM ${this.DB_SCHEMA}.app_subscription_data
@@ -169,6 +176,15 @@ WHERE org = ${user.organization}
       `,
       );
 if (subs && subs.length > 0) {
+  // if (subs[0].typeid !== 3) {
+  //   console.log(subs[0].typeid, 'type');
+  //   console.log(subs[0].sub_data.MSA, 'msa');
+  //   const msan = subs[0].sub_data.MSA;
+  //   console.log(msan, 'msa');
+  //   const msac = "'" + msan?.join("','") + "'";
+  //   let allMSA = `and msa_code in (${msac})`;
+  // }
+
   if (status === 'LEAD') {
     // const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
     if (mylist === 'yes') {
