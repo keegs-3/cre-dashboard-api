@@ -42,7 +42,7 @@ export class LeadsController {
     return this.leadsRepository.create(userData);
   }
 
-  
+
 
   @get('/leads/byStatus')
   @response(200, {
@@ -276,7 +276,20 @@ WHERE org = ${user.organization}
         ) {
           yb = `AND (subquery.year_built between ${yearbuilds} and ${yearbuilde}  )`;
         }
-
+        let myllist = '';
+if(mylist === 'yes'){
+myllist = `and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
+and userid = ${userid} and status = '${status}'
+and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
+and userid = ${userid} and status = '${status}'))
+               `;
+}
+if (mylist === 'no' || mylist === '' || mylist === undefined) {
+  myllist = `and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
+and status = '${status}'
+and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id} and status = '${status}'))
+               `;
+}
         const s = `
                 SELECT *
                 from nedl_model.lead_gen subquery
@@ -287,8 +300,7 @@ WHERE org = ${user.organization}
                 WHERE ls.status = '${status}'
                 AND subquery.lead_type IN (${propenq})
 
-                and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id} and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}))
-                ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}
+                 ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}${myllist}
                 order by
                 ln.inserted_on desc,
                 ls.insert_date desc,
