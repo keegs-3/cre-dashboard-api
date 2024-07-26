@@ -29,3 +29,6 @@ export * from './subscription-type.model';
 export * from './user-subscription.model';
 export * from './subscription-data.model';
 export * from './app-msa-region.model';
+export * from './appleadsbuyerscontact.model';
+export * from './appleadsextracontact.model';
+export * from './appleadsnotes.model';

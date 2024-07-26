@@ -126,15 +126,13 @@ and property_name ILIKE '%${search}%'
     @param.query.string('status') status?: string,
     @param.query.string('probability') probability?: string,
     @param.query.string('state') state?: string,
-    @param.query.string('market') market?: string,
-    @param.query.string('submarket') submarket?: string,
     @param.query.string('owner') owner?: string,
     @param.query.string('property') property?: string,
-    @param.query.string('org') org?: string,
+    @param.query.number('org') org?: number,
     @param.query.string('financial_sent') financial_sent?: string,
     @param.query.string('financial_notsent') financial_notsent?: string,
     @param.query.string('listed') listed?: string,
-    @param.query.string('username') username?: string,
+    @param.query.string('userid') userid?: string,
     @param.query.string('available_off_market') available_off_market?: string,
     @param.query.number('offset') offset?: number,
     @param.query.number('punits') punits?: number,
@@ -150,16 +148,14 @@ and property_name ILIKE '%${search}%'
     const propertyn = property?.split(',');
     const propertyc = "'" + propertyn?.join("','") + "'";
 
-    const mark = market?.split(',');
-    const markc = "'" + mark?.join("','") + "'";
+
     const states = state?.split(',');
     const statec = "'" + states?.join("','") + "'";
-    const submarkets = submarket?.split(',');
-    const submarketc = "'" + submarkets?.join("','") + "'";
+
 
     if (status === 'LEAD') {
       // const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
-      if (username !== '' && username !== undefined) {
+      if (userid !== '' && userid !== undefined) {
         let pu = '';
         if (
           punits !== null &&
