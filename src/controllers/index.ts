@@ -17,3 +17,4 @@ export * from './appleadsbuyerscontact.controller';
 export * from './appleadsextracontact.controller';
 export * from './appleadsnotes.controller';
 export * from './leads.controller';
+export * from './appleadstatus.controller';

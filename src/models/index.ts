@@ -32,3 +32,4 @@ export * from './app-msa-region.model';
 export * from './appleadsbuyerscontact.model';
 export * from './appleadsextracontact.model';
 export * from './appleadsnotes.model';
+export * from './appleadsstatus.model';

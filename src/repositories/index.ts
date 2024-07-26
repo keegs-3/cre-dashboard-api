@@ -25,3 +25,4 @@ export * from './app-msa-region.repository';
 export * from './appleadsbuyerscontact.repository';
 export * from './appleadsextracontact.repository';
 export * from './appleadsnotes.repository';
+export * from './appleadsstatus.repository';
