@@ -42,8 +42,6 @@ export class LeadsController {
     return this.leadsRepository.create(userData);
   }
 
-
-
   @get('/leads/byStatus')
   @response(200, {
     description: 'Array of buyers page chart model instances',
@@ -136,7 +134,8 @@ WHERE org = ${user.organization}
           }
           let myList = '';
           if (subs_id !== null && subs_id !== undefined) {
-            myList = `and (nedl_property_id_pk in (select ln.property_id  FROM ${this.DB_SCHEMA}.app_leads_notes ln where ln.subs_id = '${subs_id}'))`;
+            myList = `and (nedl_property_id_pk in (select ln.property_id  FROM ${this.DB_SCHEMA}.app_leads_notes ln
+            where ln.subs_id = '${subs_id}'))`;
           }
           const s = `
           SELECT l.*
@@ -145,17 +144,17 @@ WHERE org = ${user.organization}
            (lead_type IN (${propenq}))
           ${ow}${pr}${myList}${yb}${pu}${allMSA}
           order by
-          case probability
-          when 'Hot' then 1
-          when 'Warm' then 2
-          when 'Cold' then 3
-          end,
-          CASE
+           CASE
           WHEN
           (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk
           and lnotes.subs_id = ${subs_id} ) IS NULL THEN 2
           ELSE 1
           END,
+          case probability
+          when 'Hot' then 1
+          when 'Warm' then 2
+          when 'Cold' then 3
+          end
           limit 102 offset ${offset}
           `;
           console.log('from if ', s);
@@ -201,14 +200,14 @@ WHERE org = ${user.organization}
         And (l.tax_assessor_id not in (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes lnotes where lnotes.subs_id = ${subs_id}))
         ${ow}${pr}${yb}${pu}${allMSA}
         ORDER BY
-        CASE probability
-        WHEN 'Hot' THEN 1
-        WHEN 'Warm' THEN 2
-        WHEN 'Cold' THEN 3
-        END,
         CASE
         WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
         ELSE 1
+        END,
+        CASE lead_type
+        WHEN 'Hot' THEN 1
+        WHEN 'Warm' THEN 2
+        WHEN 'Cold' THEN 3
         END
         LIMIT 102 OFFSET ${offset};
 
@@ -277,19 +276,18 @@ WHERE org = ${user.organization}
           yb = `AND (subquery.year_built between ${yearbuilds} and ${yearbuilde}  )`;
         }
         let myllist = '';
-if(mylist === 'yes'){
-myllist = `and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and userid = ${userid} and status = '${status}'
+        if (mylist === 'yes') {
+          myllist = `and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
+and userid = ${userid}
 and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and userid = ${userid} and status = '${status}'))
+and userid = ${userid} ))
                `;
-}
-if (mylist === 'no' || mylist === '' || mylist === undefined) {
-  myllist = `and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and status = '${status}'
-and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id} and status = '${status}'))
+        }
+        if (mylist === 'no' || mylist === '' || mylist === undefined) {
+          myllist = `and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
+and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}))
                `;
-}
+        }
         const s = `
                 SELECT *
                 from nedl_model.lead_gen subquery
@@ -299,7 +297,6 @@ and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_stat
                 on subquery.nedl_property_id_pk = ls.property_id
                 WHERE ls.status = '${status}'
                 AND subquery.lead_type IN (${propenq})
-
                  ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}${myllist}
                 order by
                 ln.inserted_on desc,
@@ -337,7 +334,6 @@ and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_stat
     select distinct l.owner_name from nedl_model.lead_gen l
     where l.owner_name ILIKE '%${search}%'
     order by l.owner_name asc
-
     `,
       );
       return sql;
@@ -347,11 +343,40 @@ and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_stat
     select distinct l.property_name from nedl_model.lead_gen l
     where l.property_name ILIKE '%${search}%'
     order by l.property_name asc
-
     `,
       );
       return sql;
     }
   }
 
+  @get('/leads/buyers/bypropertyid')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async buyers(
+    @param.query.number('property') property?: number,
+  ): Promise<any> {
+    const sql = await this.leadsRepository.dataSource.execute(
+      `
+        select * from nedl_model.buyers_recommendation where nedl_property_id_pk = ${property}
+    `,
+    );
+    return sql;
   }
+
+  @get('/leads/minmax')
+  @response(200, {
+    description: 'Array of buyers page chart model instances',
+  })
+  async minmax(
+    ): Promise<any> {
+      const sql = await this.leadsRepository.dataSource.execute(
+        `select min(units_count)as minunit ,
+         max(units_count)as maxunit , min(year_built)as minyear , max(year_built) as maxyear
+          from nedl_model.lead_gen
+    `,
+      );
+      return sql;
+
+  }
+}
