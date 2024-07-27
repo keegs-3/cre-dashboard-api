@@ -243,16 +243,16 @@ console.log({user,subs})
         let fns = '';
         let fs = '';
         if (available_off_market !== '' && available_off_market !== undefined) {
-          afm = `AND (subquery.available_off_market = ${available_off_market})`;
+          afm = `AND (ls.available_off_market = ${available_off_market})`;
         }
         if (listed !== '' && listed !== undefined) {
-          l = `AND (subquery.listed = ${listed})`;
+          l = `AND (ls.listed = ${listed})`;
         }
         if (financial_notsent !== '' && financial_notsent !== undefined) {
-          fns = `AND (subquery.financial_notsent = ${financial_notsent})`;
+          fns = `AND (ls.financial_notsent = ${financial_notsent})`;
         }
         if (financial_sent !== '' && financial_sent !== undefined) {
-          fs = `AND (subquery.financial_sent = ${financial_sent})`;
+          fs = `AND (ls.financial_sent = ${financial_sent})`;
         }
         let ow = '';
         if (owner !== '' && owner !== undefined) {
@@ -260,7 +260,7 @@ console.log({user,subs})
         }
         let pr = '';
         if (property !== '' && property !== undefined) {
-          pr = `AND (property_name in( ${propertyc}))`;
+          pr = `AND (subquery.property_name in( ${propertyc}))`;
         }
         let pu = '';
         if (
