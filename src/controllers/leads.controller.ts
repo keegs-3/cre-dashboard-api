@@ -142,7 +142,7 @@ console.log({user,subs})
           }
           const s = `
           SELECT l.*
-          FROM nedl_model.app_leads_status l
+          FROM nedl_model.lead_gen l
           where
            (lead_type IN (${propenq}))
           ${ow}${pr}${myList}${yb}${pu}${allMSA}
