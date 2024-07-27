@@ -283,9 +283,9 @@ console.log({user,subs})
         let myllist = '';
         if (mylist === 'yes') {
           myllist = `and subquery.nedl_property_id_pk in (select property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and userid = ${userid}
+and userid = '${userid}'
 and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and userid = ${userid} ))
+and userid = '${userid}' ))
                `;
         }
         if (mylist === 'no' || mylist === '' || mylist === undefined) {
