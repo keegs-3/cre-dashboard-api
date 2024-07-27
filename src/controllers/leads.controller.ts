@@ -153,6 +153,7 @@ console.log({user,subs})
           and lnotes.subs_id = ${subs_id} ) IS NULL THEN 2
           ELSE 1
           END,
+          insert_date_time desc,
           case lead_type
           when 'Hot' then 1
           when 'Warm' then 2
@@ -208,6 +209,7 @@ console.log({user,subs})
         WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
         ELSE 1
         END,
+        insert_date_time desc,
         CASE lead_type
         WHEN 'Hot' THEN 1
         WHEN 'Warm' THEN 2
@@ -306,7 +308,7 @@ and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_stat
                 order by
                 ln.inserted_on desc,
                 ls.insert_date desc,
-                subquery.insert_date DESC,
+                subquery.insert_date_time DESC,
                  case subquery.lead_type
                 when 'Hot' then 1
                 when 'Warm' then 2
