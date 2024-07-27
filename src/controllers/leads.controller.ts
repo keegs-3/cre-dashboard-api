@@ -197,7 +197,7 @@ WHERE org = ${user.organization}
         SELECT l.* FROM ${this.DB_SCHEMA}.leads_status_leads_vw l
         WHERE
         (lead_type IN (${propenq}))
-        And (l.tax_assessor_id not in (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes lnotes where lnotes.subs_id = ${subs_id}))
+        And (l.nedl_property_id_pk not in (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes lnotes where lnotes.subs_id = ${subs_id}))
         ${ow}${pr}${yb}${pu}${allMSA}
         ORDER BY
         CASE
