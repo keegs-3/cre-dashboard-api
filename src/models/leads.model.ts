@@ -329,12 +329,12 @@ export class Leads extends Entity {
   subs_id?: Number;
 
   @property({
-    type: 'string',
+    type: 'number',
 
     id: true,
     generated: true,
   })
-  nedl_property_id_pk?: string;
+  nedl_property_id_pk?: number;
 
   constructor(data?: Partial<Leads>) {
     super(data);
