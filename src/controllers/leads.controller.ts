@@ -88,12 +88,13 @@ WHERE org = ${user.organization}
   );
       `,
     );
-
+console.log({user,subs})
     const date = new Date();
     if (new Date(subs[0]?.enddate) < date)
       return 'Subscription Expired please renew';
     if (subs && subs.length > 0) {
       if (status === 'LEAD') {
+        console.log(status)
         let allMSA = '';
         if (subs[0].typeid !== 3) {
           console.log(subs[0].typeid, 'type');
@@ -103,8 +104,10 @@ WHERE org = ${user.organization}
           const msac = "'" + msan?.join("','") + "'";
           allMSA = `and msa_code in (${msac})`;
         }
+        console.log(allMSA)
         // const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
         if (mylist === 'yes') {
+          console.log('if myleads',mylist)
           let pu = '';
 
           if (
@@ -165,6 +168,7 @@ WHERE org = ${user.organization}
             return 'No data Matched';
           }
         } else {
+          console.log('if not my list',mylist)
           let ow = '';
           if (owner !== '' && owner !== undefined) {
             ow = `AND (owner_name in( ${ownerc}))`;
@@ -224,6 +228,7 @@ WHERE org = ${user.organization}
 
       // when data is not for leads status
       else {
+        console.log('if not leads',status);
         let allMSA = '';
         if (subs[0].typeid !== 3) {
           console.log(subs[0].typeid, 'type');
