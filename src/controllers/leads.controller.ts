@@ -153,7 +153,7 @@ console.log({user,subs})
           and lnotes.subs_id = ${subs_id} ) IS NULL THEN 2
           ELSE 1
           END,
-          case probability
+          case lead_type
           when 'Hot' then 1
           when 'Warm' then 2
           when 'Cold' then 3
