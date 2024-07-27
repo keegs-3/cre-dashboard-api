@@ -330,6 +330,9 @@ export class Leads extends Entity {
 
   @property({
     type: 'string',
+
+    id: true,
+    generated: true,
   })
   nedl_property_id_pk?: string;
 
