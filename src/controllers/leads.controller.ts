@@ -145,6 +145,7 @@ console.log({user,subs})
           FROM nedl_model.lead_gen l
           where
            (lead_type IN (${propenq}))
+           and l.nedl_property_id_pk not in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status ls where ls.org = ${org} and ls.subs_id = ${subs_id} )
           ${ow}${pr}${myList}${yb}${pu}${allMSA}
           order by
            CASE
@@ -202,7 +203,9 @@ console.log({user,subs})
         SELECT l.* FROM nedl_model.lead_gen l
         WHERE
         (lead_type IN (${propenq}))
-        And (l.nedl_property_id_pk not in (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes lnotes where lnotes.subs_id = ${subs_id}))
+        And (l.nedl_property_id_pk not in
+        (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_status ls
+         where ls.subs_id = ${subs_id}))
         ${ow}${pr}${yb}${pu}${allMSA}
         ORDER BY
         CASE
