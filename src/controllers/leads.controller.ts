@@ -287,15 +287,19 @@ console.log({user,subs})
         }
         let myllist = '';
         if (mylist === 'yes') {
-          myllist = `and subquery.nedl_property_id_pk in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and userid = '${userid}'
-and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and userid = '${userid}' ))
+          myllist = `and ls.insert_date =
+          (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status
+           where subs_id = ${subs_id}
+           and userid = '${userid}'
+           and property_id = subquery.nedl_property_id_pk
+           )
                `;
         }
         if (mylist === 'no' || mylist === '' || mylist === undefined) {
-          myllist = `and subquery.nedl_property_id_pk in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}
-and insert_date = (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status where subs_id = ${subs_id}))
+          myllist = `and ls.insert_date =
+          (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status
+           where subs_id = ${subs_id}
+           and property_id = subquery.nedl_property_id_pk
                `;
         }
         const s = `
