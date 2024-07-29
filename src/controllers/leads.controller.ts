@@ -299,11 +299,11 @@ console.log({user,subs})
           myllist = `and ls.insert_date =
           (select max(insert_date) from ${this.DB_SCHEMA}.app_leads_status
            where subs_id = ${subs_id}
-           and property_id = subquery.nedl_property_id_pk
+           and property_id = subquery.nedl_property_id_pk)
                `;
         }
         const s = `
-                SELECT *
+                SELECT distinct on (subquery.nedl_property_id_pk) *
                 from nedl_model.lead_gen subquery
                 join ${this.DB_SCHEMA}.app_leads_notes ln
                 on subquery.nedl_property_id_pk = ln.property_id
@@ -313,6 +313,7 @@ console.log({user,subs})
                 AND subquery.lead_type IN (${propenq})
                  ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}${myllist}
                 order by
+                subquery.nedl_property_id_pk,
                 ln.inserted_on desc,
                 ls.insert_date desc,
                 subquery.insert_date_time DESC,
