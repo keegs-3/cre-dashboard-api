@@ -133,7 +133,7 @@ console.log({user,subs})
           }
           let pr = '';
           if (property !== '' && property !== undefined) {
-            pr = `AND (property_name in( ${propertyc}))`;
+            pr = `AND (nedl_property_name in( ${propertyc}))`;
           }
           let myList = '';
           if (subs_id !== null && subs_id !== undefined) {
@@ -199,7 +199,7 @@ console.log({user,subs})
 
           let pr = '';
           if (property !== '' && property !== undefined) {
-            pr = `AND (property_name in( ${propertyc}))`;
+            pr = `AND (nedl_property_name in( ${propertyc}))`;
           }
 
           const s = `
@@ -270,7 +270,7 @@ console.log({user,subs})
         }
         let pr = '';
         if (property !== '' && property !== undefined) {
-          pr = `AND (subquery.property_name in( ${propertyc}))`;
+          pr = `AND (subquery.nedl_property_name in( ${propertyc}))`;
         }
         let pu = '';
         if (
@@ -360,9 +360,9 @@ console.log({user,subs})
     } else if (option === 'property') {
       const sql = await this.leadsRepository.dataSource.execute(
         `
-    select distinct l.property_name from nedl_model.lead_gen l
-    where l.property_name ILIKE '%${search}%'
-    order by l.property_name asc
+    select distinct l.nedl_property_name from nedl_model.lead_gen l
+    where l.nedl_property_name ILIKE '%${search}%'
+    order by l.nedl_property_name asc
     `,
       );
       return sql;
