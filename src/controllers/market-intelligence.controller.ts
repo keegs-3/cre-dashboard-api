@@ -27,7 +27,7 @@ export class MarketIntelligenceController {
   async liveFeeds(): Promise<JSON> {
     const sql = await this.userRepository.dataSource.execute(
       `
-    SELECT * from ${this.DB_SCHEMA}.vw_recorder order by document_recorded_date desc limit 20
+    SELECT * from ${this.DB_SCHEMA}.app_livefeeds_vw order by document_recorded_date desc limit 20
 
     `,
     );
