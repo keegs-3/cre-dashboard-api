@@ -34,6 +34,25 @@ export class MarketIntelligenceController {
 
     return sql;
   }
+  @get('/marketIntelligence/newsFeeds')
+  @response(200, {
+    description: 'Array of Live Feeds Tickers',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+        },
+      },
+    },
+  })
+  async newsFeeds(): Promise<JSON> {
+    const sql = await this.userRepository.dataSource.execute(
+      `    SELECT * from ${this.DB_SCHEMA}.mi_news_feed order by date desc limit 20
+    `,
+    );
+
+    return sql;
+  }
   @get('/marketIntelligence/all')
   @response(200, {
     description: 'Array of Market data',
