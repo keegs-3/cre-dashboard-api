@@ -95,7 +95,7 @@ ORDER BY to_date(recording_month, 'YYYY-MM-DD') DESC;
   ): Promise<any> {
     let statesd = '';
     if (state !== '' && state !== undefined){
-statesd = (`and situs_state = ${state}`)
+statesd = (`and situs_state = '${state}'`)
     }
     const count = await this.userRepository.dataSource.execute(
       `    select count(*) from ${this.DB_SCHEMA}.leads_aging la where la.year_of_analysis  = '${date}' ${statesd}
