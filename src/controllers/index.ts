@@ -13,3 +13,8 @@ export * from './user-subscription.controller';
 export * from './subscription-data.controller';
 export * from './app-msa-r-egion.controller';
 export * from './user-update.controller';
+export * from './appleadsbuyerscontact.controller';
+export * from './appleadsextracontact.controller';
+export * from './appleadsnotes.controller';
+export * from './leads.controller';
+export * from './appleadstatus.controller';

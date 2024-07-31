@@ -790,7 +790,7 @@ To finish setting up your nëdl account, follow the steps below.
          `
       SELECT *
 FROM ${this.DB_SCHEMA}.app_subscription_data
-WHERE org = 1
+WHERE org = ${user.organization}
   AND jsonb_typeof(users->'users') = 'array'
   AND EXISTS (
     SELECT 1
