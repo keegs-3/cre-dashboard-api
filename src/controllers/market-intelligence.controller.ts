@@ -94,36 +94,27 @@ ORDER BY to_date(recording_month, 'YYYY-MM-DD') DESC;
     @param.query.string('state') state?: string,
   ): Promise<any> {
     let statesd = '';
-    if (state !== '' && state !== undefined) {
-      statesd = `AND situs_state = '${state}'`;
+    if (state !== '' && state !== undefined){
+statesd = (`and situs_state = ${state}`)
     }
+    const count = await this.userRepository.dataSource.execute(
+      `    select count(*) from ${this.DB_SCHEMA}.leads_aging la where la.year_of_analysis  = '${date}' ${statesd}
 
-    // Query to get count
-    const countQuery = `
-    SELECT COUNT(*)
-    FROM ${this.DB_SCHEMA}.leads_aging la
-    WHERE la.year_of_analysis = $1
-    ${statesd}
-  `;
-    const count = await this.userRepository.dataSource.execute(countQuery, [
-      date,
-    ]);
 
-    // Query to get ageing data grouped by month
-    const ageingQuery = `
-    SELECT DATE_TRUNC('month', la2.deals_closed) AS month, COUNT(*)
-    FROM ${this.DB_SCHEMA}.leads_aging la2
-    WHERE la2.deals_closed BETWEEN
-          (timestamp $1 - INTERVAL '6 months') AND
-          (timestamp $1 - INTERVAL '1 month')
-          ${statesd}
-    GROUP BY DATE_TRUNC('month', la2.deals_closed)
-    ORDER BY month;
-  `;
-    const ageing = await this.userRepository.dataSource.execute(ageingQuery, [
-      date,
-    ]);
-
-    return {count, ageing};
+    `,
+    );
+    const ageing = await this.userRepository.dataSource.execute(
+      `
+  SELECT DATE_TRUNC('month', la2.deals_closed) AS month, COUNT(*)
+FROM ${this.DB_SCHEMA}.leads_aging la2
+WHERE la2.deals_closed BETWEEN
+      (timestamp '${date}' - INTERVAL '6 months') AND
+      (timestamp '${date}' - INTERVAL '1 month')
+      ${statesd}
+GROUP BY DATE_TRUNC('month', la2.deals_closed)
+ORDER BY month;
+    `,
+    );
+    return {count,ageing};
   }
 }
