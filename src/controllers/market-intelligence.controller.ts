@@ -108,8 +108,8 @@ statesd = (`and situs_state = ${state}`)
   SELECT DATE_TRUNC('month', la2.deals_closed) AS month, COUNT(*)
 FROM ${this.DB_SCHEMA}.leads_aging la2
 WHERE la2.deals_closed BETWEEN
-      (timestamp '${date}' - INTERVAL '6 months') AND
-      (timestamp '${date}' - INTERVAL '1 month')
+      (timestamp '${date}') AND
+      (timestamp '${date}' + INTERVAL '5 month')
       ${statesd}
 GROUP BY DATE_TRUNC('month', la2.deals_closed)
 ORDER BY month;
