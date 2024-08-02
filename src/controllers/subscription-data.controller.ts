@@ -19,17 +19,20 @@ import {
 } from '@loopback/rest';
 import {SubscriptionData} from '../models';
 import {SubscriptionDataRepository} from '../repositories';
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class SubscriptionDataController {
   constructor(
     @repository(SubscriptionDataRepository)
-    public subscriptionDataRepository : SubscriptionDataRepository,
+    public subscriptionDataRepository: SubscriptionDataRepository,
   ) {}
 
   @post('/subscription-data')
   @response(200, {
     description: 'SubscriptionData model instance',
-    content: {'application/json': {schema: getModelSchemaRef(SubscriptionData)}},
+    content: {
+      'application/json': {schema: getModelSchemaRef(SubscriptionData)},
+    },
   })
   async create(
     @requestBody({
@@ -106,7 +109,8 @@ export class SubscriptionDataController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(SubscriptionData, {exclude: 'where'}) filter?: FilterExcludingWhere<SubscriptionData>
+    @param.filter(SubscriptionData, {exclude: 'where'})
+    filter?: FilterExcludingWhere<SubscriptionData>,
   ): Promise<SubscriptionData> {
     return this.subscriptionDataRepository.findById(id, filter);
   }

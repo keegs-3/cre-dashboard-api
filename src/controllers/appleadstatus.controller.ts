@@ -19,11 +19,12 @@ import {
 } from '@loopback/rest';
 import {Appleadsstatus} from '../models';
 import {AppleadsstatusRepository} from '../repositories';
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class AppleadstatusController {
   constructor(
     @repository(AppleadsstatusRepository)
-    public appleadsstatusRepository : AppleadsstatusRepository,
+    public appleadsstatusRepository: AppleadsstatusRepository,
   ) {}
 
   @post('/appleadsstatuses')
@@ -106,7 +107,8 @@ export class AppleadstatusController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Appleadsstatus, {exclude: 'where'}) filter?: FilterExcludingWhere<Appleadsstatus>
+    @param.filter(Appleadsstatus, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Appleadsstatus>,
   ): Promise<Appleadsstatus> {
     return this.appleadsstatusRepository.findById(id, filter);
   }
