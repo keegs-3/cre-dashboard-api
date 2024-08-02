@@ -19,11 +19,12 @@ import {
 } from '@loopback/rest';
 import {Appleadsnotes} from '../models';
 import {AppleadsnotesRepository} from '../repositories';
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class AppleadsnotesController {
   constructor(
     @repository(AppleadsnotesRepository)
-    public appleadsnotesRepository : AppleadsnotesRepository,
+    public appleadsnotesRepository: AppleadsnotesRepository,
   ) {}
 
   @post('/appleadsnotes')
@@ -106,7 +107,8 @@ export class AppleadsnotesController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Appleadsnotes, {exclude: 'where'}) filter?: FilterExcludingWhere<Appleadsnotes>
+    @param.filter(Appleadsnotes, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Appleadsnotes>,
   ): Promise<Appleadsnotes> {
     return this.appleadsnotesRepository.findById(id, filter);
   }

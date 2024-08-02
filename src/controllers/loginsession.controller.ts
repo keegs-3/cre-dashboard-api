@@ -19,11 +19,12 @@ import {
 } from '@loopback/rest';
 import {Loginsession} from '../models';
 import {LoginsessionRepository} from '../repositories';
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class LoginsessionController {
   constructor(
     @repository(LoginsessionRepository)
-    public loginsessionRepository : LoginsessionRepository,
+    public loginsessionRepository: LoginsessionRepository,
   ) {}
 
   @post('/loginsessions')
@@ -106,7 +107,8 @@ export class LoginsessionController {
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Loginsession, {exclude: 'where'}) filter?: FilterExcludingWhere<Loginsession>
+    @param.filter(Loginsession, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Loginsession>,
   ): Promise<Loginsession> {
     return this.loginsessionRepository.findById(id, filter);
   }

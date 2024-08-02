@@ -6,7 +6,8 @@ import {UserRepository} from '../repositories';
 
 // import {inject} from '@loopback/core';
 
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class MarketIntelligenceController {
   constructor(
     @repository(UserRepository)
@@ -94,8 +95,8 @@ ORDER BY to_date(recording_month, 'YYYY-MM-DD') DESC;
     @param.query.string('state') state?: string,
   ): Promise<any> {
     let statesd = '';
-    if (state !== '' && state !== undefined){
-statesd = (`and situs_state = '${state}'`)
+    if (state !== '' && state !== undefined) {
+      statesd = `and situs_state = '${state}'`;
     }
     const count = await this.userRepository.dataSource.execute(
       `    select count(*) from ${this.DB_SCHEMA}.leads_aging la where la.year_of_analysis  = '${date}' ${statesd}
@@ -109,12 +110,12 @@ statesd = (`and situs_state = '${state}'`)
 FROM ${this.DB_SCHEMA}.leads_aging la2
 WHERE la2.deals_closed BETWEEN
       (timestamp '${date}') AND
-      (timestamp '${date}' + INTERVAL '6 month')
+      (timestamp '${date}' + INTERVAL '12 month')
       ${statesd}
 GROUP BY DATE_TRUNC('month', la2.deals_closed)
 ORDER BY month;
     `,
     );
-    return {count,ageing};
+    return {count, ageing};
   }
 }

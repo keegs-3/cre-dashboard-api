@@ -19,17 +19,20 @@ import {
 } from '@loopback/rest';
 import {Appleadsextracontact} from '../models';
 import {AppleadsextracontactRepository} from '../repositories';
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class AppleadsextracontactController {
   constructor(
     @repository(AppleadsextracontactRepository)
-    public appleadsextracontactRepository : AppleadsextracontactRepository,
+    public appleadsextracontactRepository: AppleadsextracontactRepository,
   ) {}
 
   @post('/appleadsextracontacts')
   @response(200, {
     description: 'Appleadsextracontact model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Appleadsextracontact)}},
+    content: {
+      'application/json': {schema: getModelSchemaRef(Appleadsextracontact)},
+    },
   })
   async create(
     @requestBody({
@@ -65,7 +68,9 @@ export class AppleadsextracontactController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Appleadsextracontact, {includeRelations: true}),
+          items: getModelSchemaRef(Appleadsextracontact, {
+            includeRelations: true,
+          }),
         },
       },
     },
@@ -92,7 +97,10 @@ export class AppleadsextracontactController {
     appleadsextracontact: Appleadsextracontact,
     @param.where(Appleadsextracontact) where?: Where<Appleadsextracontact>,
   ): Promise<Count> {
-    return this.appleadsextracontactRepository.updateAll(appleadsextracontact, where);
+    return this.appleadsextracontactRepository.updateAll(
+      appleadsextracontact,
+      where,
+    );
   }
 
   @get('/appleadsextracontacts/{id}')
@@ -100,13 +108,16 @@ export class AppleadsextracontactController {
     description: 'Appleadsextracontact model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Appleadsextracontact, {includeRelations: true}),
+        schema: getModelSchemaRef(Appleadsextracontact, {
+          includeRelations: true,
+        }),
       },
     },
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Appleadsextracontact, {exclude: 'where'}) filter?: FilterExcludingWhere<Appleadsextracontact>
+    @param.filter(Appleadsextracontact, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Appleadsextracontact>,
   ): Promise<Appleadsextracontact> {
     return this.appleadsextracontactRepository.findById(id, filter);
   }
@@ -126,7 +137,10 @@ export class AppleadsextracontactController {
     })
     appleadsextracontact: Appleadsextracontact,
   ): Promise<void> {
-    await this.appleadsextracontactRepository.updateById(id, appleadsextracontact);
+    await this.appleadsextracontactRepository.updateById(
+      id,
+      appleadsextracontact,
+    );
   }
 
   @put('/appleadsextracontacts/{id}')
@@ -137,7 +151,10 @@ export class AppleadsextracontactController {
     @param.path.number('id') id: number,
     @requestBody() appleadsextracontact: Appleadsextracontact,
   ): Promise<void> {
-    await this.appleadsextracontactRepository.replaceById(id, appleadsextracontact);
+    await this.appleadsextracontactRepository.replaceById(
+      id,
+      appleadsextracontact,
+    );
   }
 
   @del('/appleadsextracontacts/{id}')

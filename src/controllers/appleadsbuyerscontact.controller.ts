@@ -19,17 +19,20 @@ import {
 } from '@loopback/rest';
 import {Appleadsbuyerscontact} from '../models';
 import {AppleadsbuyerscontactRepository} from '../repositories';
-
+import {authenticate} from '@loopback/authentication';
+@authenticate('jwt')
 export class AppleadsbuyerscontactController {
   constructor(
     @repository(AppleadsbuyerscontactRepository)
-    public appleadsbuyerscontactRepository : AppleadsbuyerscontactRepository,
+    public appleadsbuyerscontactRepository: AppleadsbuyerscontactRepository,
   ) {}
 
   @post('/appleadsbuyerscontacts')
   @response(200, {
     description: 'Appleadsbuyerscontact model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Appleadsbuyerscontact)}},
+    content: {
+      'application/json': {schema: getModelSchemaRef(Appleadsbuyerscontact)},
+    },
   })
   async create(
     @requestBody({
@@ -65,7 +68,9 @@ export class AppleadsbuyerscontactController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Appleadsbuyerscontact, {includeRelations: true}),
+          items: getModelSchemaRef(Appleadsbuyerscontact, {
+            includeRelations: true,
+          }),
         },
       },
     },
@@ -92,7 +97,10 @@ export class AppleadsbuyerscontactController {
     appleadsbuyerscontact: Appleadsbuyerscontact,
     @param.where(Appleadsbuyerscontact) where?: Where<Appleadsbuyerscontact>,
   ): Promise<Count> {
-    return this.appleadsbuyerscontactRepository.updateAll(appleadsbuyerscontact, where);
+    return this.appleadsbuyerscontactRepository.updateAll(
+      appleadsbuyerscontact,
+      where,
+    );
   }
 
   @get('/appleadsbuyerscontacts/{id}')
@@ -100,13 +108,16 @@ export class AppleadsbuyerscontactController {
     description: 'Appleadsbuyerscontact model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Appleadsbuyerscontact, {includeRelations: true}),
+        schema: getModelSchemaRef(Appleadsbuyerscontact, {
+          includeRelations: true,
+        }),
       },
     },
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Appleadsbuyerscontact, {exclude: 'where'}) filter?: FilterExcludingWhere<Appleadsbuyerscontact>
+    @param.filter(Appleadsbuyerscontact, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Appleadsbuyerscontact>,
   ): Promise<Appleadsbuyerscontact> {
     return this.appleadsbuyerscontactRepository.findById(id, filter);
   }
@@ -126,7 +137,10 @@ export class AppleadsbuyerscontactController {
     })
     appleadsbuyerscontact: Appleadsbuyerscontact,
   ): Promise<void> {
-    await this.appleadsbuyerscontactRepository.updateById(id, appleadsbuyerscontact);
+    await this.appleadsbuyerscontactRepository.updateById(
+      id,
+      appleadsbuyerscontact,
+    );
   }
 
   @put('/appleadsbuyerscontacts/{id}')
@@ -137,7 +151,10 @@ export class AppleadsbuyerscontactController {
     @param.path.number('id') id: number,
     @requestBody() appleadsbuyerscontact: Appleadsbuyerscontact,
   ): Promise<void> {
-    await this.appleadsbuyerscontactRepository.replaceById(id, appleadsbuyerscontact);
+    await this.appleadsbuyerscontactRepository.replaceById(
+      id,
+      appleadsbuyerscontact,
+    );
   }
 
   @del('/appleadsbuyerscontacts/{id}')
