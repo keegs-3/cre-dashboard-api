@@ -151,6 +151,7 @@ console.log({user,subs})
            and l.nedl_property_id_pk not in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status ls where ls.org = ${org} and ls.subs_id = ${subs_id} )
           ${ow}${pr}${myList}${yb}${pu}${allMSA}
           order by
+          l.nedl_property_id_pk,
            CASE
           WHEN
           (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk
@@ -213,6 +214,7 @@ console.log({user,subs})
          where ls.subs_id = ${subs_id}))
         ${ow}${pr}${yb}${pu}${allMSA}
         ORDER BY
+        l.nedl_property_id_pk,
         CASE
         WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
         ELSE 1
