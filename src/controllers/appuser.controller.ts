@@ -454,13 +454,15 @@ To finish setting up your nëdl account, follow the steps below.
       return 'Invalid reset key';
     }
 
-    const password = await this.hasher.hashPassword(passwordata.password);
-    console.log(password);
-    await this.userRepository.dataSource.execute(`
+    if(data){
+      const password = await this.hasher.hashPassword(passwordata.password);
+      console.log(password);
+      await this.userRepository.dataSource.execute(`
  UPDATE ${this.DB_SCHEMA}.app_users
     SET   password = '${password}',resetkey=null where resetkey = '${passwordata.resetkey}'`);
 
-    return 'reset successful';
+      return 'reset successful';
+    }
   }
   @post('/app/user/verify', {
     responses: {

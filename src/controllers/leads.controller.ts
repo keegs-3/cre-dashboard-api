@@ -204,7 +204,7 @@ console.log({user,subs})
           }
 
           const s = `
-        SELECT distinct on (l.nedl_property_id_pk)
+        SELECT
         l.*, ln.inserted_on FROM nedl_model.lead_gen l
          left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
@@ -215,20 +215,17 @@ console.log({user,subs})
          where ls.subs_id = ${subs_id}))
         ${ow}${pr}${yb}${pu}${allMSA}
         ORDER BY
-        l.nedl_property_id_pk,
-        ln.inserted_on desc,
         CASE
         WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
         ELSE 1
         END,
-
         insert_date_time desc,
         CASE lead_type
         WHEN 'Hot' THEN 1
         WHEN 'Warm' THEN 2
         WHEN 'Cold' THEN 3
         END
-        LIMIT 102 OFFSET ${offset};
+        LIMIT 102 OFFSET ${offset}
 
         `;
           console.log('from else', s);
