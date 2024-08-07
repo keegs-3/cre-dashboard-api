@@ -204,7 +204,9 @@ console.log({user,subs})
           }
 
           const s = `
-        SELECT distinct on (l.nedl_property_id_pk) (select max(ln.inserted_on)as inserted_on from ${this.DB_SCHEMA}.app_leads_notes where ln.property_id = l.nedl_property_id_pk),l.* FROM nedl_model.lead_gen l
+        SELECT distinct on (l.nedl_property_id_pk)
+        (select max(inserted_on)as inserted_on from ${this.DB_SCHEMA}.app_leads_notes
+         where property_id = l.nedl_property_id_pk),l.* FROM nedl_model.lead_gen l
          left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
         WHERE
