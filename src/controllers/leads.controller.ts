@@ -205,8 +205,7 @@ console.log({user,subs})
 
           const s = `
         SELECT distinct on (l.nedl_property_id_pk)
-        (select max(inserted_on)as inserted_on from ${this.DB_SCHEMA}.app_leads_notes
-         where property_id = l.nedl_property_id_pk),l.* FROM nedl_model.lead_gen l
+        l.*, ln.inserted_on FROM nedl_model.lead_gen l
          left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
         WHERE
@@ -217,6 +216,7 @@ console.log({user,subs})
         ${ow}${pr}${yb}${pu}${allMSA}
         ORDER BY
         l.nedl_property_id_pk,
+        ln.inserted_on desc,
         CASE
         WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
         ELSE 1
