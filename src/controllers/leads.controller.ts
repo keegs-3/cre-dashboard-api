@@ -141,7 +141,7 @@ console.log({user,subs})
             where ln.subs_id = '${subs_id}'))`;
           }
           const s = `
-          SELECT l.*,ln.inserted_on
+          SELECT  distinct on (l.nedl_property_id_pk) l.*,ln.inserted_on
           FROM nedl_model.lead_gen l
            left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
@@ -203,7 +203,7 @@ console.log({user,subs})
           }
 
           const s = `
-        SELECT l.*,ln.inserted_on FROM nedl_model.lead_gen l
+        SELECT distinct on (l.nedl_property_id_pk) l.*,ln.inserted_on FROM nedl_model.lead_gen l
          left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
         WHERE
