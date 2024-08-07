@@ -36,6 +36,10 @@ export class Appleadsnotes extends Entity {
     type: 'number',
   })
   subs_id?: number;
+  @property({
+    type: 'Date',
+  })
+  inserted_on?: Date;
 
   constructor(data?: Partial<Appleadsnotes>) {
     super(data);
