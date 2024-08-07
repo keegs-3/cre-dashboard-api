@@ -27,7 +27,10 @@ export class LEadsNOtes extends Entity {
     type: 'string',
   })
   org?: string;
-
+  @property({
+    type: 'Date',
+  })
+  inserted_on?: Date;
 
   constructor(data?: Partial<LEadsNOtes>) {
     super(data);
