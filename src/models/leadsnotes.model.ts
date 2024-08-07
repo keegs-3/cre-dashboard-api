@@ -1,6 +1,10 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'leads_notes'}}, })
+@model({
+  settings: {
+    postgresql: {schema: process.env.DB_SCHEMA, table: 'app_leads_notes'},
+  },
+})
 export class LEadsNOtes extends Entity {
   @property({
     type: 'number',
@@ -13,6 +17,10 @@ export class LEadsNOtes extends Entity {
     type: 'string',
   })
   property_id?: string;
+  @property({
+    type: 'date',
+  })
+  inserted_on?: Date;
 
   @property({
     type: 'string',
@@ -27,10 +35,6 @@ export class LEadsNOtes extends Entity {
     type: 'string',
   })
   org?: string;
-  @property({
-    type: 'Date',
-  })
-  inserted_on?: Date;
 
   constructor(data?: Partial<LEadsNOtes>) {
     super(data);
