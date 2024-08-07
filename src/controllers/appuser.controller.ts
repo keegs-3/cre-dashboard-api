@@ -8,6 +8,7 @@ import {
   getJsonSchemaRef,
   HttpErrors,
   param,
+  patch,
   post,
   requestBody,
   response,
@@ -57,6 +58,20 @@ export class AppUserController {
   EMAILPASS = process.env.EMAIL_PASSWORD;
   UI_URL = process.env.UI_URL;
   // @authenticate('jwt')
+  string = function getString(n: number) {
+    let str = '';
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const charLen = characters.length;
+
+    for (let i = 0; i < n; i++) {
+      // Generating a random index
+      const idx = Math.floor(Math.random() * charLen);
+
+      str += characters.charAt(idx);
+    }
+
+    return str;
+  };
   @post('/app/user/signup', {
     responses: {
       '200': {
@@ -235,6 +250,218 @@ To finish setting up your nëdl account, follow the steps below.
     }
   }
 
+  @post('/app/user/forgotpassword/verify', {
+    responses: {
+      '200': {
+        description: 'verifyuser',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                email: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async fverify(
+    @requestBody({
+      responses: {
+        '200': {
+          description: 'User',
+          content: {
+            schema: {email: 'string'},
+          },
+        },
+      },
+    })
+    emaild: {
+      email: string;
+    },
+  ): Promise<any> {
+    try {
+      const verify = await this.userRepository.findOne({
+        where: {email: emaild.email},
+      });
+
+      if (!verify) {
+        throw new Error('Invalid email / Email not available on Database');
+      }
+      if (verify) {
+        const userotp = this.string(6);
+
+        await this.userRepository.dataSource.execute(`
+      UPDATE ${this.DB_SCHEMA}.app_users
+      SET   resetkey= '${userotp}' where email = '${emaild.email}'
+
+      `);
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true, // true for 465, false for other ports
+          auth: {
+            user: this.EMAIL, // generated ethereal user
+            pass: this.EMAILPASS, // generated ethereal password
+          },
+        });
+
+        // send mail with defined transport object
+        const info = await transporter.sendMail({
+          from: '"Nedl Support" <support@nedl.us>', // sender address
+          to: `${emaild.email}`, // list of receivers
+          subject: 'Reset Password', // Subject line
+          text: 'Add your password', // plain text body
+          html: `
+
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Nedl Reset Password</title>
+              <style>
+                /* Reset default styles */
+                body,
+                html,
+                p,
+                h1,
+                h2,
+                h3,
+                h4,
+                h5,
+                h6,
+                ul,
+                ol,
+                li {
+                  margin: 0;
+                  padding: 0;
+                }
+
+                body {
+                  font-family: Arial, sans-serif;
+                  line-height: 1.5;
+                  color: #333333;
+                }
+
+                /* Container */
+                .container {
+                  max-width: 600px;
+                  margin: 0 auto;
+                  padding: 20px;
+                  background-color: #f5f5f5;
+                }
+
+                /* Heading */
+                h1 {
+                  font-size: 24px;
+                  font-weight: bold;
+                  margin-bottom: 20px;
+                }
+
+                /* Paragraph */
+                p {
+                  margin-bottom: 20px;
+                }
+
+                /* Button */
+                .button {
+                  display: inline-block;
+                  padding: 10px 20px;
+                  background-color: #007bff;
+                  color: #ffffff;
+                  text-decoration: none;
+                  border-radius: 5px;
+                  margin-top:20px;
+                }
+
+                /* Footer */
+                .footer {
+                  display:flex;
+                  justify-content: center;
+                  gap:20px;
+                  margin-top: 20px;
+                  padding-top: 20px;
+                  border-top: 1px solid #dddddd;
+                  text-align: center;
+
+                }
+                .footer p {
+                  line-height:40px
+                }
+                .logo {
+            width:150px;
+            height:30px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                Dear ${verify.firstName} ${verify.lastName}
+<p>Your one-time reset code is ${userotp}</p>
+
+<p>Please use this code to change password on the nëdl application.</p>
+                <div class="footer">
+
+                  <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
+
+                </div>
+              </div>
+            </body>
+            </html>
+
+
+
+            `, // html body
+        });
+
+        console.log('Message sent: %s', info.messageId);
+        // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+
+        // Preview only available when sending through an Ethereal account
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+
+        return `'Please check your ${emaild.email}' for reset key`;
+      }
+    } catch (error: any) {
+      // Handle errors here
+      console.error('Error during verify:', error.message);
+      throw new HttpErrors.BadRequest(error.message); // You can customize the error response as needed
+    }
+  }
+  @patch('/app/user/reset/password')
+  @response(204, {
+    description: 'password PATCH success',
+  })
+  async updateByre(
+    @requestBody({
+      content: {
+        'application/json': {},
+      },
+    })
+    passwordata: {
+      password: string;
+      resetkey: string;
+    },
+  ): Promise<any> {
+    const data = await this.userRepository.find({
+      where: {resetKey: passwordata.resetkey},
+    });
+    if (!data) {
+      return 'Invalid reset key';
+    }
+
+    const password = await this.hasher.hashPassword(passwordata.password);
+    console.log(password);
+    await this.userRepository.dataSource.execute(`
+ UPDATE ${this.DB_SCHEMA}.app_users
+    SET   password = '${password}',resetkey=null where resetkey = '${passwordata.resetkey}'`);
+
+    return 'reset successful';
+  }
   @post('/app/user/verify', {
     responses: {
       '200': {
@@ -786,8 +1013,8 @@ To finish setting up your nëdl account, follow the steps below.
   ): Promise<any> {
     try {
       const user = await Promise.resolve(currentUser);
-       const subs = await this.subData.dataSource.execute(
-         `
+      const subs = await this.subData.dataSource.execute(
+        `
       SELECT *
 FROM ${this.DB_SCHEMA}.app_subscription_data
 WHERE org = ${user.organization}
@@ -798,14 +1025,14 @@ WHERE org = ${user.organization}
     WHERE elem = '${user[securityId]}'
   );
       `,
-       );
+      );
 
-const date = new Date();
-      if(subs.length > 0){
+      const date = new Date();
+      if (subs.length > 0) {
         if (new Date(subs[0].enddate) > date) return {user, subs};
-        else return {user,"message":'Subscription Expired please renew'};
+        else return {user, message: 'Subscription Expired please renew'};
       }
-      return {user,"message":"Please add a Subscription"};
+      return {user, message: 'Please add a Subscription'};
     } catch (error: any) {
       console.error('Error during login:', error.message);
       throw new HttpErrors.Unauthorized(error.message);
