@@ -214,11 +214,12 @@ console.log({user,subs})
          where ls.subs_id = ${subs_id}))
         ${ow}${pr}${yb}${pu}${allMSA}
         ORDER BY
-        l.nedl_property_id_pk,
+
         CASE
         WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
         ELSE 1
         END,
+        l.nedl_property_id_pk,
         insert_date_time desc,
         CASE lead_type
         WHEN 'Hot' THEN 1
