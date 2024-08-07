@@ -5,7 +5,7 @@ import {Entity, model, property} from '@loopback/repository';
     postgresql: {schema: process.env.DB_SCHEMA, table: 'app_leads_notes'},
   },
 })
-export class LEadsNOtes extends Entity {
+export class LeadsNotes extends Entity {
   @property({
     type: 'number',
     id: true,
@@ -36,13 +36,13 @@ export class LEadsNOtes extends Entity {
   })
   org?: string;
 
-  constructor(data?: Partial<LEadsNOtes>) {
+  constructor(data?: Partial<LeadsNotes>) {
     super(data);
   }
 }
 
-export interface LEadsNOtesRelations {
+export interface LeadsNotesRelations {
   // describe navigational properties here
 }
 
-export type LEadsNOtesWithRelations = LEadsNOtes & LEadsNOtesRelations;
+export type LeadsNotesWithRelations = LeadsNotes & LeadsNotesRelations;
