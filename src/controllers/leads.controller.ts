@@ -205,7 +205,9 @@ console.log({user,subs})
 
           const s = `
         SELECT
-        l.*, ln.inserted_on FROM nedl_model.lead_gen l
+        l.*,  (SELECT MAX(ln.inserted_on)
+     FROM ${this.DB_SCHEMA}.app_leads_notes ln
+     WHERE ln.property_id = l.nedl_property_id_pk) AS inserted_on FROM nedl_model.lead_gen l
          left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
         WHERE
