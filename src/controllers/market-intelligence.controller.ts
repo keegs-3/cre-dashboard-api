@@ -70,7 +70,7 @@ export class MarketIntelligenceController {
       `
    SELECT *
 FROM ${this.DB_SCHEMA}.market_kpis
-WHERE to_date(recording_month, 'YYYY-MM-DD') BETWEEN (current_date - INTERVAL '6 months') AND (current_date - INTERVAL '1 month')
+WHERE to_date(recording_month, 'YYYY-MM-DD') BETWEEN (current_date - INTERVAL '7 months') AND (current_date - INTERVAL '5 month')
 ORDER BY to_date(recording_month, 'YYYY-MM-DD') DESC;
 
     `,
