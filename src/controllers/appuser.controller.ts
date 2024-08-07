@@ -453,7 +453,7 @@ To finish setting up your nëdl account, follow the steps below.
     if (!data) {
       return 'Invalid reset key';
     }
-
+console.log('data',data);
     if(data){
       const password = await this.hasher.hashPassword(passwordata.password);
       console.log(password);
