@@ -1,7 +1,11 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'leads_notes'}}, })
-export class LEadsNOtes extends Entity {
+@model({
+  settings: {
+    postgresql: {schema: process.env.DB_SCHEMA, table: 'app_leads_notes'},
+  },
+})
+export class LeadsNotes extends Entity {
   @property({
     type: 'number',
     id: true,
@@ -13,6 +17,10 @@ export class LEadsNOtes extends Entity {
     type: 'string',
   })
   property_id?: string;
+  @property({
+    type: 'date',
+  })
+  inserted_on?: Date;
 
   @property({
     type: 'string',
@@ -28,14 +36,13 @@ export class LEadsNOtes extends Entity {
   })
   org?: string;
 
-
-  constructor(data?: Partial<LEadsNOtes>) {
+  constructor(data?: Partial<LeadsNotes>) {
     super(data);
   }
 }
 
-export interface LEadsNOtesRelations {
+export interface LeadsNotesRelations {
   // describe navigational properties here
 }
 
-export type LEadsNOtesWithRelations = LEadsNOtes & LEadsNOtesRelations;
+export type LeadsNotesWithRelations = LeadsNotes & LeadsNotesRelations;
