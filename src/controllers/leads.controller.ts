@@ -202,72 +202,71 @@ console.log({user,subs})
           if (property !== '' && property !== undefined) {
             pr = `AND (nedl_property_name in( ${propertyc}))`;
           }
-          const s = `SELECT
-    l.*,
-    latest_notes.inserted_on
-FROM
-    nedl_model.lead_gen l
-LEFT JOIN (
-    SELECT
-        property_id,
-        MAX(inserted_on) AS inserted_on
-    FROM
-        ${this.DB_SCHEMA}.app_leads_notes
-    GROUP BY
-        property_id
-) AS latest_notes ON l.nedl_property_id_pk = latest_notes.property_id
-WHERE
-    lead_type IN (${propenq})
-    AND l.nedl_property_id_pk NOT IN (
-        SELECT DISTINCT property_id
-        FROM ${this.DB_SCHEMA}.app_leads_status ls
-        WHERE ls.subs_id = ${subs_id}
-    )
-    ${ow}${pr}${yb}${pu}${allMSA}
-ORDER BY
-    CASE
-        WHEN (SELECT MAX(lnotes.inserted_on)
-              FROM ${this.DB_SCHEMA}.app_leads_notes lnotes
-              WHERE lnotes.property_id = l.nedl_property_id_pk
-              AND lnotes.subs_id = ${subs_id}) IS NULL THEN 2
-        ELSE 1
-    END,
-    insert_date_time DESC,
-    CASE lead_type
+//           const s = `SELECT
+//     l.*,
+//     latest_notes.inserted_on
+// FROM
+//     nedl_model.lead_gen l
+// LEFT JOIN (
+//     SELECT
+//         property_id,
+//         MAX(inserted_on) AS inserted_on
+//     FROM
+//         ${this.DB_SCHEMA}.app_leads_notes
+//     GROUP BY
+//         property_id
+// ) AS latest_notes ON l.nedl_property_id_pk = latest_notes.property_id
+// WHERE
+//     lead_type IN (${propenq})
+//     AND l.nedl_property_id_pk NOT IN (
+//         SELECT DISTINCT property_id
+//         FROM ${this.DB_SCHEMA}.app_leads_status ls
+//         WHERE ls.subs_id = ${subs_id}
+//     )
+//         AND l.nedl_property_id_pk NOT IN (
+//         SELECT DISTINCT property_id
+//         FROM ${this.DB_SCHEMA}.app_leads_status ls
+//         WHERE ls.subs_id = ${subs_id}
+//     )
+//     ${ow}${pr}${yb}${pu}${allMSA}
+// ORDER BY
+//     CASE
+//         WHEN (SELECT MAX(lnotes.inserted_on)
+//               FROM ${this.DB_SCHEMA}.app_leads_notes lnotes
+//               WHERE lnotes.property_id = l.nedl_property_id_pk
+//               AND lnotes.subs_id = ${subs_id}) IS NULL THEN 2
+//         ELSE 1
+//     END,
+//     insert_date_time DESC,
+//     CASE lead_type
+//         WHEN 'Hot' THEN 1
+//         WHEN 'Warm' THEN 2
+//         WHEN 'Cold' THEN 3
+//     END
+// LIMIT 102 OFFSET ${offset}
+// `;
+
+          const s = `
+        SELECT
+        l.*  FROM nedl_model.lead_gen l
+        WHERE
+        (lead_type IN (${propenq}))
+        And (l.nedl_property_id_pk not in
+        (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_status ls
+         where ls.subs_id = ${subs_id}))
+         And (l.nedl_property_id_pk not in
+        (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes ln
+         where ln.subs_id = ${subs_id}))
+        ${ow}${pr}${yb}${pu}${allMSA}
+        ORDER BY
+        CASE lead_type
         WHEN 'Hot' THEN 1
         WHEN 'Warm' THEN 2
         WHEN 'Cold' THEN 3
-    END
-LIMIT 102 OFFSET ${offset}
-`;
+        END
+        LIMIT 102 OFFSET ${offset}
 
-    //       const s = `
-    //     SELECT
-    //     l.*,  (SELECT MAX(ln.inserted_on)
-    //  FROM ${this.DB_SCHEMA}.app_leads_notes ln
-    //  WHERE ln.property_id = l.nedl_property_id_pk) AS inserted_on FROM nedl_model.lead_gen l
-    //      left join ${this.DB_SCHEMA}.app_leads_notes ln
-    //             on l.nedl_property_id_pk = ln.property_id
-    //     WHERE
-    //     (lead_type IN (${propenq}))
-    //     And (l.nedl_property_id_pk not in
-    //     (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_status ls
-    //      where ls.subs_id = ${subs_id}))
-    //     ${ow}${pr}${yb}${pu}${allMSA}
-    //     ORDER BY
-    //     CASE
-    //     WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
-    //     ELSE 1
-    //     END,
-    //     insert_date_time desc,
-    //     CASE lead_type
-    //     WHEN 'Hot' THEN 1
-    //     WHEN 'Warm' THEN 2
-    //     WHEN 'Cold' THEN 3
-    //     END
-    //     LIMIT 102 OFFSET ${offset}
-
-    //     `;
+        `;
           console.log('from else', s);
           const sql = await this.leadsRepository.dataSource.execute(s);
           if (sql.length >= 1) {
