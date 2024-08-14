@@ -66,10 +66,19 @@ export class LeadsController {
     @param.query.number('punite') punite?: number,
     @param.query.number('yearbuilds') yearbuilds?: number,
     @param.query.number('yearbuilde') yearbuilde?: number,
+    @param.query.string('region') region?: string,
+    @param.query.string('state') state?: string,
+    @param.query.string('msa') msa?: string,
   ): Promise<any> {
     const propen = probability?.split(',');
     const propenq = "'" + propen?.join("','") + "'";
+    const regiond = region?.split(',');
+    const regionc = "'" + regiond?.join("','") + "'";
+    const stated = state?.split(',');
+    const statec = "'" + stated?.join("','") + "'";
     const ownern = owner?.split(',');
+    const msad = msa?.split(',');
+    const msac = "'" + msad?.join("','") + "'";
     const ownerc = "'" + ownern?.join("','") + "'";
     const propertyn = property?.split(',');
     const propertyc = "'" + propertyn?.join("','") + "'";
@@ -88,13 +97,13 @@ WHERE org = ${user.organization}
   );
       `,
     );
-console.log({user,subs})
+    console.log({user, subs});
     const date = new Date();
     if (new Date(subs[0]?.enddate) < date)
       return 'Subscription Expired please renew';
     if (subs && subs.length > 0) {
       if (status === 'LEAD') {
-        console.log(status)
+        console.log(status);
         let allMSA = '';
         if (subs[0].typeid !== 3) {
           console.log(subs[0].typeid, 'type');
@@ -104,10 +113,10 @@ console.log({user,subs})
           const msac = "'" + msan?.join("','") + "'";
           allMSA = `and msa_code in (${msac})`;
         }
-        console.log(allMSA)
+        console.log(allMSA);
         // const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
         if (mylist === 'yes') {
-          console.log('if myleads',mylist)
+          console.log('if myleads', mylist);
           let pu = '';
 
           if (
@@ -118,6 +127,23 @@ console.log({user,subs})
           ) {
             pu = `AND (units_count between ${punits} and ${punite}  )`;
           }
+          let regiona = '';
+          let msaa='';
+          let statea='';
+
+           if (
+             region !== null &&
+             region !== undefined
+           ) {
+              regiona = `AND (region in (${regionc})  )`;
+           }
+            if (msa !== null && msa !== undefined) {
+               msaa = `AND (msa in (${regionc})  )`;
+            }
+            if (state !== null && state !== undefined) {
+               statea = `AND (state in (${regionc})  )`;
+            }
+
           let yb = '';
           if (
             yearbuilds !== null &&
@@ -149,7 +175,7 @@ console.log({user,subs})
           where
            (lead_type IN (${propenq}))
            and l.nedl_property_id_pk not in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status ls where ls.org = ${org} and ls.subs_id = ${subs_id} )
-          ${ow}${pr}${myList}${yb}${pu}${allMSA}
+          ${ow}${pr}${myList}${yb}${pu}${allMSA}${regiona}${msaa}${statea}
           order by
           l.nedl_property_id_pk,
            CASE
@@ -174,7 +200,7 @@ console.log({user,subs})
             return 'No data Matched';
           }
         } else {
-          console.log('if not my list',mylist)
+          console.log('if not my list', mylist);
           let ow = '';
           if (owner !== '' && owner !== undefined) {
             ow = `AND (owner_name in( ${ownerc}))`;
@@ -202,72 +228,71 @@ console.log({user,subs})
           if (property !== '' && property !== undefined) {
             pr = `AND (nedl_property_name in( ${propertyc}))`;
           }
-          const s = `SELECT
-    l.*,
-    latest_notes.inserted_on
-FROM
-    nedl_model.lead_gen l
-LEFT JOIN (
-    SELECT
-        property_id,
-        MAX(inserted_on) AS inserted_on
-    FROM
-        ${this.DB_SCHEMA}.app_leads_notes
-    GROUP BY
-        property_id
-) AS latest_notes ON l.nedl_property_id_pk = latest_notes.property_id
-WHERE
-    lead_type IN (${propenq})
-    AND l.nedl_property_id_pk NOT IN (
-        SELECT DISTINCT property_id
-        FROM ${this.DB_SCHEMA}.app_leads_status ls
-        WHERE ls.subs_id = ${subs_id}
-    )
-    ${ow}${pr}${yb}${pu}${allMSA}
-ORDER BY
-    CASE
-        WHEN (SELECT MAX(lnotes.inserted_on)
-              FROM ${this.DB_SCHEMA}.app_leads_notes lnotes
-              WHERE lnotes.property_id = l.nedl_property_id_pk
-              AND lnotes.subs_id = ${subs_id}) IS NULL THEN 2
-        ELSE 1
-    END,
-    insert_date_time DESC,
-    CASE lead_type
+          //           const s = `SELECT
+          //     l.*,
+          //     latest_notes.inserted_on
+          // FROM
+          //     nedl_model.lead_gen l
+          // LEFT JOIN (
+          //     SELECT
+          //         property_id,
+          //         MAX(inserted_on) AS inserted_on
+          //     FROM
+          //         ${this.DB_SCHEMA}.app_leads_notes
+          //     GROUP BY
+          //         property_id
+          // ) AS latest_notes ON l.nedl_property_id_pk = latest_notes.property_id
+          // WHERE
+          //     lead_type IN (${propenq})
+          //     AND l.nedl_property_id_pk NOT IN (
+          //         SELECT DISTINCT property_id
+          //         FROM ${this.DB_SCHEMA}.app_leads_status ls
+          //         WHERE ls.subs_id = ${subs_id}
+          //     )
+          //         AND l.nedl_property_id_pk NOT IN (
+          //         SELECT DISTINCT property_id
+          //         FROM ${this.DB_SCHEMA}.app_leads_status ls
+          //         WHERE ls.subs_id = ${subs_id}
+          //     )
+          //     ${ow}${pr}${yb}${pu}${allMSA}
+          // ORDER BY
+          //     CASE
+          //         WHEN (SELECT MAX(lnotes.inserted_on)
+          //               FROM ${this.DB_SCHEMA}.app_leads_notes lnotes
+          //               WHERE lnotes.property_id = l.nedl_property_id_pk
+          //               AND lnotes.subs_id = ${subs_id}) IS NULL THEN 2
+          //         ELSE 1
+          //     END,
+          //     insert_date_time DESC,
+          //     CASE lead_type
+          //         WHEN 'Hot' THEN 1
+          //         WHEN 'Warm' THEN 2
+          //         WHEN 'Cold' THEN 3
+          //     END
+          // LIMIT 102 OFFSET ${offset}
+          // `;
+
+          const s = `
+        SELECT
+        l.*  FROM nedl_model.lead_gen l
+        WHERE
+        (lead_type IN (${propenq}))
+        And (l.nedl_property_id_pk not in
+        (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_status ls
+         where ls.subs_id = ${subs_id}))
+         And (l.nedl_property_id_pk not in
+        (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes ln
+         where ln.subs_id = ${subs_id}))
+        ${ow}${pr}${yb}${pu}${allMSA}
+        ORDER BY
+        CASE lead_type
         WHEN 'Hot' THEN 1
         WHEN 'Warm' THEN 2
         WHEN 'Cold' THEN 3
-    END
-LIMIT 102 OFFSET ${offset}
-`;
+        END
+        LIMIT 102 OFFSET ${offset}
 
-    //       const s = `
-    //     SELECT
-    //     l.*,  (SELECT MAX(ln.inserted_on)
-    //  FROM ${this.DB_SCHEMA}.app_leads_notes ln
-    //  WHERE ln.property_id = l.nedl_property_id_pk) AS inserted_on FROM nedl_model.lead_gen l
-    //      left join ${this.DB_SCHEMA}.app_leads_notes ln
-    //             on l.nedl_property_id_pk = ln.property_id
-    //     WHERE
-    //     (lead_type IN (${propenq}))
-    //     And (l.nedl_property_id_pk not in
-    //     (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_status ls
-    //      where ls.subs_id = ${subs_id}))
-    //     ${ow}${pr}${yb}${pu}${allMSA}
-    //     ORDER BY
-    //     CASE
-    //     WHEN (SELECT MAX(lnotes.inserted_on) FROM ${this.DB_SCHEMA}.app_leads_notes lnotes WHERE lnotes.property_id = l.nedl_property_id_pk and lnotes.subs_id = ${subs_id}) IS NULL THEN 2
-    //     ELSE 1
-    //     END,
-    //     insert_date_time desc,
-    //     CASE lead_type
-    //     WHEN 'Hot' THEN 1
-    //     WHEN 'Warm' THEN 2
-    //     WHEN 'Cold' THEN 3
-    //     END
-    //     LIMIT 102 OFFSET ${offset}
-
-    //     `;
+        `;
           console.log('from else', s);
           const sql = await this.leadsRepository.dataSource.execute(s);
           if (sql.length >= 1) {
@@ -280,7 +305,7 @@ LIMIT 102 OFFSET ${offset}
 
       // when data is not for leads status
       else {
-        console.log('if not leads',status);
+        console.log('if not leads', status);
         let allMSA = '';
         if (subs[0].typeid !== 3) {
           console.log(subs[0].typeid, 'type');
@@ -430,15 +455,13 @@ LIMIT 102 OFFSET ${offset}
   @response(200, {
     description: 'Array of buyers page chart model instances',
   })
-  async minmax(
-    ): Promise<any> {
-      const sql = await this.leadsRepository.dataSource.execute(
-        `select min(units_count)as minunit ,
+  async minmax(): Promise<any> {
+    const sql = await this.leadsRepository.dataSource.execute(
+      `select min(units_count)as minunit ,
          max(units_count)as maxunit , min(year_built)as minyear , max(year_built) as maxyear
           from nedl_model.lead_gen
     `,
-      );
-      return sql;
-
+    );
+    return sql;
   }
 }
