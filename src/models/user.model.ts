@@ -1,6 +1,8 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'users'}}, })
+@model({
+  settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'app_users'}},
+})
 export class User extends Entity {
   @property({
     type: 'string',
@@ -36,60 +38,62 @@ export class User extends Entity {
   })
   username: string;
   @property({
-    type: 'string',
+    type: 'number',
   })
-  agent_id?: string;
+  org?: number;
   @property({
     type: 'string',
   })
-  agent_map_to: string;
+  addedBy: string;
+  @property({
+    type: 'number',
+  })
+  role: number;
   @property({
     type: 'string',
   })
-  role: String;
-  @property({
-    type: 'string',
-  })
-  resetkey?: String;
+  resetKey?: string;
   @property({
     type: 'date',
   })
-  agent_map_date: Date;
+  addedOn: Date;
+  @property({
+    type: 'date',
+  })
+  updatedOn: Date;
   @property({
     type: 'string',
   })
-  state?: String;
+  state?: string;
   @property({
     type: 'Boolean',
-    default:true,
+    default: true,
   })
-  force_reset_password?: Boolean;
+  forceReset?: boolean;
   @property({
     type: 'Boolean',
-    default:false,
+    default: false,
   })
-  isLogedIn?: Boolean;
+  isLogedIn?: boolean;
+  @property({
+    type: 'Boolean',
+    default: true,
+  })
+  enabled?: boolean;
   @property({
     type: 'number',
   })
-  userOtp?: Number;
+  userOtp?: number;
   @property({
     type: 'number',
   })
-  loginOtp?: Number;
-
-
+  loginOtp?: number;
 
   constructor(data?: Partial<User>) {
     super(data);
   }
 }
 
-export interface UserRelations {
-  // describe navigational properties here
 
 
-
-}
-
-export type UserWithRelations = User & UserRelations;
+export type UserWithRelations = User;
