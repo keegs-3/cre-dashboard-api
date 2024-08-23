@@ -25,6 +25,7 @@ import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 // import {MyUserService} from '../.env';
 import {MyUserService} from './services/user-service';
+import {SecurityheaderInterceptor} from './interceptors';
 export {ApplicationConfig};
 
 export class CreaigithubApplication extends BootMixin(
@@ -47,7 +48,7 @@ export class CreaigithubApplication extends BootMixin(
 
     // Add security spec
     // this.addSecuritySpec();
-
+this.interceptor(SecurityheaderInterceptor);
     this.component(AuthenticationComponent);
     registerAuthenticationStrategy(this, JWTStrategy);
 

@@ -110,14 +110,14 @@ export class AppUserController {
       const info = await transporter.sendMail({
         from: '"Nedl Support" <support@nedl.us>', // sender address
         to: `${savedUser.email}`, // list of receivers
-        subject: 'Nedl User Details', // Subject line
+        subject: 'Welcome to nëdl!', // Subject line
         text: 'Is this your account', // plain text body
         html: `
 
         <!DOCTYPE html>
 <html>
 <head>
-<title>Nedl OnBoarding</title>
+<title>Welcome to nëdl!</title>
 <style>
   /* Reset default styles */
   body,
@@ -195,30 +195,19 @@ height:30px;
 </head>
 <body>
 <div class="container">
-Dear ${savedUser.firstName} ,
-
-An account has been created with your ${savedUser.email} on nëdl application.
-
-Your username: EMAIL ID PROVIDED BY THE USER
-
-To finish setting up your nëdl account, follow the steps below.
-
+Hi ${savedUser.firstName} ,
+<p>Your account is ready for you! Take a look at the directions below to get started finding off-market deals.</p>
+<ol>
+<li> Log into nëdl <link to platform> with the username provided below:
+${savedUser.email}</li>
+<li> Once you enter your username, you will receive an OTP verification to your email.</li>
+<li>Enter your OTP code, then create and confirm your password.</li>
+<li>Once you create your password, you will be redirected to the nëdl login page to re-enter your username and password.</li>
+</ol>
+<span>If you have any questions or encounter any issues during the log in process, contact us at support@nedl.us</span>
+<p>Cheers, </p>
+<p>Nedl</p>
      <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
-    <p>Enter the username provided above.</p>
-    <p>Then enter your one-time verification code, which you will receive via email.</p>
-    <p>Create and confirm your password. Please choose a strong password that meets the criteria provided.</p>
-    <p>Once your password has been created, you will be redirected to the nëdl application login screen to re-enter your username and password.</p>
-
-<p>If you have any questions or encounter any issues during the log in process, contact us at support@nedl.us</p>
-
-<p>Thank you</p>
-
-
-
-
-
-
-
 
   <div class="footer">
 
@@ -314,14 +303,14 @@ To finish setting up your nëdl account, follow the steps below.
         const info = await transporter.sendMail({
           from: '"Nedl Support" <support@nedl.us>', // sender address
           to: `${emaild.email}`, // list of receivers
-          subject: 'Reset Password', // Subject line
+          subject: 'Password Reset Request for nëdl', // Subject line
           text: 'Add your password', // plain text body
           html: `
 
             <!DOCTYPE html>
             <html>
             <head>
-              <title>Nedl Reset Password</title>
+              <title>Password Reset Request for nëdl</title>
               <style>
                 /* Reset default styles */
                 body,
@@ -462,7 +451,7 @@ console.log('data',data);
     SET   password = '${password}',resetkey=null where resetkey = '${passwordata.resetkey}'`);
 
       return 'reset successful';
-    
+
   }
   @post('/app/user/verify', {
     responses: {
@@ -528,7 +517,8 @@ console.log('data',data);
         const info = await transporter.sendMail({
           from: '"Nedl Support" <support@nedl.us>', // sender address
           to: `${emaild.email}`, // list of receivers
-          subject: 'Add Password', // Subject line
+          subject:
+            'Final Step for your nëdl access - Verify OTP and Add Password', // Subject line
           text: 'Add your password', // plain text body
           html: `
 
@@ -613,10 +603,11 @@ console.log('data',data);
             </head>
             <body>
               <div class="container">
-                Dear ${verify.firstName} ${verify.lastName}
+              You are almost there, ${verify.firstName}
 <p>Your one-time verification code is ${userotp}</p>
 
-<p>Please use this OTP to create password on the nëdl application.</p>
+<p>Once you enter the OTP, you can create your password for the application.</p>
+f you have any questions or encounter any issues during the log in process, contact us at support@nedl.us
                 <div class="footer">
 
                   <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
