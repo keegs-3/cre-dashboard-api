@@ -25,7 +25,7 @@ import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 // import {MyUserService} from '../.env';
 import {MyUserService} from './services/user-service';
-import {SecurityheaderInterceptor} from './interceptors';
+// import { SecurityHeadersComponent} from './middleware/setHeader.component';
 export {ApplicationConfig};
 
 export class CreaigithubApplication extends BootMixin(
@@ -48,7 +48,12 @@ export class CreaigithubApplication extends BootMixin(
 
     // Add security spec
     // this.addSecuritySpec();
-this.interceptor(SecurityheaderInterceptor);
+    // this.interceptor(SecurityheaderInterceptor);
+    // this.middleware(securityHeadersMiddleware);
+    // this.expressMiddleware(securityHeadersMiddleware);
+    // this.expressMiddleware(securityHeadersMiddleware());
+    // this.middleware(SecurityHeadersProvider);
+    // this.expressMiddleware(securityHeadersMiddleware);
     this.component(AuthenticationComponent);
     registerAuthenticationStrategy(this, JWTStrategy);
 
@@ -102,6 +107,7 @@ this.interceptor(SecurityheaderInterceptor);
     this.bind(TokenServiceBindings.TOKEN_EXPIRES_IN).to(
       TokenServiceConstants.TOKEN_EXPIRES_IN_VALUE,
     );
+    // this.component(SecurityHeadersComponent);
   }
 
   // addSecuritySpec(): void {
