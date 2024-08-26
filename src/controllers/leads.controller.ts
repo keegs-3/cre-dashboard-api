@@ -445,7 +445,7 @@ WHERE org = ${user.organization}
   ): Promise<any> {
     const sql = await this.leadsRepository.dataSource.execute(
       `
-        select * from nedl_model.buyers_recommendation where nedl_property_id_pk = ${property}
+        select * from ${this.DB_SCHEMA}.vw_buyers_recommendation where nedl_property_id_pk = ${property}
     `,
     );
     return sql;
