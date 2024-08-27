@@ -269,7 +269,7 @@ WHERE org = ${user.organization}
             allInterestRate = `and interest_rate >= ${ir}`;
           }
       if (owner !== '' && owner !== undefined) {
-        allOwner = `  AND (grantee_name IN(${own}))`;
+        allOwner = `  AND (owner_name IN(${own}))`;
       }
        if (hcs !== null && hcs !== undefined && hce !== null && hce !== undefined) {
          allHouseHoldCount = `and household_count  between ${hcs} and ${hce}`;
@@ -305,9 +305,11 @@ WHERE org = ${user.organization}
                     ${allMsaData}
                     ${allState}
                     ${allCity}
-
                     ${allPunit}
-                    ${allOcr}${allRr}${allBuildingArea}${allYearBuilt}
+                    ${allOcr}
+                    ${allRr}
+                    ${allBuildingArea}
+                    ${allYearBuilt}
                     ${allLastSale}
                     ${allLa}
                     ${allLoanAmountToValue}
@@ -322,7 +324,7 @@ WHERE org = ${user.organization}
                     ${allYtms}
                     ${allPname}
                     ${allAddress}
-${allMSA}
+                    ${allMSA}
                     limit 100 offset ${offset}
                   `;
 
@@ -447,7 +449,7 @@ FROM ${this.DB_SCHEMA}.data_hub
     @param.query.string('owner_name') owner_name?: string,
   ): Promise<any> {
     const data = `
-                   select grantee_name from ${this.DB_SCHEMA}.data_hub where grantee_name ILIKE '%${owner_name}%'
+                   select owner_name from ${this.DB_SCHEMA}.data_hub where owner_name ILIKE '%${owner_name}%'
                   `;
 
     const all = await this.userRepository.dataSource.execute(data);
