@@ -269,7 +269,7 @@ WHERE org = ${user.organization}
             allInterestRate = `and interest_rate >= ${ir}`;
           }
       if (owner !== '' && owner !== undefined) {
-        allOwner = `  AND (grantee_name IN(${own}))`;
+        allOwner = `  AND (owner_name IN(${own}))`;
       }
        if (hcs !== null && hcs !== undefined && hce !== null && hce !== undefined) {
          allHouseHoldCount = `and household_count  between ${hcs} and ${hce}`;
