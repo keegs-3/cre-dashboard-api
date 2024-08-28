@@ -449,7 +449,7 @@ FROM ${this.DB_SCHEMA}.data_hub
     @param.query.string('owner_name') owner_name?: string,
   ): Promise<any> {
     const data = `
-                   select owner_name from ${this.DB_SCHEMA}.data_hub where owner_name ILIKE '%${owner_name}%'
+                   select distinct owner_name from ${this.DB_SCHEMA}.data_hub where owner_name ILIKE '%${owner_name}%'
                   `;
 
     const all = await this.userRepository.dataSource.execute(data);
