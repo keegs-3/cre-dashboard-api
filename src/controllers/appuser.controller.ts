@@ -191,6 +191,9 @@ export class AppUserController {
 width:150px;
 height:30px;
   }
+ol{
+margin-left:10%;
+}
 </style>
 </head>
 <body>
@@ -388,12 +391,14 @@ ${savedUser.email}</li>
             </head>
             <body>
               <div class="container">
-                Dear ${verify.firstName} ${verify.lastName}
+                Dear ${verify.firstName}
 <p>Your one-time reset code is ${userotp}</p>
 
 <p>Please use this code to change password on the nëdl application.</p>
+<p>Cheers, </p>
+<p>Nedl</p>
+     <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
                 <div class="footer">
-
                   <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
 
                 </div>
@@ -607,9 +612,11 @@ console.log('data',data);
 <p>Your one-time verification code is ${userotp}</p>
 
 <p>Once you enter the OTP, you can create your password for the application.</p>
-f you have any questions or encounter any issues during the log in process, contact us at support@nedl.us
+<p>If you have any questions or encounter any issues during the log in process, contact us at support@nedl.us</p>
+<p>Cheers, </p>
+<p>Nedl</p>
+     <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
                 <div class="footer">
-
                   <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
 
                 </div>
@@ -740,9 +747,11 @@ f you have any questions or encounter any issues during the log in process, cont
         <body>
           <div class="container">
 
-<p>Dear ${verify.firstName} ${verify.lastName} </p>
+<p>Dear ${verify.firstName} </p>
 <p>Please use ${loginotp} as the One Time Password (OTP) to log into your nëdl Account.</p>
-
+<p>Cheers, </p>
+<p>Nedl</p>
+     <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
             <div class="footer">
 
               <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
