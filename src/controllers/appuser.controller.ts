@@ -22,13 +22,17 @@ import {
   UserServiceBindings,
 } from '../keys';
 import {User} from '../models/user.model';
-import {LoginsessionRepository, SubscriptionDataRepository, UsersessionRepository} from '../repositories';
+import {
+  LoginsessionRepository,
+  SubscriptionDataRepository,
+  UsersessionRepository,
+} from '../repositories';
 import {UserRepository} from '../repositories/user.repository';
 import {validateCredentials} from '../services';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import { SubscriptionData } from './../models/subscription-data.model';
+import {SubscriptionData} from './../models/subscription-data.model';
 
 export class AppUserController {
   constructor(
@@ -159,15 +163,15 @@ export class AppUserController {
 
   /* Paragraph */
   p {
-    margin-bottom: 20px;
+    margin-top: 20px;
   }
 
   /* Button */
-  .button {
+  .nbutton {
     display: inline-block;
     padding: 10px 20px;
     background-color: #007bff;
-    color: #ffffff;
+    color: #ffffff !important;
     text-decoration: none;
     border-radius: 5px;
     margin-top:20px;
@@ -177,6 +181,7 @@ export class AppUserController {
   .footer {
     display:flex;
     justify-content: center;
+    align-item:center;
     gap:20px;
     margin-top: 20px;
     padding-top: 20px;
@@ -190,15 +195,20 @@ export class AppUserController {
   .logo {
 width:150px;
 height:30px;
+margin:auto;
   }
 ol{
 margin-left:10%;
+margin-top:20px;
+}
+.sign {
+margin-top : 10px;
 }
 </style>
 </head>
 <body>
 <div class="container">
-Hi ${savedUser.firstName} ,
+Hi ${savedUser.firstName},
 <p>Your account is ready for you! Take a look at the directions below to get started finding off-market deals.</p>
 <ol>
 <li> Log into nëdl <link to platform> with the username provided below:
@@ -207,15 +217,12 @@ ${savedUser.email}</li>
 <li>Enter your OTP code, then create and confirm your password.</li>
 <li>Once you create your password, you will be redirected to the nëdl login page to re-enter your username and password.</li>
 </ol>
-<span>If you have any questions or encounter any issues during the log in process, contact us at support@nedl.us</span>
-<p>Cheers, </p>
-<p>Nedl</p>
-     <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
-
+<p>If you have any questions or encounter any issues during the log in process, contact us at support@nedl.us</p>
+<p>Cheers,</p>
+<p class="sign">Nedl</p>
+<a href="${this.UI_URL}" class="nbutton">Visit the nëdl application</a>.
   <div class="footer">
-
     <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
-
   </div>
 </div>
 </body>
@@ -355,7 +362,7 @@ ${savedUser.email}</li>
 
                 /* Paragraph */
                 p {
-                  margin-bottom: 20px;
+                  margin-top: 20px;
                 }
 
                 /* Button */
@@ -392,19 +399,20 @@ ${savedUser.email}</li>
             <body>
               <div class="container">
                 Dear ${verify.firstName}
+
 <p>Your one-time reset code is ${userotp}</p>
 
 <p>Please use this code to change password on the nëdl application.</p>
-<p>Cheers, </p>
-<p>Nedl</p>
-     <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
-                <div class="footer">
-                  <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
 
-                </div>
-              </div>
-            </body>
-            </html>
+<p>Cheers,</p>
+<p>Nedl</p>
+<a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
+<div class="footer">
+ <p>© 2023</p> <img class="logo" src="${this.UI_URL}/images/lattest/newlogo.png">.<p> All rights reserved.</p>
+</div>
+</div>
+</body>
+</html>
 
 
 
@@ -444,19 +452,18 @@ ${savedUser.email}</li>
     const data = await this.userRepository.find({
       where: {resetKey: passwordata.resetkey},
     });
-    if (data.length <1) {
+    if (data.length < 1) {
       return 'Invalid reset key';
     }
-console.log('data',data);
+    console.log('data', data);
 
-      const password = await this.hasher.hashPassword(passwordata.password);
-      console.log(password);
-      await this.userRepository.dataSource.execute(`
+    const password = await this.hasher.hashPassword(passwordata.password);
+    console.log(password);
+    await this.userRepository.dataSource.execute(`
  UPDATE ${this.DB_SCHEMA}.app_users
     SET   password = '${password}',resetkey=null where resetkey = '${passwordata.resetkey}'`);
 
-      return 'reset successful';
-
+    return 'reset successful';
   }
   @post('/app/user/verify', {
     responses: {
@@ -572,7 +579,7 @@ console.log('data',data);
 
                 /* Paragraph */
                 p {
-                  margin-bottom: 20px;
+                  margin-top: 20px;
                 }
 
                 /* Button */
@@ -609,11 +616,13 @@ console.log('data',data);
             <body>
               <div class="container">
               You are almost there, ${verify.firstName}
+
 <p>Your one-time verification code is ${userotp}</p>
 
 <p>Once you enter the OTP, you can create your password for the application.</p>
 <p>If you have any questions or encounter any issues during the log in process, contact us at support@nedl.us</p>
-<p>Cheers, </p>
+
+<p>Cheers,</p>
 <p>Nedl</p>
      <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
                 <div class="footer">
@@ -710,7 +719,7 @@ console.log('data',data);
 
             /* Paragraph */
             p {
-              margin-bottom: 20px;
+              margin-top: 20px;
             }
 
             /* Button */
@@ -747,10 +756,11 @@ console.log('data',data);
         <body>
           <div class="container">
 
-<p>Dear ${verify.firstName} </p>
+<p>Dear ${verify.firstName}</p>
 <p>Please use ${loginotp} as the One Time Password (OTP) to log into your nëdl Account.</p>
-<p>Cheers, </p>
-<p>Nedl</p>
+<p>Cheers,</p>
+<span>Nedl</span>
+
      <a href="${this.UI_URL}" class="button" style="color:#fff;">Visit the nëdl application</a>.
             <div class="footer">
 
