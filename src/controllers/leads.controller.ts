@@ -70,15 +70,15 @@ export class LeadsController {
     @param.query.string('state') state?: string,
     @param.query.string('msa') msa?: string,
   ): Promise<any> {
-    const propen = probability?.split(',');
-    const propenq = "'" + propen?.join("','") + "'";
+    const msad = msa?.split(',');
+    const msac = "'" + msad?.join("','") + "'";
     const regiond = region?.split(',');
     const regionc = "'" + regiond?.join("','") + "'";
     const stated = state?.split(',');
     const statec = "'" + stated?.join("','") + "'";
+    const propen = probability?.split(',');
+    const propenq = "'" + propen?.join("','") + "'";
     const ownern = owner?.split(',');
-    const msad = msa?.split(',');
-    const msac = "'" + msad?.join("','") + "'";
     const ownerc = "'" + ownern?.join("','") + "'";
     const propertyn = property?.split(',');
     const propertyc = "'" + propertyn?.join("','") + "'";
@@ -110,15 +110,11 @@ WHERE org = ${user.organization}
           console.log(subs[0].sub_data.MSA, 'msa');
           const msan = subs[0].sub_data.MSA;
           console.log(msan, 'msa');
-          const msac = "'" + msan?.join("','") + "'";
-          allMSA = `and msa_code in (${msac})`;
+          const msacc = "'" + msan?.join("','") + "'";
+          allMSA = `and msa_code in (${msacc})`;
         }
-        console.log(allMSA);
-        // const count = await this.leadsRepository.dataSource.execute(`SELECT * FROM ${this.DB_SCHEMA}.lead_user_org_vw where agent_id = '${org}'`  )
-        if (mylist === 'yes') {
-          console.log('if myleads', mylist);
+       if (mylist === 'yes') {
           let pu = '';
-
           if (
             punits !== null &&
             punits !== undefined &&
@@ -128,21 +124,18 @@ WHERE org = ${user.organization}
             pu = `AND (units_count between ${punits} and ${punite}  )`;
           }
           let regiona = '';
-          let msaa='';
-          let statea='';
+          let msaa = '';
+          let statea = '';
 
-           if (
-             region !== null &&
-             region !== undefined
-           ) {
-              regiona = `AND (region in (${regionc})  )`;
-           }
-            if (msa !== null && msa !== undefined) {
-               msaa = `AND (msa in (${regionc})  )`;
-            }
-            if (state !== null && state !== undefined) {
-               statea = `AND (state in (${regionc})  )`;
-            }
+          if (region !== null && region !== undefined) {
+            regiona = `AND (region in (${regionc})  )`;
+          }
+          if (msa !== null && msa !== undefined) {
+            msaa = `AND (msa_code in (${msac})  )`;
+          }
+          if (state !== null && state !== undefined) {
+            statea = `AND (state in (${statec})  )`;
+          }
 
           let yb = '';
           if (
@@ -201,6 +194,19 @@ WHERE org = ${user.organization}
           }
         } else {
           console.log('if not my list', mylist);
+          let regiona = '';
+          let msaa = '';
+          let statea = '';
+
+          if (region !== null && region !== undefined) {
+            regiona = `AND (region in (${regionc})  )`;
+          }
+          if (msa !== null && msa !== undefined) {
+            msaa = `AND (msa_code in (${msac})  )`;
+          }
+          if (state !== null && state !== undefined) {
+            statea = `AND (state in (${statec})  )`;
+          }
           let ow = '';
           if (owner !== '' && owner !== undefined) {
             ow = `AND (owner_name in( ${ownerc}))`;
@@ -228,49 +234,6 @@ WHERE org = ${user.organization}
           if (property !== '' && property !== undefined) {
             pr = `AND (nedl_property_name in( ${propertyc}))`;
           }
-          //           const s = `SELECT
-          //     l.*,
-          //     latest_notes.inserted_on
-          // FROM
-          //     nedl_model.lead_gen l
-          // LEFT JOIN (
-          //     SELECT
-          //         property_id,
-          //         MAX(inserted_on) AS inserted_on
-          //     FROM
-          //         ${this.DB_SCHEMA}.app_leads_notes
-          //     GROUP BY
-          //         property_id
-          // ) AS latest_notes ON l.nedl_property_id_pk = latest_notes.property_id
-          // WHERE
-          //     lead_type IN (${propenq})
-          //     AND l.nedl_property_id_pk NOT IN (
-          //         SELECT DISTINCT property_id
-          //         FROM ${this.DB_SCHEMA}.app_leads_status ls
-          //         WHERE ls.subs_id = ${subs_id}
-          //     )
-          //         AND l.nedl_property_id_pk NOT IN (
-          //         SELECT DISTINCT property_id
-          //         FROM ${this.DB_SCHEMA}.app_leads_status ls
-          //         WHERE ls.subs_id = ${subs_id}
-          //     )
-          //     ${ow}${pr}${yb}${pu}${allMSA}
-          // ORDER BY
-          //     CASE
-          //         WHEN (SELECT MAX(lnotes.inserted_on)
-          //               FROM ${this.DB_SCHEMA}.app_leads_notes lnotes
-          //               WHERE lnotes.property_id = l.nedl_property_id_pk
-          //               AND lnotes.subs_id = ${subs_id}) IS NULL THEN 2
-          //         ELSE 1
-          //     END,
-          //     insert_date_time DESC,
-          //     CASE lead_type
-          //         WHEN 'Hot' THEN 1
-          //         WHEN 'Warm' THEN 2
-          //         WHEN 'Cold' THEN 3
-          //     END
-          // LIMIT 102 OFFSET ${offset}
-          // `;
 
           const s = `
         SELECT
@@ -283,7 +246,7 @@ WHERE org = ${user.organization}
          And (l.nedl_property_id_pk not in
         (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes ln
          where ln.subs_id = ${subs_id}))
-        ${ow}${pr}${yb}${pu}${allMSA}
+        ${ow}${pr}${yb}${pu}${allMSA}${regiona}${msaa}${statea}
         ORDER BY
         CASE lead_type
         WHEN 'Hot' THEN 1
@@ -312,8 +275,8 @@ WHERE org = ${user.organization}
           console.log(subs[0].sub_data.MSA, 'msa');
           const msan = subs[0].sub_data.MSA;
           console.log(msan, 'msa');
-          const msac = "'" + msan?.join("','") + "'";
-          allMSA = `and subquery.msa_code in (${msac})`;
+          const submsa = "'" + msan?.join("','") + "'";
+          allMSA = `and subquery.msa_code in (${submsa})`;
         }
         let afm = '';
         let l = '';
@@ -374,6 +337,23 @@ WHERE org = ${user.organization}
            and property_id = subquery.nedl_property_id_pk)
                `;
         }
+let regiona = '';
+let msaa = '';
+let statea = '';
+
+if (region !== null && region !== undefined) {
+  regiona = `AND (subquery.region in (${regionc})  )`;
+}
+if (msa !== null && msa !== undefined) {
+  msaa = `AND (subquery.msa_code in (${msac})  )`;
+}
+if (state !== null && state !== undefined) {
+  statea = `AND (subquery.state in (${statec})  )`;
+}
+
+
+
+
         const s = `
                 SELECT distinct on (subquery.nedl_property_id_pk) *
                 from nedl_model.lead_gen subquery
@@ -383,7 +363,7 @@ WHERE org = ${user.organization}
                 on subquery.nedl_property_id_pk = ls.property_id
                 WHERE ls.status = '${status}'
                 AND subquery.lead_type IN (${propenq})
-                 ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}${myllist}
+                 ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}${myllist}${regiona}${msaa}${statea}
                 order by
                 subquery.nedl_property_id_pk,
                 ln.inserted_on desc,
