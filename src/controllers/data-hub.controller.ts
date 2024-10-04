@@ -78,6 +78,7 @@ export class DataHubController {
   ): Promise<any> {
     let marq: any = '';
 
+    let regionc: any = '';
     let cityc: any = '';
     let msacc: any = '';
     let own: any = '';
@@ -95,12 +96,15 @@ export class DataHubController {
     cityc = "'" + cit?.join("','") + "'";
 
     const ow = owner?.split(',');
-
     own = "'" + ow?.join("','") + "'";
+
+     const re = region?.split(',');
+     regionc = "'" + re?.join("','") + "'";
 
     let allMsaData = '';
     let allState = '';
     let allCity = '';
+    let allRegion = '';
     let allPunit = '';
     let allOcr = '';
     let allRr = '';
@@ -169,6 +173,9 @@ WHERE org = ${user.organization}
       }
       if (city !== '' && city !== undefined) {
         allCity = `AND (city IN(${cityc}))`;
+      }
+      if (region !== '' && region !== undefined) {
+        allRegion = `AND (region IN(${regionc}))`;
       }
 
       if (propertyName !== '' && propertyName !== undefined) {
@@ -325,6 +332,7 @@ WHERE org = ${user.organization}
                     ${allPname}
                     ${allAddress}
                     ${allMSA}
+                    ${allRegion}
                     limit 100 offset ${offset}
                   `;
 
@@ -352,6 +360,7 @@ WHERE org = ${user.organization}
                     ${allPname}
                     ${allAddress}
 ${allMSA}
+${allRegion}
 
                 `;
       console.log('for search ', data);
