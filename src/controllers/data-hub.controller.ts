@@ -36,7 +36,7 @@ export class DataHubController {
     },
   })
   async forProperty(
-    @inject(RestBindings.Http.RESPONSE) res: Response,
+    // @inject(RestBindings.Http.RESPONSE) res: Response,
     @inject(AuthenticationBindings.CURRENT_USER)
     currentUser: UserProfile,
     @param.query.string('region') region?: string,
@@ -78,8 +78,8 @@ export class DataHubController {
 
     @param.query.number('offset', {default: 0}) offset?: number,
   ): Promise<any> {
-   
-     res.headers.set('Access-Control-Allow-Origin','*');
+
+    //  res.headers.set('Access-Control-Allow-Origin','*');
     let marq: any = '';
 
     let regionc: any = '';
