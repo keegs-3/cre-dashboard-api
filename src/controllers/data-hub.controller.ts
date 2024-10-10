@@ -342,9 +342,11 @@ WHERE org = ${user.organization}
                     ${allMsaData}
                     ${allState}
                     ${allCity}
-
                     ${allPunit}
-                    ${allOcr}${allRr}${allBuildingArea}${allYearBuilt}
+                    ${allOcr}
+                    ${allRr}
+                    ${allBuildingArea}
+                    ${allYearBuilt}
                     ${allLastSale}
                     ${allLa}
                     ${allLoanAmountToValue}
@@ -359,9 +361,8 @@ WHERE org = ${user.organization}
                     ${allYtms}
                     ${allPname}
                     ${allAddress}
-${allMSA}
-${allRegion}
-
+                    ${allMSA}
+                    ${allRegion}
                 `;
       console.log('for search ', data);
       console.log('for count ', countdata);

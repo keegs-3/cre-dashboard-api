@@ -5,7 +5,7 @@ import {
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
 import {RepositoryMixin} from '@loopback/repository';
-import {RestApplication} from '@loopback/rest';
+import {RestApplication, RestBindings, RestServerConfig} from '@loopback/rest';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
@@ -45,7 +45,18 @@ export class CreaigithubApplication extends BootMixin(
 
     // setup binding
     this.setupBinding();
+    const corsOptions: RestServerConfig = {
+      cors: {
+        origin: '*', // Allow all origins, or specify allowed domains like 'http://localhost:3000'
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
+        allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
+      },
+    };
 
+    // Configure the rest server with CORS options
+    this.configure('rest').to(corsOptions);
     // Add security spec
     // this.addSecuritySpec();
     // this.interceptor(SecurityheaderInterceptor);
