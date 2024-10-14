@@ -4,7 +4,7 @@
 import {AuthenticationBindings, authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {get, param, response} from '@loopback/rest';
+import {get, param, response, RestBindings} from '@loopback/rest';
 import {UserProfile, securityId} from '@loopback/security';
 import {UserServiceBindings} from '../keys';
 import {SubscriptionDataRepository, UserRepository} from '../repositories';
@@ -23,6 +23,7 @@ export class DataHubController {
 
   DB_SCHEMA = process.env.DB_SCHEMA;
 
+
   @get('/dataHub/search')
   @response(200, {
     description: 'Array dataHUb',
@@ -35,6 +36,7 @@ export class DataHubController {
     },
   })
   async forProperty(
+    // @inject(RestBindings.Http.RESPONSE) res: Response,
     @inject(AuthenticationBindings.CURRENT_USER)
     currentUser: UserProfile,
     @param.query.string('region') region?: string,
@@ -76,6 +78,8 @@ export class DataHubController {
 
     @param.query.number('offset', {default: 0}) offset?: number,
   ): Promise<any> {
+
+    //  res.headers.set('Access-Control-Allow-Origin','*');
     let marq: any = '';
 
     let regionc: any = '';
@@ -98,8 +102,8 @@ export class DataHubController {
     const ow = owner?.split(',');
     own = "'" + ow?.join("','") + "'";
 
-     const re = region?.split(',');
-     regionc = "'" + re?.join("','") + "'";
+    const re = region?.split(',');
+    regionc = "'" + re?.join("','") + "'";
 
     let allMsaData = '';
     let allState = '';
@@ -126,7 +130,6 @@ export class DataHubController {
     let allAverageHousehold = '';
     let allMedianHousehold = '';
 
-
     const user = await Promise.resolve(currentUser);
     const subs = await this.subData.dataSource.execute(
       `
@@ -144,12 +147,8 @@ WHERE org = ${user.organization}
     console.log('ddddd', subs);
     const date = new Date();
 
-
-        if (new Date(subs[0].enddate) < date)
-        return 'Subscription Expired please renew';
-
-
-
+    if (new Date(subs[0].enddate) < date)
+      return 'Subscription Expired please renew';
 
     if (subs && subs.length > 0) {
       console.log('zsdfsdfsdf', subs[0].typeid);
@@ -253,58 +252,55 @@ WHERE org = ${user.organization}
         }
       }
 
-        if (
-          las !== null &&
-          las !== undefined &&
-          lae !== null &&
-          lae !== undefined
-        ) {
-          allLoanAmount = `and amount  between ${las} and ${lae}`;
-        }
-         if (
-           ts !== null &&
-           ts !== undefined &&
-           te !== null &&
-           te !== undefined
-         ) {
-           allTerm = `and term  between ${ts} and ${te}`;
-         }
-          if (
-            ir !== null &&
-            ir !== undefined
-          ) {
-            allInterestRate = `and interest_rate >= ${ir}`;
-          }
+      if (
+        las !== null &&
+        las !== undefined &&
+        lae !== null &&
+        lae !== undefined
+      ) {
+        allLoanAmount = `and amount  between ${las} and ${lae}`;
+      }
+      if (ts !== null && ts !== undefined && te !== null && te !== undefined) {
+        allTerm = `and term  between ${ts} and ${te}`;
+      }
+      if (ir !== null && ir !== undefined) {
+        allInterestRate = `and interest_rate >= ${ir}`;
+      }
       if (owner !== '' && owner !== undefined) {
         allOwner = `  AND (owner_name IN(${own}))`;
       }
-       if (hcs !== null && hcs !== undefined && hce !== null && hce !== undefined) {
-         allHouseHoldCount = `and household_count  between ${hcs} and ${hce}`;
-       }
-        if (
-          hyfs !== null &&
-          hyfs !== undefined &&
-          hyfe !== null &&
-          hyfe !== undefined
-        ) {
-          allHouseHoldYearForecast = `and household_5_year_forecast_count  between ${hyfs} and ${hyfe}`;
-        }
-         if (
-           ahis !== null &&
-           ahis !== undefined &&
-           ahie !== null &&
-           ahie !== undefined
-         ) {
-           allAverageHousehold = `and average_household_income  between ${ahis} and ${ahie}`;
-         }
-          if (
-            mhis !== null &&
-            mhis !== undefined &&
-            mhie !== null &&
-            mhie !== undefined
-          ) {
-            allMedianHousehold = `and median_household_income  between ${mhis} and ${mhie}`;
-          }
+      if (
+        hcs !== null &&
+        hcs !== undefined &&
+        hce !== null &&
+        hce !== undefined
+      ) {
+        allHouseHoldCount = `and household_count  between ${hcs} and ${hce}`;
+      }
+      if (
+        hyfs !== null &&
+        hyfs !== undefined &&
+        hyfe !== null &&
+        hyfe !== undefined
+      ) {
+        allHouseHoldYearForecast = `and household_5_year_forecast_count  between ${hyfs} and ${hyfe}`;
+      }
+      if (
+        ahis !== null &&
+        ahis !== undefined &&
+        ahie !== null &&
+        ahie !== undefined
+      ) {
+        allAverageHousehold = `and average_household_income  between ${ahis} and ${ahie}`;
+      }
+      if (
+        mhis !== null &&
+        mhis !== undefined &&
+        mhie !== null &&
+        mhie !== undefined
+      ) {
+        allMedianHousehold = `and median_household_income  between ${mhis} and ${mhie}`;
+      }
 
       const data = `
                     SELECT * FROM ${this.DB_SCHEMA}.data_hub
@@ -342,9 +338,11 @@ WHERE org = ${user.organization}
                     ${allMsaData}
                     ${allState}
                     ${allCity}
-
                     ${allPunit}
-                    ${allOcr}${allRr}${allBuildingArea}${allYearBuilt}
+                    ${allOcr}
+                    ${allRr}
+                    ${allBuildingArea}
+                    ${allYearBuilt}
                     ${allLastSale}
                     ${allLa}
                     ${allLoanAmountToValue}
@@ -359,9 +357,8 @@ WHERE org = ${user.organization}
                     ${allYtms}
                     ${allPname}
                     ${allAddress}
-${allMSA}
-${allRegion}
-
+                    ${allMSA}
+                    ${allRegion}
                 `;
       console.log('for search ', data);
       console.log('for count ', countdata);
@@ -423,7 +420,7 @@ min(latest_monthly_rent)as min_rent , max(latest_monthly_rent)as max_rent ,
 min(building_sq_ft)as min_building , max(building_sq_ft)as max_building,
 min(year_built) as min_built , max(year_built) as max_built ,
 min(last_sale_amount) as min_sale_amount , max(last_sale_amount) as max_sale_amount ,
-min(amount)as min_amount , max(amount) as max_amount ,
+min(loan_amount)as min_amount , max(loan_amount) as max_amount ,
 min(household_count)as min_householdcount , max(household_count) as max_householdcount,
 min(median_household_income)as min_household_income , max(median_household_income)as max_household_income,
 min(transfer_purchase_loan_to_value)as min_loan_to_value , max(transfer_purchase_loan_to_value) as max_loan_to_value,
