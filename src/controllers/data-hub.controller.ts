@@ -245,9 +245,9 @@ WHERE org = ${user.organization}
       }
       if (la !== '' && la !== undefined) {
         if (la === 'No') {
-          allLa = `and mortgage_due_date is  null`;
+          allLa = `and loan_maturity_date <  CURRENT_DATE`;
         } else if (la === 'Yes') {
-          allLa = `and mortgage_due_date is not null `;
+          allLa = `and loan_maturity_date >= CURRENT_DATE `;
         }
       }
       if (latv !== '' && latv !== undefined) {
