@@ -23,7 +23,6 @@ export class DataHubController {
 
   DB_SCHEMA = process.env.DB_SCHEMA;
 
-
   @get('/dataHub/search')
   @response(200, {
     description: 'Array dataHUb',
@@ -43,6 +42,7 @@ export class DataHubController {
     @param.query.string('msa') msa?: string,
     @param.query.string('state') state?: string,
     @param.query.string('city') city?: string,
+    @param.query.string('zip') zip?: string,
     @param.query.number('punits') punits?: number,
     @param.query.number('punite') punite?: number,
     @param.query.number('ocs') ocs?: number,
@@ -78,12 +78,12 @@ export class DataHubController {
 
     @param.query.number('offset', {default: 0}) offset?: number,
   ): Promise<any> {
-
     //  res.headers.set('Access-Control-Allow-Origin','*');
     let marq: any = '';
 
     let regionc: any = '';
     let cityc: any = '';
+    let zipc: any = '';
     let msacc: any = '';
     let own: any = '';
 
@@ -98,7 +98,9 @@ export class DataHubController {
     const cit = city?.split(',');
 
     cityc = "'" + cit?.join("','") + "'";
+const z = zip?.split(',');
 
+zipc = "'" + z?.join("','") + "'";
     const ow = owner?.split(',');
     own = "'" + ow?.join("','") + "'";
 
@@ -108,6 +110,7 @@ export class DataHubController {
     let allMsaData = '';
     let allState = '';
     let allCity = '';
+    let allZip = '';
     let allRegion = '';
     let allPunit = '';
     let allOcr = '';
@@ -173,6 +176,9 @@ WHERE org = ${user.organization}
       if (city !== '' && city !== undefined) {
         allCity = `AND (city IN(${cityc}))`;
       }
+      if (zip !== '' && zip !== undefined) {
+        allZip = `AND (zip IN(${zipc}))`;
+      }
       if (region !== '' && region !== undefined) {
         allRegion = `AND (region IN(${regionc}))`;
       }
@@ -235,7 +241,7 @@ WHERE org = ${user.organization}
         ytme !== null &&
         ytme !== undefined
       ) {
-        allYtms = `and years_to_mature  between ${ytms} and ${ytme}`;
+        allYtms = `and loan_maturity_date  between ${ytms} and ${ytme}`;
       }
       if (la !== '' && la !== undefined) {
         if (la === 'No') {
@@ -258,7 +264,7 @@ WHERE org = ${user.organization}
         lae !== null &&
         lae !== undefined
       ) {
-        allLoanAmount = `and amount  between ${las} and ${lae}`;
+        allLoanAmount = `and loan_amount  between ${las} and ${lae}`;
       }
       if (ts !== null && ts !== undefined && te !== null && te !== undefined) {
         allTerm = `and term  between ${ts} and ${te}`;
@@ -308,6 +314,7 @@ WHERE org = ${user.organization}
                     ${allMsaData}
                     ${allState}
                     ${allCity}
+                    ${allZip}
                     ${allPunit}
                     ${allOcr}
                     ${allRr}
@@ -338,6 +345,7 @@ WHERE org = ${user.organization}
                     ${allMsaData}
                     ${allState}
                     ${allCity}
+                    ${allZip}
                     ${allPunit}
                     ${allOcr}
                     ${allRr}
