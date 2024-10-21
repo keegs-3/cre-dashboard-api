@@ -33,9 +33,9 @@ export class AppMsaRegion extends Entity {
   })
   region?: string;
   @property({
-    type: 'JSON',
+    type: 'object',
   })
-  city_zip?: JSON;
+  city_zip?: Object;
 
   constructor(data?: Partial<AppMsaRegion>) {
     super(data);

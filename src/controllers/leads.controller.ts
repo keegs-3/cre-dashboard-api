@@ -69,6 +69,8 @@ export class LeadsController {
     @param.query.string('region') region?: string,
     @param.query.string('state') state?: string,
     @param.query.string('msa') msa?: string,
+    @param.query.string('city') city?: string,
+    @param.query.string('zip') zip?: string,
   ): Promise<any> {
     const msad = msa?.split(',');
     const msac = "'" + msad?.join("','") + "'";
@@ -113,7 +115,7 @@ WHERE org = ${user.organization}
           const msacc = "'" + msan?.join("','") + "'";
           allMSA = `and msa_code in (${msacc})`;
         }
-       if (mylist === 'yes') {
+        if (mylist === 'yes') {
           let pu = '';
           if (
             punits !== null &&
@@ -337,22 +339,19 @@ WHERE org = ${user.organization}
            and property_id = subquery.nedl_property_id_pk)
                `;
         }
-let regiona = '';
-let msaa = '';
-let statea = '';
+        let regiona = '';
+        let msaa = '';
+        let statea = '';
 
-if (region !== null && region !== undefined) {
-  regiona = `AND (subquery.region in (${regionc})  )`;
-}
-if (msa !== null && msa !== undefined) {
-  msaa = `AND (subquery.msa_code in (${msac})  )`;
-}
-if (state !== null && state !== undefined) {
-  statea = `AND (subquery.state in (${statec})  )`;
-}
-
-
-
+        if (region !== null && region !== undefined) {
+          regiona = `AND (subquery.region in (${regionc})  )`;
+        }
+        if (msa !== null && msa !== undefined) {
+          msaa = `AND (subquery.msa_code in (${msac})  )`;
+        }
+        if (state !== null && state !== undefined) {
+          statea = `AND (subquery.state in (${statec})  )`;
+        }
 
         const s = `
                 SELECT distinct on (subquery.nedl_property_id_pk) *
