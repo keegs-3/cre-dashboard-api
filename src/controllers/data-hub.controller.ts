@@ -267,7 +267,7 @@ WHERE org = ${user.organization}
         allLoanAmount = `and loan_amount  between ${las} and ${lae}`;
       }
       if (ts !== null && ts !== undefined && te !== null && te !== undefined) {
-        allTerm = `and term  between ${ts} and ${te}`;
+        allTerm = `and months_to_loan_maturity  between ${ts} and ${te}`;
       }
       if (ir !== null && ir !== undefined) {
         allInterestRate = `and interest_rate >= ${ir}`;
@@ -432,7 +432,7 @@ min(loan_amount)as min_amount , max(loan_amount) as max_amount ,
 min(household_count)as min_householdcount , max(household_count) as max_householdcount,
 min(median_household_income)as min_household_income , max(median_household_income)as max_household_income,
 min(transfer_purchase_loan_to_value)as min_loan_to_value , max(transfer_purchase_loan_to_value) as max_loan_to_value,
-min(term) as min_term , max(term) as max_term,
+min(months_to_loan_maturity) as min_term , max(months_to_loan_maturity) as max_term,
 min(household_5_year_forecast_count) as min_house_forcast , max(household_5_year_forecast_count)as max_house_forcast,
 min(average_household_income) as min_average , max(average_household_income) as max_average
 FROM ${this.DB_SCHEMA}.data_hub
