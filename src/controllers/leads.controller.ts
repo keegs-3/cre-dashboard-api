@@ -69,6 +69,8 @@ export class LeadsController {
     @param.query.string('region') region?: string,
     @param.query.string('state') state?: string,
     @param.query.string('msa') msa?: string,
+    @param.query.string('city') city?: string,
+    @param.query.string('zip') zip?: string,
   ): Promise<any> {
     const msad = msa?.split(',');
     const msac = "'" + msad?.join("','") + "'";
@@ -82,6 +84,10 @@ export class LeadsController {
     const ownerc = "'" + ownern?.join("','") + "'";
     const propertyn = property?.split(',');
     const propertyc = "'" + propertyn?.join("','") + "'";
+     const c = city?.split(',');
+     const cc = "'" + c?.join("','") + "'";
+     const z = zip?.split(',');
+     const zc = "'" + z?.join("','") + "'";
 
     const user = await Promise.resolve(currentUser);
     const subs = await this.subData.dataSource.execute(
@@ -113,7 +119,7 @@ WHERE org = ${user.organization}
           const msacc = "'" + msan?.join("','") + "'";
           allMSA = `and msa_code in (${msacc})`;
         }
-       if (mylist === 'yes') {
+        if (mylist === 'yes') {
           let pu = '';
           if (
             punits !== null &&
@@ -126,6 +132,8 @@ WHERE org = ${user.organization}
           let regiona = '';
           let msaa = '';
           let statea = '';
+          let cityd = '';
+          let zipd = '';
 
           if (region !== null && region !== undefined) {
             regiona = `AND (region in (${regionc})  )`;
@@ -135,6 +143,12 @@ WHERE org = ${user.organization}
           }
           if (state !== null && state !== undefined) {
             statea = `AND (state in (${statec})  )`;
+          }
+          if (city !== null && city !== undefined) {
+            cityd = `AND (city in (${cc})  )`;
+          }
+          if (zip !== null && zip !== undefined) {
+            zipd = `AND (zip in (${zc})  )`;
           }
 
           let yb = '';
@@ -168,7 +182,7 @@ WHERE org = ${user.organization}
           where
            (lead_type IN (${propenq}))
            and l.nedl_property_id_pk not in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status ls where ls.org = ${org} and ls.subs_id = ${subs_id} )
-          ${ow}${pr}${myList}${yb}${pu}${allMSA}${regiona}${msaa}${statea}
+          ${ow}${pr}${myList}${yb}${pu}${allMSA}${regiona}${msaa}${statea}${cityd}${zipd}
           order by
           l.nedl_property_id_pk,
            CASE
@@ -197,6 +211,8 @@ WHERE org = ${user.organization}
           let regiona = '';
           let msaa = '';
           let statea = '';
+          let cityd = '';
+          let zipd='';
 
           if (region !== null && region !== undefined) {
             regiona = `AND (region in (${regionc})  )`;
@@ -207,6 +223,12 @@ WHERE org = ${user.organization}
           if (state !== null && state !== undefined) {
             statea = `AND (state in (${statec})  )`;
           }
+           if (city !== null && city !== undefined) {
+             cityd = `AND (city in (${cc})  )`;
+           }
+           if (zip !== null && zip !== undefined) {
+             zipd = `AND (zip in (${zc})  )`;
+           }
           let ow = '';
           if (owner !== '' && owner !== undefined) {
             ow = `AND (owner_name in( ${ownerc}))`;
@@ -246,7 +268,7 @@ WHERE org = ${user.organization}
          And (l.nedl_property_id_pk not in
         (select distinct property_id FROM ${this.DB_SCHEMA}.app_leads_notes ln
          where ln.subs_id = ${subs_id}))
-        ${ow}${pr}${yb}${pu}${allMSA}${regiona}${msaa}${statea}
+        ${ow}${pr}${yb}${pu}${allMSA}${regiona}${msaa}${statea}${cityd}${zipd}
         ORDER BY
         CASE lead_type
         WHEN 'Hot' THEN 1
@@ -337,22 +359,27 @@ WHERE org = ${user.organization}
            and property_id = subquery.nedl_property_id_pk)
                `;
         }
-let regiona = '';
-let msaa = '';
-let statea = '';
+        let regiona = '';
+        let msaa = '';
+        let statea = '';
+        let cityd='';
+        let zipd = '';
 
-if (region !== null && region !== undefined) {
-  regiona = `AND (subquery.region in (${regionc})  )`;
-}
-if (msa !== null && msa !== undefined) {
-  msaa = `AND (subquery.msa_code in (${msac})  )`;
-}
-if (state !== null && state !== undefined) {
-  statea = `AND (subquery.state in (${statec})  )`;
-}
-
-
-
+        if (region !== null && region !== undefined) {
+          regiona = `AND (subquery.region in (${regionc})  )`;
+        }
+        if (msa !== null && msa !== undefined) {
+          msaa = `AND (subquery.msa_code in (${msac})  )`;
+        }
+        if (state !== null && state !== undefined) {
+          statea = `AND (subquery.state in (${statec})  )`;
+        }
+         if (city !== null && city !== undefined) {
+           cityd = `AND (city in (${cc})  )`;
+         }
+         if (zip !== null && zip !== undefined) {
+           zipd = `AND (zip in (${zc})  )`;
+         }
 
         const s = `
                 SELECT distinct on (subquery.nedl_property_id_pk) *
@@ -363,7 +390,7 @@ if (state !== null && state !== undefined) {
                 on subquery.nedl_property_id_pk = ls.property_id
                 WHERE ls.status = '${status}'
                 AND subquery.lead_type IN (${propenq})
-                 ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}${myllist}${regiona}${msaa}${statea}
+                 ${fns}${fs}${l}${afm}${ow}${pr}${pu}${yb}${allMSA}${myllist}${regiona}${msaa}${statea}${cityd}${zipd}
                 order by
                 subquery.nedl_property_id_pk,
                 ln.inserted_on desc,

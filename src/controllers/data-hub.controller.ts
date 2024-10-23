@@ -23,7 +23,6 @@ export class DataHubController {
 
   DB_SCHEMA = process.env.DB_SCHEMA;
 
-
   @get('/dataHub/search')
   @response(200, {
     description: 'Array dataHUb',
@@ -43,6 +42,7 @@ export class DataHubController {
     @param.query.string('msa') msa?: string,
     @param.query.string('state') state?: string,
     @param.query.string('city') city?: string,
+    @param.query.string('zip') zip?: string,
     @param.query.number('punits') punits?: number,
     @param.query.number('punite') punite?: number,
     @param.query.number('ocs') ocs?: number,
@@ -56,8 +56,8 @@ export class DataHubController {
     @param.query.number('lsas') lsas?: number,
     @param.query.number('lsae') lsae?: number,
     @param.query.string('la') la?: string,
-    @param.query.number('ytms') ytms?: number,
-    @param.query.number('ytme') ytme?: number,
+    @param.query.string('ytms') ytms?: string,
+    @param.query.string('ytme') ytme?: string,
     @param.query.string('latv') latv?: string,
     @param.query.number('las') las?: number,
     @param.query.number('lae') lae?: number,
@@ -78,12 +78,12 @@ export class DataHubController {
 
     @param.query.number('offset', {default: 0}) offset?: number,
   ): Promise<any> {
-
     //  res.headers.set('Access-Control-Allow-Origin','*');
     let marq: any = '';
 
     let regionc: any = '';
     let cityc: any = '';
+    let zipc: any = '';
     let msacc: any = '';
     let own: any = '';
 
@@ -98,7 +98,9 @@ export class DataHubController {
     const cit = city?.split(',');
 
     cityc = "'" + cit?.join("','") + "'";
+const z = zip?.split(',');
 
+zipc = "'" + z?.join("','") + "'";
     const ow = owner?.split(',');
     own = "'" + ow?.join("','") + "'";
 
@@ -108,6 +110,7 @@ export class DataHubController {
     let allMsaData = '';
     let allState = '';
     let allCity = '';
+    let allZip = '';
     let allRegion = '';
     let allPunit = '';
     let allOcr = '';
@@ -173,6 +176,9 @@ WHERE org = ${user.organization}
       if (city !== '' && city !== undefined) {
         allCity = `AND (city IN(${cityc}))`;
       }
+      if (zip !== '' && zip !== undefined) {
+        allZip = `AND (zip IN(${zipc}))`;
+      }
       if (region !== '' && region !== undefined) {
         allRegion = `AND (region IN(${regionc}))`;
       }
@@ -235,13 +241,13 @@ WHERE org = ${user.organization}
         ytme !== null &&
         ytme !== undefined
       ) {
-        allYtms = `and years_to_mature  between ${ytms} and ${ytme}`;
+        allYtms = `and loan_maturity_date  between '${ytms}' and '${ytme}'`;
       }
       if (la !== '' && la !== undefined) {
         if (la === 'No') {
-          allLa = `and mortgage_due_date is  null`;
+          allLa = `and loan_maturity_date <  CURRENT_DATE`;
         } else if (la === 'Yes') {
-          allLa = `and mortgage_due_date is not null `;
+          allLa = `and loan_maturity_date >= CURRENT_DATE `;
         }
       }
       if (latv !== '' && latv !== undefined) {
@@ -258,10 +264,10 @@ WHERE org = ${user.organization}
         lae !== null &&
         lae !== undefined
       ) {
-        allLoanAmount = `and amount  between ${las} and ${lae}`;
+        allLoanAmount = `and loan_amount  between ${las} and ${lae}`;
       }
       if (ts !== null && ts !== undefined && te !== null && te !== undefined) {
-        allTerm = `and term  between ${ts} and ${te}`;
+        allTerm = `and months_to_loan_maturity  between ${ts} and ${te}`;
       }
       if (ir !== null && ir !== undefined) {
         allInterestRate = `and interest_rate >= ${ir}`;
@@ -308,6 +314,7 @@ WHERE org = ${user.organization}
                     ${allMsaData}
                     ${allState}
                     ${allCity}
+                    ${allZip}
                     ${allPunit}
                     ${allOcr}
                     ${allRr}
@@ -338,6 +345,7 @@ WHERE org = ${user.organization}
                     ${allMsaData}
                     ${allState}
                     ${allCity}
+                    ${allZip}
                     ${allPunit}
                     ${allOcr}
                     ${allRr}
@@ -424,7 +432,7 @@ min(loan_amount)as min_amount , max(loan_amount) as max_amount ,
 min(household_count)as min_householdcount , max(household_count) as max_householdcount,
 min(median_household_income)as min_household_income , max(median_household_income)as max_household_income,
 min(transfer_purchase_loan_to_value)as min_loan_to_value , max(transfer_purchase_loan_to_value) as max_loan_to_value,
-min(term) as min_term , max(term) as max_term,
+min(months_to_loan_maturity) as min_term , max(months_to_loan_maturity) as max_term,
 min(household_5_year_forecast_count) as min_house_forcast , max(household_5_year_forecast_count)as max_house_forcast,
 min(average_household_income) as min_average , max(average_household_income) as max_average
 FROM ${this.DB_SCHEMA}.data_hub
