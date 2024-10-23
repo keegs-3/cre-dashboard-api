@@ -241,7 +241,7 @@ WHERE org = ${user.organization}
         ytme !== null &&
         ytme !== undefined
       ) {
-        allYtms = `and loan_maturity_date  between ${ytms} and ${ytme}`;
+        allYtms = `and loan_maturity_date  between '${ytms}' and '${ytme}'`;
       }
       if (la !== '' && la !== undefined) {
         if (la === 'No') {
