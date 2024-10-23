@@ -247,9 +247,9 @@ WHERE org = ${user.organization}
         if (la === 'No') {
           allLa = `and loan_maturity_date is null and loan_amount is null and loan_origination_date is null`;
         } else if (la === 'Yes') {
-          allLa = `and loan_maturity_date is not null
+          allLa = `and (loan_maturity_date is not null
           or loan_amount is not null
-          or loan_origination_date is not null `;
+          or loan_origination_date is not null) `;
         }
       }
       if (latv !== '' && latv !== undefined) {
