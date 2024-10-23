@@ -245,7 +245,7 @@ WHERE org = ${user.organization}
       }
       if (la !== '' && la !== undefined) {
         if (la === 'No') {
-          allLa = `and loan_maturity_date <  CURRENT_DATE`;
+          allLa = `and loan_maturity_date is null and loan_amount is null and loan_origination_date is null`;
         } else if (la === 'Yes') {
           allLa = `and loan_maturity_date >= CURRENT_DATE `;
         }
