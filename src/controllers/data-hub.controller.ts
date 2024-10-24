@@ -245,11 +245,9 @@ WHERE org = ${user.organization}
       }
       if (la !== '' && la !== undefined) {
         if (la === 'No') {
-          allLa = `and loan_maturity_date is null and loan_amount is null and loan_origination_date is null`;
+          allLa = `and current_loan_status = '${la}'`;
         } else if (la === 'Yes') {
-          allLa = `and (loan_maturity_date is not null
-          or loan_amount is not null
-          or loan_origination_date is not null) `;
+          allLa = `and current_loan_status = '${la}' `;
         }
       }
       if (latv !== '' && latv !== undefined) {
@@ -311,7 +309,37 @@ WHERE org = ${user.organization}
       }
 
       const data = `
-                    SELECT * FROM ${this.DB_SCHEMA}.data_hub
+                    SELECT
+                    d.*,
+    COALESCE(dl.loans_array, '{}') AS loans_array
+                     FROM ${this.DB_SCHEMA}.data_hub d
+                     LEFT JOIN (
+    SELECT
+        nedl_property_id_pk,
+        ARRAY_AGG(
+            JSON_BUILD_OBJECT(
+                'loan_amount', loan_amount,
+                'loan_origination_date', loan_origination_date,
+                'loan_maturity_date', loan_maturity_date,
+                'years_to_mature', years_to_mature,
+                'months_to_loan_maturity', months_to_loan_maturity,
+                'term', term,
+                'time_to_mature', time_to_mature,
+                'current_loan_status', current_loan_status,
+            )
+        ) AS loans_array
+    FROM
+        nedl_app.datahub_loans
+        where 1 =1
+         ${allYtms} ${allLa}
+                    ${allLoanAmountToValue}
+                    ${allLoanAmount}
+                    ${allTerm}
+
+    GROUP BY
+        nedl_property_id_pk
+) dl
+ON d.nedl_property_id_pk = dl.nedl_property_id_pk
                     where 1 = 1
                     ${allMsaData}
                     ${allState}
@@ -323,17 +351,14 @@ WHERE org = ${user.organization}
                     ${allBuildingArea}
                     ${allYearBuilt}
                     ${allLastSale}
-                    ${allLa}
-                    ${allLoanAmountToValue}
-                    ${allLoanAmount}
-                    ${allTerm}
+
                     ${allInterestRate}
                     ${allOwner}
                     ${allHouseHoldCount}
                     ${allHouseHoldYearForecast}
                     ${allAverageHousehold}
                     ${allMedianHousehold}
-                    ${allYtms}
+
                     ${allPname}
                     ${allAddress}
                     ${allMSA}
@@ -342,8 +367,37 @@ WHERE org = ${user.organization}
                   `;
 
       const countdata = `
-                  SELECT count(*) FROM ${this.DB_SCHEMA}.data_hub
-                  where 1 = 1
+                  SELECT
+                   count(*)
+                     FROM ${this.DB_SCHEMA}.data_hub d
+                     LEFT JOIN (
+    SELECT
+        nedl_property_id_pk,
+        ARRAY_AGG(
+            JSON_BUILD_OBJECT(
+                'loan_amount', loan_amount,
+                'loan_origination_date', loan_origination_date,
+                'loan_maturity_date', loan_maturity_date,
+                'years_to_mature', years_to_mature,
+                'months_to_loan_maturity', months_to_loan_maturity,
+                'term', term,
+                'time_to_mature', time_to_mature,
+                'current_loan_status', current_loan_status,
+            )
+        ) AS loans_array
+    FROM
+        nedl_app.datahub_loans
+        where 1 =1
+         ${allYtms} ${allLa}
+                    ${allLoanAmountToValue}
+                    ${allLoanAmount}
+                    ${allTerm}
+
+    GROUP BY
+        nedl_property_id_pk
+) dl
+ON d.nedl_property_id_pk = dl.nedl_property_id_pk
+                    where 1 = 1
                     ${allMsaData}
                     ${allState}
                     ${allCity}
@@ -354,17 +408,14 @@ WHERE org = ${user.organization}
                     ${allBuildingArea}
                     ${allYearBuilt}
                     ${allLastSale}
-                    ${allLa}
-                    ${allLoanAmountToValue}
-                    ${allLoanAmount}
-                    ${allTerm}
+
                     ${allInterestRate}
                     ${allOwner}
                     ${allHouseHoldCount}
                     ${allHouseHoldYearForecast}
                     ${allAverageHousehold}
                     ${allMedianHousehold}
-                    ${allYtms}
+
                     ${allPname}
                     ${allAddress}
                     ${allMSA}
