@@ -309,61 +309,60 @@ WHERE org = ${user.organization}
       }
 
       const data = `
-                    SELECT
-                    d.*,
-    COALESCE(dl.loans_array, '{}') AS loans_array
-                     FROM ${this.DB_SCHEMA}.data_hub d
-                     LEFT JOIN (
-    SELECT
-        nedl_property_id_pk,
-        ARRAY_AGG(
-            JSON_BUILD_OBJECT(
-                'loan_amount', loan_amount,
-                'loan_origination_date', loan_origination_date,
-                'loan_maturity_date', loan_maturity_date,
-                'years_to_mature', years_to_mature,
-                'months_to_loan_maturity', months_to_loan_maturity,
-                'term', term,
-                'time_to_mature', time_to_mature,
-                'current_loan_status', current_loan_status,
-            )
-        ) AS loans_array
-    FROM
-        nedl_app.datahub_loans
-        where 1 =1
-         ${allYtms} ${allLa}
-                    ${allLoanAmountToValue}
-                    ${allLoanAmount}
-                    ${allTerm}
-
-    GROUP BY
-        nedl_property_id_pk
-) dl
+SELECT
+d.*,
+COALESCE(dl.loans_array, '{}') AS loans_array
+FROM ${this.DB_SCHEMA}.data_hub d
+        LEFT JOIN (
+                        SELECT
+                        nedl_property_id_pk,
+                              ARRAY_AGG(
+                                  JSON_BUILD_OBJECT(
+                                  'loan_amount', loan_amount,
+                                  'loan_origination_date', loan_origination_date,
+                                  'loan_maturity_date', loan_maturity_date,
+                                  'years_to_mature', years_to_mature,
+                                  'months_to_loan_maturity', months_to_loan_maturity,
+                                  'term', term,
+                                  'time_to_mature', time_to_mature,
+                                  'current_loan_status', current_loan_status
+                                  )
+                              )
+                        AS loans_array
+                        FROM
+                        nedl_app.datahub_loans
+                        where 1 =1
+                        ${allYtms}
+                        ${allLa}
+                        ${allLoanAmountToValue}
+                        ${allLoanAmount}
+                        ${allTerm}
+                        GROUP BY
+                        nedl_property_id_pk
+                    ) dl
 ON d.nedl_property_id_pk = dl.nedl_property_id_pk
-                    where 1 = 1
-                    ${allMsaData}
-                    ${allState}
-                    ${allCity}
-                    ${allZip}
-                    ${allPunit}
-                    ${allOcr}
-                    ${allRr}
-                    ${allBuildingArea}
-                    ${allYearBuilt}
-                    ${allLastSale}
-
-                    ${allInterestRate}
-                    ${allOwner}
-                    ${allHouseHoldCount}
-                    ${allHouseHoldYearForecast}
-                    ${allAverageHousehold}
-                    ${allMedianHousehold}
-
-                    ${allPname}
-                    ${allAddress}
-                    ${allMSA}
-                    ${allRegion}
-                    limit 100 offset ${offset}
+where 1 = 1
+${allMsaData}
+${allState}
+${allCity}
+${allZip}
+${allPunit}
+${allOcr}
+${allRr}
+${allBuildingArea}
+${allYearBuilt}
+${allLastSale}
+${allInterestRate}
+${allOwner}
+${allHouseHoldCount}
+${allHouseHoldYearForecast}
+${allAverageHousehold}
+${allMedianHousehold}
+${allPname}
+${allAddress}
+${allMSA}
+${allRegion}
+limit 100 offset ${offset}
                   `;
 
       const countdata = `
@@ -382,14 +381,15 @@ ON d.nedl_property_id_pk = dl.nedl_property_id_pk
                 'months_to_loan_maturity', months_to_loan_maturity,
                 'term', term,
                 'time_to_mature', time_to_mature,
-                'current_loan_status', current_loan_status,
+                'current_loan_status', current_loan_status
             )
         ) AS loans_array
     FROM
         nedl_app.datahub_loans
         where 1 =1
-         ${allYtms} ${allLa}
-                    ${allLoanAmountToValue}
+         ${allYtms}
+         ${allLa}
+                             ${allLoanAmountToValue}
                     ${allLoanAmount}
                     ${allTerm}
 
@@ -408,14 +408,12 @@ ON d.nedl_property_id_pk = dl.nedl_property_id_pk
                     ${allBuildingArea}
                     ${allYearBuilt}
                     ${allLastSale}
-
                     ${allInterestRate}
                     ${allOwner}
                     ${allHouseHoldCount}
                     ${allHouseHoldYearForecast}
                     ${allAverageHousehold}
                     ${allMedianHousehold}
-
                     ${allPname}
                     ${allAddress}
                     ${allMSA}
