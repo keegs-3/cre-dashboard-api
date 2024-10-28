@@ -38,29 +38,29 @@ export class DatahubAddToLeadsController {
         'application/json': {
           schema: getModelSchemaRef(Leads, {
             title: 'NewLeads',
+            exclude: ['id'],
           }),
         },
       },
     })
-    leads: Leads,
+    leads: Omit<Leads, 'id'>,
   ): Promise<any> {
     const checkLeads = await this.leadsRepository.dataSource.execute(`
 select * from nedl_model.lead_gen where  nedl_property_id_pk = ${leads.nedl_property_id_pk}
   `);
-  const checkAdd = await this.leadsRepository.dataSource.execute(
-    `
+    const checkAdd = await this.leadsRepository.dataSource.execute(
+      `
     select * from ${this.DB_SCHEMA}.app_add_to_leads where  nedl_property_id_pk = ${leads.nedl_property_id_pk} and subs_id = ${leads.subs_id}
     `,
-  );
-  if(checkLeads){
-    return 'Property already present on your Intelligent Leads Page'
-  }
-  if(checkAdd){
-    return 'Someone From your team has already Added it'
-  }
+    );
+    if (checkLeads) {
+      return 'Property already present on your Intelligent Leads Page';
+    }
+    if (checkAdd) {
+      return 'Someone From your team has already Added it';
+    }
 
-
-    const add =  await this.leadsRepository.create(leads);
+    const add = await this.leadsRepository.create(leads);
     return add;
   }
 

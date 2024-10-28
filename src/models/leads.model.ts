@@ -74,8 +74,6 @@ export class Leads extends Entity {
   })
   year_built?: Number;
 
-
-
   @property({
     type: 'number',
   })
@@ -145,6 +143,11 @@ export class Leads extends Entity {
     type: 'number',
   })
   loan_amount?: Number;
+  @property({
+    type: 'number',
+    id: true,
+  })
+  id?: Number;
   @property({
     type: 'date',
   })
