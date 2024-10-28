@@ -23,8 +23,9 @@ import {LeadsRepository} from '../repositories';
 export class DatahubAddToLeadsController {
   constructor(
     @repository(LeadsRepository)
-    public leadsRepository : LeadsRepository,
+    public leadsRepository: LeadsRepository,
   ) {}
+  DB_SCHEMA = process.env.DB_SCHEMA;
 
   @post('/ExtraLeads')
   @response(200, {
@@ -37,14 +38,30 @@ export class DatahubAddToLeadsController {
         'application/json': {
           schema: getModelSchemaRef(Leads, {
             title: 'NewLeads',
-            
           }),
         },
       },
     })
     leads: Leads,
-  ): Promise<Leads> {
-    return this.leadsRepository.create(leads);
+  ): Promise<Any> {
+    const checkLeads = await this.leadsRepository.dataSource.execute(`
+select * from nedl_model.lead_gen where  nedl_property_id_pk = ${leads.nedl_property_id_pk}
+  `);
+  const checkAdd = await this.leadsRepository.dataSource.execute(
+    `
+    select * from ${this.DB_SCHEMA}.app_add_to_leads where  nedl_property_id_pk = ${leads.nedl_property_id_pk} and subs_id = ${leads.subs_id}
+    `,
+  );
+  if(checkLeads){
+    return 'Property already present on your Intelligent Leads Page'
+  }
+  if(checkAdd){
+    return 'Someone From your team has already Added it'
+  }
+
+
+    const add =  await this.leadsRepository.create(leads);
+    return add;
   }
 
   @get('/ExtraLeads/count')
@@ -52,9 +69,7 @@ export class DatahubAddToLeadsController {
     description: 'Leads model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Leads) where?: Where<Leads>,
-  ): Promise<Count> {
+  async count(@param.where(Leads) where?: Where<Leads>): Promise<Count> {
     return this.leadsRepository.count(where);
   }
 
@@ -70,9 +85,7 @@ export class DatahubAddToLeadsController {
       },
     },
   })
-  async find(
-    @param.filter(Leads) filter?: Filter<Leads>,
-  ): Promise<Leads[]> {
+  async find(@param.filter(Leads) filter?: Filter<Leads>): Promise<Leads[]> {
     return this.leadsRepository.find(filter);
   }
 
@@ -106,7 +119,8 @@ export class DatahubAddToLeadsController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Leads, {exclude: 'where'}) filter?: FilterExcludingWhere<Leads>
+    @param.filter(Leads, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Leads>,
   ): Promise<Leads> {
     return this.leadsRepository.findById(id, filter);
   }
