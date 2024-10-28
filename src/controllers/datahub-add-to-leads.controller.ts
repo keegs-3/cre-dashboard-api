@@ -43,7 +43,7 @@ export class DatahubAddToLeadsController {
       },
     })
     leads: Leads,
-  ): Promise<Any> {
+  ): Promise<any> {
     const checkLeads = await this.leadsRepository.dataSource.execute(`
 select * from nedl_model.lead_gen where  nedl_property_id_pk = ${leads.nedl_property_id_pk}
   `);
