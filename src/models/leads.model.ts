@@ -105,14 +105,6 @@ export class Leads extends Entity {
     type: 'number',
   })
   months_to_loan_maturity?: Number;
-
-
-
-
-
-
-
-
   @property({
     type: 'string',
   })
