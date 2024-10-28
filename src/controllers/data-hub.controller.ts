@@ -473,19 +473,21 @@ ON d.nedl_property_id_pk = dl.nedl_property_id_pk
   })
   async filter(): Promise<any> {
     const data = `
-                   SELECT min(units_count)as min_unit , max(units_count) as max_unit ,
+                   SELECT
+                   min(units_count)as min_unit , max(units_count) as max_unit ,
 min(latest_occupancy_rate)as min_occupancy,max(latest_occupancy_rate)as max_occupancy,
 min(latest_monthly_rent)as min_rent , max(latest_monthly_rent)as max_rent ,
 min(building_sq_ft)as min_building , max(building_sq_ft)as max_building,
 min(year_built) as min_built , max(year_built) as max_built ,
 min(last_sale_amount) as min_sale_amount , max(last_sale_amount) as max_sale_amount ,
-min(loan_amount)as min_amount , max(loan_amount) as max_amount ,
 min(household_count)as min_householdcount , max(household_count) as max_householdcount,
 min(median_household_income)as min_household_income , max(median_household_income)as max_household_income,
-min(transfer_purchase_loan_to_value)as min_loan_to_value , max(transfer_purchase_loan_to_value) as max_loan_to_value,
-min(months_to_loan_maturity) as min_term , max(months_to_loan_maturity) as max_term,
 min(household_5_year_forecast_count) as min_house_forcast , max(household_5_year_forecast_count)as max_house_forcast,
-min(average_household_income) as min_average , max(average_household_income) as max_average
+min(average_household_income) as min_average , max(average_household_income) as max_average,
+  (select min(loan_amount) as min_amount from ${this.DB_SCHEMA}.datahub_loans),
+  (select max(loan_amount) as max_amount from ${this.DB_SCHEMA}.datahub_loans),
+    (select min(months_to_loan_maturity) as min_months_to_loan_maturity from ${this.DB_SCHEMA}.datahub_loans),
+  (select max(months_to_loan_maturity) as max_months_to_loan_maturity from ${this.DB_SCHEMA}.datahub_loans)
 FROM ${this.DB_SCHEMA}.data_hub
                   `;
 
