@@ -74,10 +74,7 @@ export class Leads extends Entity {
   })
   year_built?: Number;
 
-  @property({
-    type: 'number',
-  })
-  effective_year_built?: Number;
+
 
   @property({
     type: 'number',
@@ -109,25 +106,12 @@ export class Leads extends Entity {
   })
   months_to_loan_maturity?: Number;
 
-  @property({
-    type: 'number',
-  })
-  prior_12months_avg_rental_rate_change?: Number;
 
-  @property({
-    type: 'number',
-  })
-  prior_6months_avg_rental_rate_change?: Number;
 
-  @property({
-    type: 'number',
-  })
-  prior_3months_avg_rental_rate_change?: Number;
 
-  @property({
-    type: 'number',
-  })
-  prior_12months_avg_occupancy_rate_change?: Number;
+
+
+
 
   @property({
     type: 'string',
