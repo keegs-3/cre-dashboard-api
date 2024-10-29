@@ -2,7 +2,7 @@
 import {Entity, model, property} from '@loopback/repository';
 
 @model({
-  settings: {postgresql: {schema: 'nedl_model', table: 'app_add_to_leads'}},
+  settings: {postgresql: {schema: 'nedl_app', table: 'app_add_to_leads'}},
 })
 export class Leads extends Entity {
   @property({
