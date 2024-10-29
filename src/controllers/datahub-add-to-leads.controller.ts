@@ -53,10 +53,10 @@ select * from nedl_model.lead_gen where  nedl_property_id_pk = ${leads.nedl_prop
     select * from ${this.DB_SCHEMA}.app_add_to_leads where  nedl_property_id_pk = ${leads.nedl_property_id_pk} and subs_id = ${leads.subs_id}
     `,
     );
-    if (checkLeads) {
+    if (checkLeads.length > 0) {
       return 'Property already present on your Intelligent Leads Page';
     }
-    if (checkAdd) {
+    if (checkAdd.length > 0) {
       return 'Someone From your team has already Added it';
     }
 
