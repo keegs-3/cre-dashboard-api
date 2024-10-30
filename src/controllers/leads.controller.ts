@@ -174,11 +174,11 @@ WHERE org = ${user.organization}
             where ln.subs_id = '${subs_id}' and ln.userid = '${userid}'))`;
           }
           const s = `
-          SELECT  distinct on (l.nedl_property_id_pk) l.*,ln.inserted_on
-          FROM nedl_model.lead_gen l
+
+select distinct on (l.nedl_property_id_pk) l.*,ln.inserted_on
+from (select * from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
            left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
-
           where
            (lead_type IN (${propenq}))
            and l.nedl_property_id_pk not in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status ls where ls.org = ${org} and ls.subs_id = ${subs_id} )
@@ -198,6 +198,7 @@ WHERE org = ${user.organization}
           when 'Cold' then 3
           end
           limit 102 offset ${offset}
+
           `;
           console.log('from if ', s);
           const sql = await this.leadsRepository.dataSource.execute(s);
