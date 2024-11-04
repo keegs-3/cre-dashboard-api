@@ -174,11 +174,11 @@ WHERE org = ${user.organization}
             where ln.subs_id = '${subs_id}' and ln.userid = '${userid}'))`;
           }
           const s = `
-          SELECT  distinct on (l.nedl_property_id_pk) l.*,ln.inserted_on
-          FROM nedl_model.lead_gen l
+
+select distinct on (l.nedl_property_id_pk) l.*,ln.inserted_on
+from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
            left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
-
           where
            (lead_type IN (${propenq}))
            and l.nedl_property_id_pk not in (select distinct property_id from ${this.DB_SCHEMA}.app_leads_status ls where ls.org = ${org} and ls.subs_id = ${subs_id} )
@@ -198,6 +198,7 @@ WHERE org = ${user.organization}
           when 'Cold' then 3
           end
           limit 102 offset ${offset}
+
           `;
           console.log('from if ', s);
           const sql = await this.leadsRepository.dataSource.execute(s);
@@ -383,7 +384,7 @@ WHERE org = ${user.organization}
 
         const s = `
                 SELECT distinct on (subquery.nedl_property_id_pk) *
-                from nedl_model.lead_gen subquery
+                from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) subquery
                 left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on subquery.nedl_property_id_pk = ln.property_id
                 left join ${this.DB_SCHEMA}.app_leads_status ls
@@ -425,7 +426,7 @@ WHERE org = ${user.organization}
     if (option === 'owner') {
       const sql = await this.leadsRepository.dataSource.execute(
         `
-    select distinct l.owner_name from nedl_model.lead_gen l
+    select distinct l.owner_name from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
     where l.owner_name ILIKE '%${search}%'
     order by l.owner_name asc
     `,
@@ -434,7 +435,7 @@ WHERE org = ${user.organization}
     } else if (option === 'property') {
       const sql = await this.leadsRepository.dataSource.execute(
         `
-    select distinct l.nedl_property_name from nedl_model.lead_gen l
+    select distinct l.nedl_property_name from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
     where l.nedl_property_name ILIKE '%${search}%'
     order by l.nedl_property_name asc
     `,
@@ -464,9 +465,9 @@ WHERE org = ${user.organization}
   })
   async minmax(): Promise<any> {
     const sql = await this.leadsRepository.dataSource.execute(
-      `select min(units_count)as minunit ,
-         max(units_count)as maxunit , min(year_built)as minyear , max(year_built) as maxyear
-          from nedl_model.lead_gen
+      `select min(l.units_count)as minunit ,
+         max(l.units_count)as maxunit , min(l.year_built)as minyear , max(l.year_built) as maxyear
+          from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
     `,
     );
     return sql;
