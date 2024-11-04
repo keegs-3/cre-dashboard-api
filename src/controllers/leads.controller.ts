@@ -176,7 +176,7 @@ WHERE org = ${user.organization}
           const s = `
 
 select distinct on (l.nedl_property_id_pk) l.*,ln.inserted_on
-from (select * from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
+from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
            left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on l.nedl_property_id_pk = ln.property_id
           where
@@ -384,7 +384,7 @@ from (select * from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.ap
 
         const s = `
                 SELECT distinct on (subquery.nedl_property_id_pk) *
-                from nedl_model.lead_gen subquery
+                from ((select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) subquery
                 left join ${this.DB_SCHEMA}.app_leads_notes ln
                 on subquery.nedl_property_id_pk = ln.property_id
                 left join ${this.DB_SCHEMA}.app_leads_status ls
