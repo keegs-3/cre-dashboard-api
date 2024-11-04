@@ -426,7 +426,7 @@ from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SC
     if (option === 'owner') {
       const sql = await this.leadsRepository.dataSource.execute(
         `
-    select distinct l.owner_name from nedl_model.lead_gen l
+    select distinct l.owner_name from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
     where l.owner_name ILIKE '%${search}%'
     order by l.owner_name asc
     `,
@@ -435,7 +435,7 @@ from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SC
     } else if (option === 'property') {
       const sql = await this.leadsRepository.dataSource.execute(
         `
-    select distinct l.nedl_property_name from nedl_model.lead_gen l
+    select distinct l.nedl_property_name from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
     where l.nedl_property_name ILIKE '%${search}%'
     order by l.nedl_property_name asc
     `,
@@ -467,7 +467,7 @@ from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SC
     const sql = await this.leadsRepository.dataSource.execute(
       `select min(units_count)as minunit ,
          max(units_count)as maxunit , min(year_built)as minyear , max(year_built) as maxyear
-          from nedl_model.lead_gen
+          from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads)
     `,
     );
     return sql;
