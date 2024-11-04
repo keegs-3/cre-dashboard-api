@@ -465,9 +465,9 @@ from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SC
   })
   async minmax(): Promise<any> {
     const sql = await this.leadsRepository.dataSource.execute(
-      `select min(units_count)as minunit ,
-         max(units_count)as maxunit , min(year_built)as minyear , max(year_built) as maxyear
-          from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads)
+      `select min(l.units_count)as minunit ,
+         max(l.units_count)as maxunit , min(l.year_built)as minyear , max(l.year_built) as maxyear
+          from (select *,0 as id from nedl_model.lead_gen UNION select * from ${this.DB_SCHEMA}.app_add_to_leads) l
     `,
     );
     return sql;
