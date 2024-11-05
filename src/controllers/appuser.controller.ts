@@ -117,23 +117,51 @@ export class AppUserController {
       return `${err .message}`;
     }
 
+     switch (event.type) {
+       case 'checkout.session.async_payment_succeeded':
+         const checkoutSessionAsyncPaymentSucceeded = event.data.object;
+         console.log(
+           'checkoutSessionAsyncPaymentSucceeded',
+           checkoutSessionAsyncPaymentSucceeded,
+         );
+         // Then define and call a function to handle the event checkout.session.async_payment_succeeded
+         break;
+       case 'checkout.session.completed':
+         const checkoutSessionCompleted = event.data.object;
+          console.log('checkoutSessionCompleted', checkoutSessionCompleted);
+         // Then define and call a function to handle the event checkout.session.completed
+         break;
+       case 'invoice.payment_succeeded':
+         const invoicePaymentSucceeded = event.data.object;
+          console.log('invoicePaymentSucceeded', invoicePaymentSucceeded);
+         // Then define and call a function to handle the event invoice.payment_succeeded
+         break;
+       case 'payment_intent.succeeded':
+         const paymentIntentSucceeded = event.data.object;
+          console.log('paymentIntentSucceeded', paymentIntentSucceeded);
+         // Then define and call a function to handle the event payment_intent.succeeded
+         break;
+       // ... handle other event types
+       default:
+         console.log(`Unhandled event type ${event.type}`);
+     }
     // Handle specific events, e.g., payment_intent.succeeded
-    if (event.type === 'payment_intent.succeeded') {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    // if (event.type === 'payment_intent.succeeded') {
+    //   const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
-      // Log payment details or process as needed
-      console.log('Payment was successful!');
-      console.log('Paymentdetail',paymentIntent);
-      console.log('Payment ID:', paymentIntent.id);
-      console.log('Amount:', paymentIntent.amount);
-      console.log('Currency:', paymentIntent.currency);
-      console.log('Customer ID:', paymentIntent.customer);
-      console.log('Payment Method:', paymentIntent.payment_method);
-      console.log('Receipt Email:', paymentIntent.receipt_email);
-      console.log('Metadata:', paymentIntent.metadata);
-    } else {
-      console.log(`Unhandled event type ${event.type}`);
-    }
+    //   // Log payment details or process as needed
+    //   console.log('Payment was successful!');
+    //   console.log('Paymentdetail',paymentIntent);
+    //   console.log('Payment ID:', paymentIntent.id);
+    //   console.log('Amount:', paymentIntent.amount);
+    //   console.log('Currency:', paymentIntent.currency);
+    //   console.log('Customer ID:', paymentIntent.customer);
+    //   console.log('Payment Method:', paymentIntent.payment_method);
+    //   console.log('Receipt Email:', paymentIntent.receipt_email);
+    //   console.log('Metadata:', paymentIntent.metadata);
+    // } else {
+    //   console.log(`Unhandled event type ${event.type}`);
+    // }
 
    // Acknowledge the webhook
   }
