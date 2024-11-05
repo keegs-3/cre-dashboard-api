@@ -241,20 +241,20 @@ WHERE org = ${user.organization}
         ytme !== null &&
         ytme !== undefined
       ) {
-        allYtms = `and loan_maturity_date  between '${ytms}' and '${ytme}'`;
+        allYtms = `and dl.loan_maturity_date  between '${ytms}' and '${ytme}'`;
       }
       if (la !== '' && la !== undefined) {
         if (la === 'No') {
-          allLa = `and current_loan_status = '${la}'`;
+          allLa = `and dl.current_loan_status = '${la}'`;
         } else if (la === 'Yes') {
-          allLa = `and current_loan_status = '${la}' `;
+          allLa = `and dl.current_loan_status = '${la}' `;
         }
       }
       if (latv !== '' && latv !== undefined) {
         if (latv === 'No') {
-          allLoanAmountToValue = `and transfer_purchase_loan_to_value is  null`;
+          allLoanAmountToValue = `and dl.transfer_purchase_loan_to_value is  null`;
         } else if (latv === 'Yes') {
-          allLoanAmountToValue = `and transfer_purchase_loan_to_value is not null `;
+          allLoanAmountToValue = `and dl.transfer_purchase_loan_to_value is not null `;
         }
       }
 
@@ -264,10 +264,10 @@ WHERE org = ${user.organization}
         lae !== null &&
         lae !== undefined
       ) {
-        allLoanAmount = `and loan_amount  between ${las} and ${lae}`;
+        allLoanAmount = `and dl.loan_amount  between ${las} and ${lae}`;
       }
       if (ts !== null && ts !== undefined && te !== null && te !== undefined) {
-        allTerm = `and months_to_loan_maturity  between ${ts} and ${te}`;
+        allTerm = `and dl.months_to_loan_maturity  between ${ts} and ${te}`;
       }
       if (ir !== null && ir !== undefined) {
         allInterestRate = `and interest_rate >= ${ir}`;
@@ -332,17 +332,18 @@ FROM ${this.DB_SCHEMA}.data_hub d
                         FROM
                         nedl_app.datahub_loans
                         where 1 =1
-                        ${allYtms}
-                        ${allLa}
-                        ${allLoanAmountToValue}
-                        ${allLoanAmount}
-                        ${allTerm}
+
                         GROUP BY
                         nedl_property_id_pk
                     ) dl
 ON d.nedl_property_id_pk = dl.nedl_property_id_pk
 where 1 = 1
 ${allMsaData}
+${allYtms}
+                        ${allLa}
+                        ${allLoanAmountToValue}
+                        ${allLoanAmount}
+                        ${allTerm}
 ${allState}
 ${allCity}
 ${allZip}
@@ -388,17 +389,18 @@ limit 100 offset ${offset}
                         FROM
                         nedl_app.datahub_loans
                         where 1 =1
-                        ${allYtms}
-                        ${allLa}
-                        ${allLoanAmountToValue}
-                        ${allLoanAmount}
-                        ${allTerm}
+
                         GROUP BY
                         nedl_property_id_pk
                     ) dl
 ON d.nedl_property_id_pk = dl.nedl_property_id_pk
 where 1 = 1
 ${allMsaData}
+ ${allYtms}
+                        ${allLa}
+                        ${allLoanAmountToValue}
+                        ${allLoanAmount}
+                        ${allTerm}
 ${allState}
 ${allCity}
 ${allZip}
