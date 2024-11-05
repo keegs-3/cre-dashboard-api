@@ -37,9 +37,7 @@ import {MyUserService} from '../services/user-service';
 import {SubscriptionData} from './../models/subscription-data.model';
 import {Request} from 'express';
 
-const REMOVED = new Stripe(
-  'REMOVED51PkTCfFp8griUug7guIcFltroakVstSf00cXbZry3IEb4kRlp5WeRSmjLxGZJ74kN9l9fPM6NFv2y3bGU2rES1IS00lAwIvlnh',
-); // Replace with your actual Stripe secret key
+const REMOVED = new Stripe('whsec_8u67Jek1xVGZGascqGPzSZYOlxfyRfhR'); // Replace with your actual Stripe secret key
 const endpointSecret = 'we_1QHQFvFp8griUug7xz9mFJPy'; // Replace with your actual webhook secret
 
 export class AppUserController {
