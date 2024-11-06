@@ -241,20 +241,22 @@ WHERE org = ${user.organization}
         ytme !== null &&
         ytme !== undefined
       ) {
-        allYtms = `and loan_maturity_date  between '${ytms}' and '${ytme}'`;
+        allYtms = `
+        and jsonb_path_exists(COALESCE(dl.loans_array, '[]'::jsonb), '$[*] ? (@.loan_maturity_date >= "${ytms}" && @.loan_maturity_date <= "${ytme}")')
+`;
       }
       if (la !== '' && la !== undefined) {
-        if (la === 'No') {
-          allLa = `and current_loan_status = '${la}'`;
-        } else if (la === 'Yes') {
-          allLa = `and current_loan_status = '${la}' `;
+
+          allLa = ` and jsonb_path_exists(COALESCE(dl.loans_array, '[]'::jsonb), '$[*] ? (@.current_loan_status == "${la}" )')
+          `;
         }
-      }
+
       if (latv !== '' && latv !== undefined) {
         if (latv === 'No') {
-          allLoanAmountToValue = `and transfer_purchase_loan_to_value is  null`;
+          allLoanAmountToValue = `and jsonb_path_exists(ARRAY_TO_JSON(dl.loans_array)::jsonb, '$[*] ? (@.current_loan_status == "${la}")')
+          and dl.transfer_purchase_loan_to_value is  null`;
         } else if (latv === 'Yes') {
-          allLoanAmountToValue = `and transfer_purchase_loan_to_value is not null `;
+          allLoanAmountToValue = `and dl.transfer_purchase_loan_to_value is not null `;
         }
       }
 
@@ -264,10 +266,14 @@ WHERE org = ${user.organization}
         lae !== null &&
         lae !== undefined
       ) {
-        allLoanAmount = `and loan_amount  between ${las} and ${lae}`;
+        allLoanAmount = `
+        and jsonb_path_exists(COALESCE(dl.loans_array, '[]'::jsonb), '$[*] ? (@.loan_amount >= ${las} && @.loan_amount <= ${lae})')
+      `;
       }
       if (ts !== null && ts !== undefined && te !== null && te !== undefined) {
-        allTerm = `and months_to_loan_maturity  between ${ts} and ${te}`;
+        allTerm = `
+        and jsonb_path_exists(COALESCE(dl.loans_array, '[]'::jsonb), '$[*] ? (@.months_to_loan_maturity >= ${ts} && @.months_to_loan_maturity <= ${te})')
+     `;
       }
       if (ir !== null && ir !== undefined) {
         allInterestRate = `and interest_rate >= ${ir}`;
@@ -309,40 +315,35 @@ WHERE org = ${user.organization}
       }
 
       const data = `
-SELECT
-d.*,
-COALESCE(dl.loans_array, '{}') AS loans_array
+  SELECT
+    d.*,
+    COALESCE(dl.loans_array, '[]'::jsonb) AS loans_array
 FROM ${this.DB_SCHEMA}.data_hub d
-        LEFT JOIN (
-                        SELECT
-                        nedl_property_id_pk,
-                              ARRAY_AGG(
-                                  JSON_BUILD_OBJECT(
-                                  'loan_amount', loan_amount,
-                                  'loan_origination_date', loan_origination_date,
-                                  'loan_maturity_date', loan_maturity_date,
-                                  'years_to_mature', years_to_mature,
-                                  'months_to_loan_maturity', months_to_loan_maturity,
-                                  'term', term,
-                                  'time_to_mature', time_to_mature,
-                                  'current_loan_status', current_loan_status
-                                  )
-                              )
-                        AS loans_array
-                        FROM
-                        nedl_app.datahub_loans
-                        where 1 =1
-                        ${allYtms}
-                        ${allLa}
-                        ${allLoanAmountToValue}
-                        ${allLoanAmount}
-                        ${allTerm}
-                        GROUP BY
-                        nedl_property_id_pk
-                    ) dl
-ON d.nedl_property_id_pk = dl.nedl_property_id_pk
+LEFT JOIN (
+    SELECT
+        nedl_property_id_pk,
+        JSONB_AGG(
+            JSONB_BUILD_OBJECT(
+                'loan_amount', loan_amount,
+                'loan_origination_date', loan_origination_date,
+                'loan_maturity_date', loan_maturity_date,
+                'years_to_mature', years_to_mature,
+                'months_to_loan_maturity', months_to_loan_maturity,
+                'term', term,
+                'time_to_mature', time_to_mature,
+                'current_loan_status', current_loan_status
+            )
+        ) AS loans_array
+    FROM nedl_app.datahub_loans
+    GROUP BY nedl_property_id_pk
+) dl ON d.nedl_property_id_pk = dl.nedl_property_id_pk
+
 where 1 = 1
 ${allMsaData}
+${allYtms}
+                        ${allLa}
+                        ${allLoanAmount}
+                        ${allTerm}
 ${allState}
 ${allCity}
 ${allZip}
@@ -366,14 +367,14 @@ limit 100 offset ${offset}
                   `;
 
       const countdata = `
-                  SELECT
-                   count(*)
-                     FROM ${this.DB_SCHEMA}.data_hub d
-                     LEFT JOIN (
+                   SELECT
+   count(*)
+FROM ${this.DB_SCHEMA}.data_hub d
+LEFT JOIN (
     SELECT
         nedl_property_id_pk,
-        ARRAY_AGG(
-            JSON_BUILD_OBJECT(
+        JSONB_AGG(
+            JSONB_BUILD_OBJECT(
                 'loan_amount', loan_amount,
                 'loan_origination_date', loan_origination_date,
                 'loan_maturity_date', loan_maturity_date,
@@ -384,40 +385,35 @@ limit 100 offset ${offset}
                 'current_loan_status', current_loan_status
             )
         ) AS loans_array
-    FROM
-        nedl_app.datahub_loans
-        where 1 =1
-         ${allYtms}
-         ${allLa}
-                             ${allLoanAmountToValue}
-                    ${allLoanAmount}
-                    ${allTerm}
+    FROM nedl_app.datahub_loans
+    GROUP BY nedl_property_id_pk
+) dl ON d.nedl_property_id_pk = dl.nedl_property_id_pk
 
-    GROUP BY
-        nedl_property_id_pk
-) dl
-ON d.nedl_property_id_pk = dl.nedl_property_id_pk
-                    where 1 = 1
-                    ${allMsaData}
-                    ${allState}
-                    ${allCity}
-                    ${allZip}
-                    ${allPunit}
-                    ${allOcr}
-                    ${allRr}
-                    ${allBuildingArea}
-                    ${allYearBuilt}
-                    ${allLastSale}
-                    ${allInterestRate}
-                    ${allOwner}
-                    ${allHouseHoldCount}
-                    ${allHouseHoldYearForecast}
-                    ${allAverageHousehold}
-                    ${allMedianHousehold}
-                    ${allPname}
-                    ${allAddress}
-                    ${allMSA}
-                    ${allRegion}
+where 1 = 1
+${allMsaData}
+ ${allYtms}
+                        ${allLa}
+                        ${allLoanAmount}
+                        ${allTerm}
+${allState}
+${allCity}
+${allZip}
+${allPunit}
+${allOcr}
+${allRr}
+${allBuildingArea}
+${allYearBuilt}
+${allLastSale}
+${allInterestRate}
+${allOwner}
+${allHouseHoldCount}
+${allHouseHoldYearForecast}
+${allAverageHousehold}
+${allMedianHousehold}
+${allPname}
+${allAddress}
+${allMSA}
+${allRegion}
                 `;
       console.log('for search ', data);
       console.log('for count ', countdata);
