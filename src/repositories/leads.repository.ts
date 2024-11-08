@@ -5,7 +5,7 @@ import {Leads, LeadsRelations} from '../models';
 
 export class LeadsRepository extends DefaultCrudRepository<
   Leads,
-  typeof Leads.prototype.nedl_property_id_pk,
+  typeof Leads.prototype.id,
   LeadsRelations
 > {
   constructor(

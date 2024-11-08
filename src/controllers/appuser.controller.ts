@@ -3,6 +3,7 @@ import {generateOTP} from '@eternaljs/otp-generator';
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
+import Stripe from 'REMOVED';
 import {
   get,
   getJsonSchemaRef,
@@ -12,6 +13,7 @@ import {
   post,
   requestBody,
   response,
+  RestBindings,
 } from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
@@ -33,6 +35,12 @@ import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {SubscriptionData} from './../models/subscription-data.model';
+import {Request} from 'express';
+
+const REMOVED = new Stripe(
+  'REMOVED51PkTCfFp8griUug7guIcFltroakVstSf00cXbZry3IEb4kRlp5WeRSmjLxGZJ74kN9l9fPM6NFv2y3bGU2rES1IS00lAwIvlnh',
+); // Replace with your actual Stripe secret key
+const endpointSecret = 'whsec_8u67Jek1xVGZGascqGPzSZYOlxfyRfhR'; // Replace with your actual webhook secret
 
 export class AppUserController {
   constructor(
@@ -76,6 +84,88 @@ export class AppUserController {
 
     return str;
   };
+  @post('/app/webhook', {
+    responses: {
+      '200': {
+        description: 'Stripe Webhook Event Response',
+      },
+    },
+  })
+  async handleWebhook(
+    @requestBody({
+      description: 'Stripe Webhook Event',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {type: 'object'},
+        },
+      },
+    })
+    body: Buffer,
+    @inject(RestBindings.Http.REQUEST) request: Request,
+  ) {
+    const sig = request.headers['REMOVED-signature'] as string;
+
+    let event: Stripe.Event;
+
+    try {
+      event = REMOVED.webhooks.constructEvent(body, sig, endpointSecret);
+    } catch (err) {
+      console.error(`Webhook Error: ${err.message}`);
+      // Use send correctly
+      // Ensure send is lowercase
+      return `${err .message}`;
+    }
+
+     switch (event.type) {
+       case 'checkout.session.async_payment_succeeded':
+         const checkoutSessionAsyncPaymentSucceeded = event.data.object;
+         console.log(
+           'checkoutSessionAsyncPaymentSucceeded',
+           checkoutSessionAsyncPaymentSucceeded,
+         );
+         // Then define and call a function to handle the event checkout.session.async_payment_succeeded
+         break;
+       case 'checkout.session.completed':
+         const checkoutSessionCompleted = event.data.object;
+          console.log('checkoutSessionCompleted', checkoutSessionCompleted);
+         // Then define and call a function to handle the event checkout.session.completed
+         break;
+       case 'invoice.payment_succeeded':
+         const invoicePaymentSucceeded = event.data.object;
+          console.log('invoicePaymentSucceeded', invoicePaymentSucceeded);
+         // Then define and call a function to handle the event invoice.payment_succeeded
+         break;
+       case 'payment_intent.succeeded':
+         const paymentIntentSucceeded = event.data.object;
+          console.log('paymentIntentSucceeded', paymentIntentSucceeded);
+         // Then define and call a function to handle the event payment_intent.succeeded
+         break;
+       // ... handle other event types
+       default:
+         console.log(`Unhandled event type ${event.type}`);
+     }
+    // Handle specific events, e.g., payment_intent.succeeded
+    // if (event.type === 'payment_intent.succeeded') {
+    //   const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+    //   // Log payment details or process as needed
+    //   console.log('Payment was successful!');
+    //   console.log('Paymentdetail',paymentIntent);
+    //   console.log('Payment ID:', paymentIntent.id);
+    //   console.log('Amount:', paymentIntent.amount);
+    //   console.log('Currency:', paymentIntent.currency);
+    //   console.log('Customer ID:', paymentIntent.customer);
+    //   console.log('Payment Method:', paymentIntent.payment_method);
+    //   console.log('Receipt Email:', paymentIntent.receipt_email);
+    //   console.log('Metadata:', paymentIntent.metadata);
+    // } else {
+    //   console.log(`Unhandled event type ${event.type}`);
+    // }
+
+   // Acknowledge the webhook
+  }
+
   @post('/app/user/signup', {
     responses: {
       '200': {
@@ -172,7 +262,8 @@ export class AppUserController {
     padding: 10px 20px;
     background-color: #007bff;
     color: #ffffff !important;
-    text-decoration: none;
+    text-decoration:import { Send } from '@loopback/rest';
+ none;
     border-radius: 5px;
     margin-top:20px;
   }

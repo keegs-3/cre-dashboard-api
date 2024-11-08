@@ -18,3 +18,4 @@ export * from './appleadsextracontact.controller';
 export * from './appleadsnotes.controller';
 export * from './leads.controller';
 export * from './appleadstatus.controller';
+export * from './datahub-add-to-leads.controller';
