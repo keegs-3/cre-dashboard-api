@@ -28,7 +28,9 @@ export class MarketIntelligenceController {
   async liveFeeds(): Promise<JSON> {
     const sql = await this.userRepository.dataSource.execute(
       `
-    select * from ${this.DB_SCHEMA}.app_livefeeds_vw order by document_recorded_date desc limit 20
+    select * from ${this.DB_SCHEMA}.app_livefeeds_vw
+    WHERE document_recorded_date BETWEEN (CURRENT_DATE - INTERVAL '60 days') AND CURRENT_DATE
+    order by document_recorded_date desc
     `,
     );
 
