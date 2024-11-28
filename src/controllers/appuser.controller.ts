@@ -67,6 +67,7 @@ export class AppUserController {
   EMAIL = process.env.EMAIL_ID;
   EMAILPASS = process.env.EMAIL_PASSWORD;
   UI_URL = process.env.UI_URL;
+  STRIPE_KEY = process.env.STRIPE_KEY;
   // @authenticate('jwt')
   string = function getString(n: number) {
     let str = '';
@@ -126,12 +127,12 @@ export class AppUserController {
       return items.reduce((total, item) => total + item.amount, 0);
     };
     const REMOVED = new Stripe(
-      'REMOVED51PkTCfFp8griUug7thulwBqpzBh7tUMhTM5Z0bML171X2Ew2GvgijAAaTcp9icS8fy2ccDVAF6c6yNcC2InW9fTP00nWlUB1TM',
+      `'${this.STRIPE_KEY}'`,
     );
 
     try {
       // Create a PaymentIntent
-console.log('datatatataatta',data);
+      console.log('datatatataatta', data);
       const paymentIntent = await REMOVED.paymentIntents.create({
         amount: calculateOrderAmount(data.items),
         currency: 'usd',
@@ -139,9 +140,8 @@ console.log('datatatataatta',data);
         metadata: {
           customer_email: data.email, // Custom metadata for tracking
         },
-       
       });
-console.log('datatatataattaeeeeeeeeee', data);
+      console.log('datatatataattaeeeeeeeeee', data);
 
       return {
         clientSecret: paymentIntent.client_secret,
