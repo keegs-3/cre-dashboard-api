@@ -127,7 +127,7 @@ export class AppUserController {
       return items.reduce((total, item) => total + item.amount, 0);
     };
     const REMOVED = new Stripe(
-      `'${this.STRIPE_KEY}'`,
+      `${this.STRIPE_KEY}`,
     );
 
     try {
