@@ -1,6 +1,10 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'user_session_time'}}, })
+@model({
+  settings: {
+    postgresql: {schema: process.env.DB_SCHEMA, table: 'app_user_session_time'},
+  },
+})
 export class Usersession extends Entity {
   @property({
     type: 'string',
@@ -12,7 +16,15 @@ export class Usersession extends Entity {
   @property({
     type: 'string',
   })
-  username?: string;
+  userid?: string;
+  @property({
+    type: 'number',
+  })
+  org?: Number;
+  @property({
+    type: 'number',
+  })
+  subs_id?: Number;
 
   @property({
     type: 'date',
@@ -32,8 +44,10 @@ export class Usersession extends Entity {
     type: 'string',
   })
   session?: string;
-
-
+  @property({
+    type: 'date',
+  })
+  inserted_on?: Date;
 
   constructor(data?: Partial<Usersession>) {
     super(data);

@@ -19,16 +19,15 @@ import {
 } from '@loopback/rest';
 import {Leads} from '../models';
 import {LeadsRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
-@authenticate("jwt")
 
-export class AddleadsController {
+export class DatahubAddToLeadsController {
   constructor(
     @repository(LeadsRepository)
-    public leadsRepository : LeadsRepository,
+    public leadsRepository: LeadsRepository,
   ) {}
   DB_SCHEMA = process.env.DB_SCHEMA;
-  @post('/addleads')
+
+  @post('/ExtraLeads')
   @response(200, {
     description: 'Leads model instance',
     content: {'application/json': {schema: getModelSchemaRef(Leads)}},
@@ -39,28 +38,42 @@ export class AddleadsController {
         'application/json': {
           schema: getModelSchemaRef(Leads, {
             title: 'NewLeads',
-
+            exclude: ['id'],
           }),
         },
       },
     })
-    leads: Leads,
-  ): Promise<Leads> {
-    return this.leadsRepository.create(leads);
+    leads: Omit<Leads, 'id'>,
+  ): Promise<any> {
+    const checkLeads = await this.leadsRepository.dataSource.execute(`
+select * from nedl_model.lead_gen where  nedl_property_id_pk = ${leads.nedl_property_id_pk}
+  `);
+    const checkAdd = await this.leadsRepository.dataSource.execute(
+      `
+    select * from ${this.DB_SCHEMA}.app_add_to_leads where  nedl_property_id_pk = ${leads.nedl_property_id_pk} and subs_id = ${leads.subs_id}
+    `,
+    );
+    if (checkLeads.length > 0) {
+      return 'Property already present on your Intelligent Leads Page';
+    }
+    if (checkAdd.length > 0) {
+      return 'Someone From your team has already Added it';
+    }
+
+    const add = await this.leadsRepository.create(leads);
+    return add;
   }
 
-  @get('/addleads/count')
+  @get('/ExtraLeads/count')
   @response(200, {
     description: 'Leads model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Leads) where?: Where<Leads>,
-  ): Promise<Count> {
+  async count(@param.where(Leads) where?: Where<Leads>): Promise<Count> {
     return this.leadsRepository.count(where);
   }
 
-  @get('/addleads')
+  @get('/ExtraLeads')
   @response(200, {
     description: 'Array of Leads model instances',
     content: {
@@ -72,25 +85,11 @@ export class AddleadsController {
       },
     },
   })
-  async find(
-    
-    @param.query.string('id') id?: string,
-    @param.query.string('org') org?: string,
-  ): Promise<Leads[]> {
-
-    const marketCity = await this.leadsRepository.dataSource.execute(`
-    select * from ${this.DB_SCHEMA}.leads l
-    where l.tax_assessor_id = '${id}'
-    and l.organization in ('all','${org}')
-
-
-`);
-
-    return marketCity;
-
+  async find(@param.filter(Leads) filter?: Filter<Leads>): Promise<Leads[]> {
+    return this.leadsRepository.find(filter);
   }
 
-  @patch('/addleads')
+  @patch('/ExtraLeads')
   @response(200, {
     description: 'Leads PATCH success count',
     content: {'application/json': {schema: CountSchema}},
@@ -109,7 +108,7 @@ export class AddleadsController {
     return this.leadsRepository.updateAll(leads, where);
   }
 
-  @get('/addleads/{id}')
+  @get('/ExtraLeads/{id}')
   @response(200, {
     description: 'Leads model instance',
     content: {
@@ -119,18 +118,19 @@ export class AddleadsController {
     },
   })
   async findById(
-    @param.path.string('id') id: string,
-    @param.filter(Leads, {exclude: 'where'}) filter?: FilterExcludingWhere<Leads>
+    @param.path.number('id') id: number,
+    @param.filter(Leads, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Leads>,
   ): Promise<Leads> {
     return this.leadsRepository.findById(id, filter);
   }
 
-  @patch('/addleads/{id}')
+  @patch('/ExtraLeads/{id}')
   @response(204, {
     description: 'Leads PATCH success',
   })
   async updateById(
-    @param.path.string('id') id: string,
+    @param.path.number('id') id: number,
     @requestBody({
       content: {
         'application/json': {
@@ -143,22 +143,22 @@ export class AddleadsController {
     await this.leadsRepository.updateById(id, leads);
   }
 
-  @put('/addleads/{id}')
+  @put('/ExtraLeads/{id}')
   @response(204, {
     description: 'Leads PUT success',
   })
   async replaceById(
-    @param.path.string('id') id: string,
+    @param.path.number('id') id: number,
     @requestBody() leads: Leads,
   ): Promise<void> {
     await this.leadsRepository.replaceById(id, leads);
   }
 
-  @del('/addleads/{id}')
+  @del('/ExtraLeads/{id}')
   @response(204, {
     description: 'Leads DELETE success',
   })
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
+  async deleteById(@param.path.number('id') id: number): Promise<void> {
     await this.leadsRepository.deleteById(id);
   }
 }

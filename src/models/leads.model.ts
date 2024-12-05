@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: { postgresql: { schema: process.env.DB_SCHEMA, table: 'leads'} }, })
+@model({
+  settings: {postgresql: {schema: process.env.DB_SCHEMA, table: 'app_add_to_leads'}},
+})
 export class Leads extends Entity {
   @property({
     type: 'string',
-    id: true,
   })
-  tax_assessor_id?: string;
+  nedl_property_id?: string;
 
   @property({
     type: 'string',
@@ -18,11 +19,6 @@ export class Leads extends Entity {
     type: 'number',
   })
   msa_code?: number;
-
-  @property({
-    type: 'string',
-  })
-  address?: string;
 
   @property({
     type: 'string',
@@ -45,6 +41,11 @@ export class Leads extends Entity {
   zip_4?: number;
 
   @property({
+    type: 'string',
+  })
+  address?: string;
+
+  @property({
     type: 'number',
   })
   latitude?: number;
@@ -53,16 +54,20 @@ export class Leads extends Entity {
     type: 'number',
   })
   longitude?: number;
-
   @property({
-    type: 'boolean',
+    type: 'number',
   })
-  is_owner_occupied?: Boolean;
+  building_sq_ft?: Number;
 
   @property({
     type: 'number',
   })
-  assessed_tax_year?: Number;
+  bed_count?: Number;
+
+  @property({
+    type: 'number',
+  })
+  units_count?: Number;
 
   @property({
     type: 'number',
@@ -70,18 +75,9 @@ export class Leads extends Entity {
   year_built?: Number;
 
   @property({
-    type: 'string',
-  })
-  tax_assessor_last_sale_date?: string;
-  @property({
     type: 'number',
   })
   last_sale_amount?: Number;
-
-  @property({
-    type: 'string',
-  })
-  tax_assessor_prior_sale_date?: string;
 
   @property({
     type: 'number',
@@ -89,82 +85,85 @@ export class Leads extends Entity {
   prior_sale_amount?: Number;
 
   @property({
-    type: 'string',
+    type: 'Date',
   })
-  last_ownership_change_date?: string;
+  prior_sale_date?: Date;
 
-  @property({
-    type: 'string',
-  })
-  last_deed_sale_date?: string;
-
-  @property({
-    type: 'number',
-  })
-  deed_last_sale_price?: Number;
-  @property({
-    type: 'number',
-  })
-  building_sq_ft?: Number;
-  @property({
-    type: 'number',
-  })
-  lot_size_acre?: Number;
-  @property({
-    type: 'number',
-  })
-  lot_size_sq_ft?: Number;
-  @property({
-    type: 'number',
-  })
-  units_count?: Number;
-
-  @property({
-    type: 'string',
-  })
-  data_publish_date?: string;
-
-  @property({
-    type: 'string',
-  })
-  probability?: string;
   @property({
     type: 'date',
   })
-  created_date?: Date;
+  last_sale_date?: Date;
+
+  @property({
+    type: 'number',
+  })
+  months_since_last_transaction?: Number;
+
+  @property({
+    type: 'number',
+  })
+  months_to_loan_maturity?: Number;
   @property({
     type: 'string',
   })
-  owner_name?: string;
+  year_of_analysis?: string;
+
+  @property({
+    type: 'date',
+  })
+  insert_date_time?: Date;
+
+  @property({
+    type: 'string',
+  })
+  lead_type?: string;
+  @property({
+    type: 'string',
+  })
+  userid?: string;
+
+  @property({
+    type: 'number',
+  })
+  org?: Number;
+  @property({
+    type: 'number',
+  })
+  subs_id?: Number;
+
+  @property({
+    type: 'number',
+  })
+  nedl_property_id_pk?: number;
+  @property({
+    type: 'string',
+  })
+  nedl_property_name?: string;
   @property({
     type: 'number',
   })
   loan_amount?: Number;
   @property({
+    type: 'number',
+    id: true,
+  })
+  id?: Number;
+  @property({
     type: 'date',
   })
-
   loan_maturity_date?: Date;
   @property({
     type: 'date',
   })
   loan_origination_date?: Date;
   @property({
-    type: 'number',
+    type: 'string',
   })
-  years_to_mature?: Number;
-  @property({
-    type: 'number',
-  })
-  last_sale_years?: Number;
+  time_to_mature?: string;
   @property({
     type: 'string',
   })
-  owner_contact_name?: string;
-  @property({
-    type: 'string',
-  })
-  owner_email?: string;
+  owner_name?: string;
   @property({
     type: 'string',
   })
@@ -180,55 +179,19 @@ export class Leads extends Entity {
   @property({
     type: 'string',
   })
-  owner_zip?: string;
-
+  owner_contact_name?: string;
   @property({
     type: 'string',
   })
   owner_phone_number?: string;
   @property({
-    type: 'number',
+    type: 'string',
   })
-  latest_monthly_rent?: Number;
-  @property({
-    type: 'number',
-  })
-  latest_occupancy_rate?: Number;
-
+  owner_email_address?: string;
   @property({
     type: 'string',
   })
-  property_name?: string;
-  @property({
-    type: 'string',
-  })
-  market?: string;
-  @property({
-    type: 'string',
-  })
-  sub_market?: string;
-  @property({
-    type: 'string',
-  })
-  county?: string;
-  @property({
-    type: 'string',
-  })
-  owner?: string;
-  @property({
-    type: 'boolean',
-  })
-  user_added?: Boolean;
-  @property({
-    type: 'string',
-  })
-  username?: string;
-  @property({
-    type: 'string',
-  })
-  organization?: string;
-
-
+  region?: string;
 
   constructor(data?: Partial<Leads>) {
     super(data);
