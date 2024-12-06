@@ -88,6 +88,14 @@ export class User extends Entity {
     type: 'number',
   })
   loginOtp?: number;
+  @property({
+    type: 'string',
+  })
+  paymentintentid?: string;
+  @property({
+    type: 'object',
+  })
+  payment?: object;
 
   constructor(data?: Partial<User>) {
     super(data);
