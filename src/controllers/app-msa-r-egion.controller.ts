@@ -19,8 +19,7 @@ import {
 } from '@loopback/rest';
 import {AppMsaRegion} from '../models';
 import {AppMsaRegionRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
-@authenticate('jwt')
+// @authenticate('jwt')
 export class AppMsaREgionController {
   constructor(
     @repository(AppMsaRegionRepository)

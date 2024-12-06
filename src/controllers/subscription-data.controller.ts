@@ -20,7 +20,7 @@ import {
 import {SubscriptionData} from '../models';
 import {SubscriptionDataRepository} from '../repositories';
 import {authenticate} from '@loopback/authentication';
-@authenticate('jwt')
+
 export class SubscriptionDataController {
   constructor(
     @repository(SubscriptionDataRepository)
