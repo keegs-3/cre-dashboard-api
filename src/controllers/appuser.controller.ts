@@ -67,7 +67,7 @@ export class AppUserController {
   EMAIL = process.env.EMAIL_ID;
   EMAILPASS = process.env.EMAIL_PASSWORD;
   UI_URL = process.env.UI_URL;
-  STRIPE_KEY = process.env.STRIPE_KEY_TEST;
+  STRIPE_KEY = process.env.STRIPE_KEY;
   // @authenticate('jwt')
   string = function getString(n: number) {
     let str = '';
