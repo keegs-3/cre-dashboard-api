@@ -78,6 +78,7 @@ export class AppUserController {
   // @authenticate('jwt')
   string = function getString(n: number) {
     let str = '';
+    let testcheck = "";
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const charLen = characters.length;
 
@@ -90,7 +91,7 @@ export class AppUserController {
 
     return str;
   };
-
+// conflict check
   @get('/products/all')
   async getCouponByName(): Promise<object> {
     try {
