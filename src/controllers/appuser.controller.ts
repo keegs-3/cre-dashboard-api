@@ -90,7 +90,7 @@ export class AppUserController {
 
     return str;
   };
-
+// conflict check 
   @get('/products/all')
   async getCouponByName(): Promise<object> {
     try {
