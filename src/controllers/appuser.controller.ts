@@ -4,7 +4,6 @@ import {generateOTP} from '@eternaljs/otp-generator';
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import Stripe from 'REMOVED';
 import {
   get,
   getJsonSchemaRef,
@@ -17,8 +16,11 @@ import {
   RestBindings,
 } from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
+import axios from 'axios';
+import https from 'https';
 import * as _ from 'lodash';
 import nodemailer from 'nodemailer';
+import Stripe from 'REMOVED';
 import {
   PasswordHasherBindings,
   TokenServiceBindings,
@@ -36,12 +38,16 @@ import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {SubscriptionData} from './../models/subscription-data.model';
-import {Request} from 'express';
 
- // Replace with your actual webhook secret
-
+const REMOVED = new Stripe(`${process.env.STRIPE_KEY_TEST}`);
+const HUBSPOT_SEARCH_URL =
+  'https://api.hubapi.com/crm/v3/objects/contacts/search';
+const HUBSPOT_CONTACT_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
+const HUBSPOT_TOKEN = process.env.HUBSPOT_TOKEN;
 export class AppUserController {
   constructor(
+    @inject('services.Stripe') private REMOVEDService: any,
+    @inject('services.HubSpot') private hubSpotService: any,
     @repository(SubscriptionDataRepository)
     public subData: SubscriptionDataRepository,
     @repository(UserRepository)
@@ -68,6 +74,7 @@ export class AppUserController {
   EMAILPASS = process.env.EMAIL_PASSWORD;
   UI_URL = process.env.UI_URL;
   STRIPE_KEY = process.env.STRIPE_KEY;
+  HUBSPOT_TOKEN = process.env.HUBSPOT_TOKEN;
   // @authenticate('jwt')
   string = function getString(n: number) {
     let str = '';
@@ -83,6 +90,392 @@ export class AppUserController {
 
     return str;
   };
+
+  @get('/products/all')
+  async getCouponByName(): Promise<object> {
+    try {
+      const products = await this.REMOVEDService.getProductList();
+      return {products};
+    } catch (error) {
+      return {error: error.message};
+    }
+  }
+  @get('/product-price-coupon')
+  async getPricesWithCoupons(): Promise<object> {
+    try {
+      const result = await this.REMOVEDService.findProductsWithPricesAndCoupons();
+      return {data: result};
+    } catch (error) {
+      return {error: error.message};
+    }
+  }
+
+  // Initialize Stripe with your secret key
+  @post('/create-subscription')
+  async createSubscription(
+    @requestBody()
+    request: {
+      email: string;
+      paymentMethodId: string;
+      items: Array<{priceId: string; quantity: number}>;
+      name: string;
+      trialPeriod: number;
+      couponCode: string;
+    },
+  ): Promise<{}> {
+    const {
+      email,
+      paymentMethodId,
+      items,
+      name,
+      trialPeriod,
+      couponCode,
+    } = request;
+
+    try {
+      if (!Array.isArray(items) || items.length === 0) {
+        return {error:'Items must be an array with at least one item'};
+      }
+
+      // // Validate and retrieve details for each priceId
+      // const prices = await Promise.all(
+      //   items.map(item => REMOVED.prices.retrieve(item.priceId)),
+      // );
+
+      // // Validate recurring intervals
+      // const interval = prices[0]?.recurring.interval;
+      // const intervalCount = prices[0]?.recurring.interval_count;
+
+      // for (const price of prices) {
+      //   if (
+      //     price.recurring.interval !== interval ||
+      //     price.recurring.interval_count !== intervalCount
+      //   ) {
+      //     return res.status(400).json({
+      //       error:
+      //         'All prices must have the same recurring.interval and recurring.interval_count.',
+      //     });
+      //   }
+      // }
+
+      const existingCustomer = await this.REMOVEDService.getCustomerByEmail(
+        email,
+      );
+      let customer;
+
+      // Check if customer exists
+      if (existingCustomer) {
+        customer = existingCustomer;
+      } else {
+        customer = await this.REMOVEDService.createCustomer({
+          email,
+          name,
+          payment_method: paymentMethodId,
+          invoice_settings: {default_payment_method: paymentMethodId},
+        });
+      }
+
+        const subscriptionItems = items.map(item => ({
+            price: item.priceId,
+            quantity: item.quantity || 1, // Default to 1 if quantity is not provided
+        }));
+      // Define subscriptionParams with the appropriate types
+      const subscriptionParams: {
+        customer: string;
+        items: {price: string,quantity:number}[];
+        expand: string[];
+        trial_period_days?: number;
+        coupon?: string;
+      } = {
+        customer: customer.id,
+        items: subscriptionItems,
+        expand: ['latest_invoice.payment_intent', 'discount.coupon'],
+      };
+
+      if (trialPeriod > 0) {
+        subscriptionParams.trial_period_days = trialPeriod;
+      }
+
+      if (couponCode && couponCode.trim() !== '') {
+        subscriptionParams.coupon = couponCode;
+      }
+
+      // Create the subscription
+      const subscription = await this.REMOVEDService.createSubscription(
+        subscriptionParams,
+      );
+
+      // Create a note for the HubSpot contact
+      const couponDetails = subscription.discount?.coupon
+        ? `\n- Coupon Applied: ${subscription.discount.coupon.name} (${
+            subscription.discount.coupon.percent_off ||
+            subscription.discount.coupon.amount_off / 100
+          } off)`
+        : '';
+
+      const noteContent = `
+        <b>Subscription Details:</b><br>
+        <b>- Status:</b> ${subscription.status}<br>
+        <b>- Start Date:</b> ${new Date(
+          subscription.start_date * 1000,
+        ).toISOString()}<br>
+        <b>- Next Payment Due Date:</b> ${new Date(
+          subscription.current_period_end * 1000,
+        ).toISOString()}<br>
+        <b>- Next Payment Amount:</b> $${(
+          subscription.items.data[0].price.unit_amount / 100
+        ).toFixed(2)}<br>
+        <b>- Stripe Subscription ID:</b> ${subscription.id}<br>
+        ${couponDetails}
+      `;
+
+      // Add or update the HubSpot contact
+      const contact = await this.hubSpotService.upsertContact(email, name);
+      await this.hubSpotService.addNoteToHubSpot(contact.id, noteContent);
+
+      return {subscriptionId: subscription.id};
+    } catch (error) {
+      console.error('Error:', error.message);
+      throw new HttpErrors.BadRequest(error.message);
+    }
+  }
+
+  @post('/hubspot/search', {
+    responses: {
+      '200': {
+        description: 'Search or create/update a contact by email',
+        content: {'application/json': {schema: {type: 'object'}}},
+      },
+    },
+  })
+  async search(
+    @requestBody({
+      description: 'Search email and update or create contact',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              email: {type: 'string'},
+              firstname: {type: 'string'},
+              lastname: {type: 'string'},
+              company: {type: 'string'},
+              phone: {type: 'string'},
+              subscription: {type: 'string'},
+              userFrom: {type: 'string'},
+              subscription_level: {type: 'array'},
+            },
+            required: ['email'],
+          },
+        },
+      },
+    })
+    data: {
+      email: string;
+      firstname: string;
+      lastname: string;
+      company: string;
+      phone: string;
+      subscription: string;
+      userFrom: string;
+      subscription_level: Array<JSON>;
+    },
+  ): Promise<object> {
+    if (!HUBSPOT_TOKEN) {
+      throw new HttpErrors.InternalServerError(
+        'HubSpot API token is not configured in environment variables.',
+      );
+    }
+
+    const searchPayload = JSON.stringify({
+      filterGroups: [
+        {
+          filters: [
+            {
+              propertyName: 'email',
+              operator: 'EQ',
+              value: data.email,
+            },
+          ],
+        },
+      ],
+    });
+
+    console.log('Search Payload:', searchPayload);
+
+    return new Promise<object>((resolve, reject) => {
+      const url = new URL(HUBSPOT_SEARCH_URL);
+
+      const options = {
+        hostname: url.hostname,
+        path: url.pathname,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${HUBSPOT_TOKEN}`,
+          'Content-Length': Buffer.byteLength(searchPayload),
+        },
+      };
+
+      const req = https.request(options, res => {
+        let responseBody = '';
+
+        res.on('data', chunk => {
+          responseBody += chunk;
+        });
+
+        res.on('end', () => {
+          console.log('Search Response:', responseBody);
+
+          try {
+            const responseJson = JSON.parse(responseBody);
+
+            if (res.statusCode && res.statusCode >= 400) {
+              return reject(
+                new HttpErrors.BadRequest(
+                  `HubSpot API error: ${res.statusCode} - ${
+                    responseJson.message || 'Unknown error'
+                  }`,
+                ),
+              );
+            }
+
+            if (responseJson.results && responseJson.results.length > 0) {
+              // Contact exists; update it
+              const contactId = responseJson.results[0].id;
+              const updateUrl = `${HUBSPOT_CONTACT_URL}/${contactId}`;
+              const updatePayload = JSON.stringify({
+                properties: {
+                  firstname: data.firstname,
+                  lastname: data.lastname,
+                  company: data.company,
+                  phone: data.phone,
+                  email: data.email,
+                  subscription: data.subscription,
+                  userFrom: data.userFrom,
+                  subscription_level: data.subscription_level,
+                },
+              });
+
+              this.makeRequest(updateUrl, 'PATCH', updatePayload, HUBSPOT_TOKEN)
+                .then(updateResponse => resolve(updateResponse))
+                .catch(error => reject(error));
+            } else {
+              // Contact does not exist; create it
+              const createPayload = JSON.stringify({
+                properties: {
+                  firstname: data.firstname,
+                  lastname: data.lastname,
+                  company: data.company,
+                  phone: data.phone,
+                  email: data.email,
+                  subscription: data.subscription,
+                  userFrom: data.userFrom,
+                  subscription_level: data.subscription_level,
+                },
+              });
+
+              this.makeRequest(
+                HUBSPOT_CONTACT_URL,
+                'POST',
+                createPayload,
+                HUBSPOT_TOKEN,
+              )
+                .then(createResponse => resolve(createResponse))
+                .catch(error => reject(error));
+            }
+          } catch (error) {
+            reject(
+              new HttpErrors.InternalServerError(
+                'Error parsing response from HubSpot API.',
+              ),
+            );
+          }
+        });
+      });
+
+      req.on('error', error => {
+        console.error('Search Request Error:', error.message);
+        reject(
+          new HttpErrors.InternalServerError(
+            `Error calling HubSpot API: ${error.message}`,
+          ),
+        );
+      });
+
+      req.write(searchPayload);
+      req.end();
+    });
+  }
+
+  private makeRequest(
+    url: string,
+    method: string,
+    payload: string,
+    token: string,
+  ): Promise<object> {
+    return new Promise((resolve, reject) => {
+      const parsedUrl = new URL(url);
+
+      const options = {
+        hostname: parsedUrl.hostname,
+        path: parsedUrl.pathname,
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      };
+
+      const req = https.request(options, res => {
+        let responseBody = '';
+
+        res.on('data', chunk => {
+          responseBody += chunk;
+        });
+
+        res.on('end', () => {
+          console.log(`${method} Response:`, responseBody);
+
+          try {
+            const responseJson = JSON.parse(responseBody);
+
+            if (res.statusCode && res.statusCode >= 400) {
+              return reject(
+                new HttpErrors.BadRequest(
+                  `${method} request error: ${res.statusCode} - ${
+                    responseJson.message || 'Unknown error'
+                  }`,
+                ),
+              );
+            }
+
+            resolve(responseJson);
+          } catch (error) {
+            reject(
+              new HttpErrors.InternalServerError(
+                'Error parsing response from HubSpot API.',
+              ),
+            );
+          }
+        });
+      });
+
+      req.on('error', error => {
+        console.error(`${method} Request Error:`, error.message);
+        reject(
+          new HttpErrors.InternalServerError(
+            `Error calling HubSpot API: ${error.message}`,
+          ),
+        );
+      });
+
+      req.write(payload);
+      req.end();
+    });
+  }
 
   @post('/create-payment-intent', {
     responses: {
@@ -126,9 +519,7 @@ export class AppUserController {
     const calculateOrderAmount = (items: {amount: number}[]): number => {
       return items.reduce((total, item) => total + item.amount, 0);
     };
-    const REMOVED = new Stripe(
-      `${this.STRIPE_KEY}`,
-    );
+    const REMOVED = new Stripe(`${this.STRIPE_KEY}`);
 
     try {
       // Create a PaymentIntent
@@ -543,6 +934,57 @@ ${savedUser.email}</li>
     SET   password = '${password}',resetkey=null where resetkey = '${passwordata.resetkey}'`);
 
     return 'reset successful';
+  }
+   @post('/app/user/email', {
+    responses: {
+      '200': {
+        description: 'verifyuser',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                email: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async checkemail(
+    @requestBody({
+      responses: {
+        '200': {
+          description: 'User',
+          content: {
+            schema: {email: 'string'},
+          },
+        },
+      },
+    })
+    emaild: {
+      email: string;
+    },
+  ): Promise<boolean> {
+    try {
+      const verify = await this.userRepository.findOne({
+        where: {email: emaild.email},
+      });
+if(verify){
+  return true
+}
+else {
+  return false
+}
+
+    } catch (error: any) {
+      // Handle errors here
+      console.error('Error during verify:', error.message);
+      throw new HttpErrors.BadRequest(error.message); // You can customize the error response as needed
+    }
   }
   @post('/app/user/verify', {
     responses: {

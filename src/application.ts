@@ -5,7 +5,7 @@ import {
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
 import {RepositoryMixin} from '@loopback/repository';
-import {RestApplication, RestBindings, RestServerConfig} from '@loopback/rest';
+import {RestApplication, RestServerConfig} from '@loopback/rest';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
@@ -25,6 +25,8 @@ import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 // import {MyUserService} from '../.env';
 import {MyUserService} from './services/user-service';
+import {StripeService} from './services/REMOVED.service';
+import {HubSpotService} from './services/hubspot.service';
 // import { SecurityHeadersComponent} from './middleware/setHeader.component';
 export {ApplicationConfig};
 
@@ -97,7 +99,6 @@ export class CreaigithubApplication extends BootMixin(
     // this.bind('authentication.jwt.secret').to('dvchgdvcjsdbhcbdjbvjb');
     // this.bind('authentication.jwt.expiresIn').to('7h');
 
-    const token = process.env.TOKEN_SECRET_VALUE;
   }
 
   setupBinding(): void {
@@ -107,7 +108,8 @@ export class CreaigithubApplication extends BootMixin(
     // this.bind('service.jwt.service').toClass(JWTService);
     // this.bind('authentication.jwt.secret').to('dvchgdvcjsdbhcbdjbvjb');
     // this.bind('authentication.jwt.expiresIn').to('7h');
-
+ this.bind('services.Stripe').toClass(StripeService);
+    this.bind('services.HubSpot').toClass(HubSpotService);
     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
     this.bind(PasswordHasherBindings.ROUNDS).to(10);
     this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
