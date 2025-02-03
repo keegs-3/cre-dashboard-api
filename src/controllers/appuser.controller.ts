@@ -78,7 +78,7 @@ export class AppUserController {
   // @authenticate('jwt')
   string = function getString(n: number) {
     let str = '';
-    let testcheck = "";
+
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const charLen = characters.length;
 
@@ -91,7 +91,87 @@ export class AppUserController {
 
     return str;
   };
-// conflict check
+  // conflict check
+
+  @post('/app/user/subscription/webhook', {
+    responses: {
+      '200': {
+        description: 'Update end date',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                message: {type: 'string'},
+                // Changed from number to string
+              },
+            },
+          },
+        },
+      },
+      '404': {
+        description: 'User not found',
+      },
+    },
+  })
+  async updateEndDate(
+    @requestBody({
+      description: 'Request body to update end date',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              email: {type: 'string'},
+              endDate: {type: 'string', format: 'date-time'}, // Ensure it's in ISO 8601 format
+            },
+            required: ['email', 'endDate'],
+          },
+        },
+      },
+    })
+    requestData: {
+      email: string;
+      endDate: string;
+    },
+  ): Promise<{message: string}> {
+    try {
+      // Step 1: Check if user exists
+      const user = await this.userRepository.findOne({
+        where: {email: requestData.email},
+      });
+
+      if (!user) {
+        throw new HttpErrors.NotFound('Email not found in database.');
+      }
+      const user_id = user.id;
+
+      // Step 2: Update the endDate for the user
+      const subsData = await this.subData.execute(
+        `SELECT *
+FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
+        [JSON.stringify([user_id])],
+      );
+
+      if (subsData.length < 1) {
+        throw new HttpErrors.NotFound(
+          'Subscription data not found for this user.',
+        );
+      }
+      await this.subData.updateById(subsData[0].id, {
+        endDate: new Date(requestData.endDate),
+      });
+
+      return {
+        message: 'Subscription Updated Successfully',
+      };
+    } catch (error: any) {
+      console.error('Error updating end date:', error.message);
+      throw new HttpErrors.BadRequest(error.message);
+    }
+  }
+
   @get('/products/all')
   async getCouponByName(): Promise<object> {
     try {
@@ -135,7 +215,7 @@ export class AppUserController {
 
     try {
       if (!Array.isArray(items) || items.length === 0) {
-        return {error:'Items must be an array with at least one item'};
+        return {error: 'Items must be an array with at least one item'};
       }
 
       // // Validate and retrieve details for each priceId
@@ -176,14 +256,14 @@ export class AppUserController {
         });
       }
 
-        const subscriptionItems = items.map(item => ({
-            price: item.priceId,
-            quantity: item.quantity || 1, // Default to 1 if quantity is not provided
-        }));
+      const subscriptionItems = items.map(item => ({
+        price: item.priceId,
+        quantity: item.quantity || 1, // Default to 1 if quantity is not provided
+      }));
       // Define subscriptionParams with the appropriate types
       const subscriptionParams: {
         customer: string;
-        items: {price: string,quantity:number}[];
+        items: {price: string; quantity: number}[];
         expand: string[];
         trial_period_days?: number;
         coupon?: string;
@@ -936,7 +1016,7 @@ ${savedUser.email}</li>
 
     return 'reset successful';
   }
-   @post('/app/user/email', {
+  @post('/app/user/email', {
     responses: {
       '200': {
         description: 'verifyuser',
@@ -974,13 +1054,11 @@ ${savedUser.email}</li>
       const verify = await this.userRepository.findOne({
         where: {email: emaild.email},
       });
-if(verify){
-  return true
-}
-else {
-  return false
-}
-
+      if (verify) {
+        return true;
+      } else {
+        return false;
+      }
     } catch (error: any) {
       // Handle errors here
       console.error('Error during verify:', error.message);
