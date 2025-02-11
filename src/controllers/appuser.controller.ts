@@ -343,7 +343,7 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
             invoice_settings: {default_payment_method: paymentMethodId},
           });
         } catch (error:any) {
-          throw new Error(error.message)
+          throw new Error(`failed to create REMOVED customer    ${error.message}`)
         }
       }
 
@@ -363,6 +363,7 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
         items: subscriptionItems,
         expand: ['latest_invoice.payment_intent', 'discount.coupon'],
       };
+      console.log("subscription params",subscriptionParams)
 
       if (trialPeriod > 0) {
         subscriptionParams.trial_period_days = trialPeriod;
@@ -415,7 +416,7 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
       return {subscriptionId: subscription.id};
     } catch (error: any) {
       console.error('Error:', error.message);
-      throw new HttpErrors.BadRequest(error.message);
+      throw new Error(error.message);
     }
   }
 
