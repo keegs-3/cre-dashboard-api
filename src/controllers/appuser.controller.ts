@@ -2,8 +2,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {generateOTP} from '@eternaljs/otp-generator';
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {inject, tryCatchFinally} from '@loopback/core';
 import {repository} from '@loopback/repository';
+import moment from 'moment-timezone';
 import {
   get,
   getJsonSchemaRef,
@@ -16,11 +17,11 @@ import {
   RestBindings,
 } from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
-import axios from 'axios';
 import https from 'https';
 import * as _ from 'lodash';
 import nodemailer from 'nodemailer';
 import Stripe from 'REMOVED';
+import {Request} from 'express';
 import {
   PasswordHasherBindings,
   TokenServiceBindings,
@@ -39,11 +40,33 @@ import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {SubscriptionData} from './../models/subscription-data.model';
 
-const REMOVED = new Stripe(`${process.env.STRIPE_KEY_TEST}`);
+// ✅ Import `TextEncoder` & `TextDecoder` for older Node.js versions
+import {
+  TextEncoder as NodeTextEncoder,
+  TextDecoder as NodeTextDecoder,
+} from 'util';
+
+if (typeof (global as any).TextEncoder === 'undefined') {
+  (global as any).TextEncoder = NodeTextEncoder;
+}
+if (typeof (global as any).TextDecoder === 'undefined') {
+  (global as any).TextDecoder = NodeTextDecoder;
+}
+
 const HUBSPOT_SEARCH_URL =
   'https://api.hubapi.com/crm/v3/objects/contacts/search';
 const HUBSPOT_CONTACT_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
 const HUBSPOT_TOKEN = process.env.HUBSPOT_TOKEN;
+const STRIPE_SUBSCRIPTION_EVENTS = [
+  'customer.subscription.created',
+  'customer.subscription.deleted',
+  'customer.subscription.paused',
+  'customer.subscription.pending_update_applied',
+  'customer.subscription.pending_update_expired',
+  'customer.subscription.resumed',
+  'customer.subscription.trial_will_end',
+  'customer.subscription.updated',
+];
 export class AppUserController {
   constructor(
     @inject('services.Stripe') private REMOVEDService: any,
@@ -56,6 +79,7 @@ export class AppUserController {
     public loginSession: LoginsessionRepository,
     @repository(UsersessionRepository)
     public usersRepository: UsersessionRepository,
+    @inject(RestBindings.Http.REQUEST) private req: Request,
 
     // @inject('service.hasher')
     @inject(PasswordHasherBindings.PASSWORD_HASHER)
@@ -69,12 +93,15 @@ export class AppUserController {
     @inject(TokenServiceBindings.TOKEN_SERVICE)
     public jwtService: JWTService,
   ) {}
+
   DB_SCHEMA = process.env.DB_SCHEMA;
   EMAIL = process.env.EMAIL_ID;
   EMAILPASS = process.env.EMAIL_PASSWORD;
   UI_URL = process.env.UI_URL;
   STRIPE_KEY = process.env.STRIPE_KEY;
   HUBSPOT_TOKEN = process.env.HUBSPOT_TOKEN;
+  WEB_HOOK = process.env.STRIPE_WEBHOOK_SECRET;
+  REMOVED = new Stripe(`${this.STRIPE_KEY}`);
   // @authenticate('jwt')
   string = function getString(n: number) {
     let str = '';
@@ -96,80 +123,120 @@ export class AppUserController {
   @post('/app/user/subscription/webhook', {
     responses: {
       '200': {
-        description: 'Update end date',
+        description: 'Webhook received successfully',
         content: {
           'application/json': {
-            schema: {
-              type: 'object',
-              properties: {
-                message: {type: 'string'},
-                // Changed from number to string
-              },
-            },
+            schema: {type: 'object', properties: {message: {type: 'string'}}},
           },
         },
-      },
-      '404': {
-        description: 'User not found',
       },
     },
   })
   async updateEndDate(
     @requestBody({
-      description: 'Request body to update end date',
+      description: 'Raw body data',
       required: true,
       content: {
         'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              email: {type: 'string'},
-              endDate: {type: 'string', format: 'date-time'}, // Ensure it's in ISO 8601 format
-            },
-            required: ['email', 'endDate'],
-          },
+          'x-parser': 'raw', // Ensure we get raw Buffer data
         },
       },
     })
-    requestData: {
-      email: string;
-      endDate: string;
-    },
+    body: Buffer, // ✅ Ensure this is a Buffer
   ): Promise<{message: string}> {
+    let event: Stripe.Event;
     try {
-      // Step 1: Check if user exists
-      const user = await this.userRepository.findOne({
-        where: {email: requestData.email},
-      });
+      const sig = this.req.headers['REMOVED-signature'] as string;
+      if (!sig) throw new HttpErrors.BadRequest('Missing Stripe signature');
 
-      if (!user) {
-        throw new HttpErrors.NotFound('Email not found in database.');
-      }
-      const user_id = user.id;
+      console.log('Received raw body:', body);
 
-      // Step 2: Update the endDate for the user
-      const subsData = await this.subData.execute(
-        `SELECT *
-FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
-        [JSON.stringify([user_id])],
+      // ✅ Pass the Buffer directly to Stripe (DO NOT convert to a string)
+      event = this.REMOVED.webhooks.constructEvent(
+        body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET ?? 'whsec_...', // Ensure this is set
       );
 
-      if (subsData.length < 1) {
-        throw new HttpErrors.NotFound(
-          'Subscription data not found for this user.',
+      console.log('Received webhook event:', event.type);
+    } catch (error: any) {
+      console.error('Error processing webhook:', error);
+      throw new HttpErrors.BadRequest(`Webhook Error: ${error.message}`);
+    }
+
+    // ✅ Check if the event is related to subscriptions
+    if (STRIPE_SUBSCRIPTION_EVENTS.includes(event.type)) {
+      // ✅ Explicitly cast event.data.object as Stripe.Subscription
+      const subscription = event.data.object as Stripe.Subscription;
+
+      console.log('Subscription:', subscription);
+
+      try {
+        // ✅ TypeScript now knows that `subscription.customer` exists
+        const customerResponse = await this.REMOVED.customers.retrieve(
+          subscription.customer as string, // Ensure customer is a string
+        );
+
+        if (customerResponse && !customerResponse.deleted) {
+          const customer = customerResponse as Stripe.Customer; // Explicitly cast to `Customer`
+
+          if (customer.email) {
+            try {
+              await this.hubSpotService.updateHubSpotContact(
+                customer.email,
+                customer.name,
+                subscription,
+              );
+            } catch (error:any) {
+              throw new HttpErrors.BadRequest(
+                `Updating hubspot error: ${error.message}`,
+              );
+            }
+
+          try {
+              const user = await this.userRepository.findOne({
+                where: {email: customer.email},
+              });
+
+              if (!user) {
+                throw new HttpErrors.NotFound('Email not found in database.');
+              }
+              const user_id = user.id;
+
+              // Step 2: Update the endDate for the user
+              const subsData = await this.subData.execute(
+                `SELECT *
+FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
+                [JSON.stringify([user_id])],
+              );
+
+              if (subsData.length < 1) {
+                throw new HttpErrors.NotFound(
+                  'Subscription data not found for this user.',
+                );
+              }
+              await this.subData.updateById(subsData[0].id, {
+                endDate: moment
+                  .unix(subscription.current_period_end)
+                  .tz('Asia/Kolkata')
+                  .format('YYYY-MM-DD HH:mm:ss.SSS Z'),
+              });
+          } catch (error:any) {
+            throw new HttpErrors.BadRequest(`PG Adding SUb error: ${error.message}`);
+          }
+
+           
+          }
+        }
+      } catch (error: any) {
+        console.error(
+          'Error updating HubSpot contact from webhook:',
+          error.message,
         );
       }
-      await this.subData.updateById(subsData[0].id, {
-        endDate: new Date(requestData.endDate),
-      });
-
-      return {
-        message: 'Subscription Updated Successfully',
-      };
-    } catch (error: any) {
-      console.error('Error updating end date:', error.message);
-      throw new HttpErrors.BadRequest(error.message);
     }
+
+    return {message: 'Successfully added to DB'};
   }
 
   @get('/products/all')
@@ -177,7 +244,7 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
     try {
       const products = await this.REMOVEDService.getProductList();
       return {products};
-    } catch (error) {
+    } catch (error: any) {
       return {error: error.message};
     }
   }
@@ -186,7 +253,7 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
     try {
       const result = await this.REMOVEDService.findProductsWithPricesAndCoupons();
       return {data: result};
-    } catch (error) {
+    } catch (error: any) {
       return {error: error.message};
     }
   }
@@ -218,26 +285,32 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
         return {error: 'Items must be an array with at least one item'};
       }
 
-      // // Validate and retrieve details for each priceId
-      // const prices = await Promise.all(
-      //   items.map(item => REMOVED.prices.retrieve(item.priceId)),
-      // );
+      // check pricing start
+      // Validate and retrieve details for each priceId
+      const prices = await Promise.all(
+        items.map(async item => {
+          try {
+            return await this.REMOVED.prices.retrieve(item.priceId);
+          } catch (error) {
+            throw new Error(`Invalid priceId: ${item.priceId}`);
+          }
+        }),
+      );
 
-      // // Validate recurring intervals
-      // const interval = prices[0]?.recurring.interval;
-      // const intervalCount = prices[0]?.recurring.interval_count;
+      const interval = prices[0]?.recurring?.interval;
+      const intervalCount = prices[0]?.recurring?.interval_count;
 
-      // for (const price of prices) {
-      //   if (
-      //     price.recurring.interval !== interval ||
-      //     price.recurring.interval_count !== intervalCount
-      //   ) {
-      //     return res.status(400).json({
-      //       error:
-      //         'All prices must have the same recurring.interval and recurring.interval_count.',
-      //     });
-      //   }
-      // }
+      for (const price of prices) {
+        if (
+          price?.recurring?.interval !== interval ||
+          price?.recurring?.interval_count !== intervalCount
+        ) {
+          throw new Error(
+            `All prices must have the same recurring interval and interval count.`,
+          );
+        }
+      }
+      // check pricing end
 
       const existingCustomer = await this.REMOVEDService.getCustomerByEmail(
         email,
@@ -248,12 +321,16 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
       if (existingCustomer) {
         customer = existingCustomer;
       } else {
-        customer = await this.REMOVEDService.createCustomer({
-          email,
-          name,
-          payment_method: paymentMethodId,
-          invoice_settings: {default_payment_method: paymentMethodId},
-        });
+        try {
+          customer = await this.REMOVEDService.createCustomer({
+            email,
+            name,
+            payment_method: paymentMethodId,
+            invoice_settings: {default_payment_method: paymentMethodId},
+          });
+        } catch (error:any) {
+          throw new Error(error.message)
+        }
       }
 
       const subscriptionItems = items.map(item => ({
@@ -280,11 +357,18 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
       if (couponCode && couponCode.trim() !== '') {
         subscriptionParams.coupon = couponCode;
       }
+      // Payment intend start
+
+      
+      // Payment intend end
 
       // Create the subscription
-      const subscription = await this.REMOVEDService.createSubscription(
-        subscriptionParams,
-      );
+      let subscription 
+      try {
+        subscription =await this.REMOVEDService.createSubscription(subscriptionParams);
+      } catch (error:any) {
+        throw new Error(error.message);
+      }
 
       // Create a note for the HubSpot contact
       const couponDetails = subscription.discount?.coupon
@@ -315,7 +399,7 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
       await this.hubSpotService.addNoteToHubSpot(contact.id, noteContent);
 
       return {subscriptionId: subscription.id};
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error.message);
       throw new HttpErrors.BadRequest(error.message);
     }
@@ -600,12 +684,11 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
     const calculateOrderAmount = (items: {amount: number}[]): number => {
       return items.reduce((total, item) => total + item.amount, 0);
     };
-    const REMOVED = new Stripe(`${this.STRIPE_KEY}`);
 
     try {
       // Create a PaymentIntent
       console.log('datatatataatta', data);
-      const paymentIntent = await REMOVED.paymentIntents.create({
+      const paymentIntent = await this.REMOVED.paymentIntents.create({
         amount: calculateOrderAmount(data.items),
         currency: 'usd',
         receipt_email: data.email,
