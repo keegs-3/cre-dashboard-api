@@ -320,6 +320,20 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
       // Check if customer exists
       if (existingCustomer) {
         customer = existingCustomer;
+         try {
+           await this.REMOVED.paymentMethods.attach(paymentMethodId, {
+             customer: customer.id,
+           });
+           await this.REMOVED.customers.update(customer.id, {
+             invoice_settings: {default_payment_method: paymentMethodId},
+           });
+         } catch (error: any) {
+          
+           throw new Error(
+             'Failed to attach payment method to existing customer: ' +
+               error.message,
+           );
+         }
       } else {
         try {
           customer = await this.REMOVEDService.createCustomer({
