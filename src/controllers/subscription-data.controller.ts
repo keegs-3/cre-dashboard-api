@@ -19,7 +19,6 @@ import {
 } from '@loopback/rest';
 import {SubscriptionData} from '../models';
 import {SubscriptionDataRepository} from '../repositories';
-import {authenticate} from '@loopback/authentication';
 
 export class SubscriptionDataController {
   constructor(
