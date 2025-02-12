@@ -187,13 +187,13 @@ export class AppUserController {
                 customer.name,
                 subscription,
               );
-            } catch (error:any) {
+            } catch (error: any) {
               throw new HttpErrors.BadRequest(
                 `Updating hubspot error: ${error.message}`,
               );
             }
 
-          try {
+            try {
               const user = await this.userRepository.findOne({
                 where: {email: customer.email},
               });
@@ -221,11 +221,11 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
                   .tz('Asia/Kolkata')
                   .format('YYYY-MM-DD HH:mm:ss.SSS Z'),
               });
-          } catch (error:any) {
-            throw new HttpErrors.BadRequest(`PG Adding SUb error: ${error.message}`);
-          }
-
-           
+            } catch (error: any) {
+              throw new HttpErrors.BadRequest(
+                `PG Adding SUb error: ${error.message}`,
+              );
+            }
           }
         }
       } catch (error: any) {
@@ -259,6 +259,165 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
   }
 
   // Initialize Stripe with your secret key
+  // @post('/create-subscription')
+  // async createSubscription(
+  //   @requestBody()
+  //   request: {
+  //     email: string;
+  //     paymentMethodId: string;
+  //     items: Array<{priceId: string; quantity: number}>;
+  //     name: string;
+  //     trialPeriod: number;
+  //     couponCode: string;
+  //   },
+  // ): Promise<{}> {
+  //   const {
+  //     email,
+  //     paymentMethodId,
+  //     items,
+  //     name,
+  //     trialPeriod,
+  //     couponCode,
+  //   } = request;
+
+  //   try {
+  //     if (!Array.isArray(items) || items.length === 0) {
+  //       return {error: 'Items must be an array with at least one item'};
+  //     }
+
+  //     // check pricing start
+  //     // Validate and retrieve details for each priceId
+  //     const prices = await Promise.all(
+  //       items.map(async item => {
+  //         try {
+  //           return await this.REMOVED.prices.retrieve(item.priceId);
+  //         } catch (error) {
+  //           throw new Error(`Invalid priceId: ${item.priceId}`);
+  //         }
+  //       }),
+  //     );
+
+  //     const interval = prices[0]?.recurring?.interval;
+  //     const intervalCount = prices[0]?.recurring?.interval_count;
+
+  //     for (const price of prices) {
+  //       if (
+  //         price?.recurring?.interval !== interval ||
+  //         price?.recurring?.interval_count !== intervalCount
+  //       ) {
+  //         throw new Error(
+  //           `All prices must have the same recurring interval and interval count.`,
+  //         );
+  //       }
+  //     }
+  //     // check pricing end
+
+  //     const existingCustomer = await this.REMOVEDService.getCustomerByEmail(
+  //       email,
+  //     );
+  //     let customer;
+
+  //     // Check if customer exists
+  //     if (existingCustomer) {
+  //       customer = existingCustomer;
+  //        try {
+  //          await this.REMOVED.paymentMethods.attach(paymentMethodId, {
+  //            customer: customer.id,
+  //          });
+  //          await this.REMOVED.customers.update(customer.id, {
+  //            invoice_settings: {default_payment_method: paymentMethodId},
+  //          });
+  //        } catch (error: any) {
+
+  //          throw new Error(
+  //            'Failed to attach payment method to existing customer: ' +
+  //              error.message,
+  //          );
+  //        }
+  //     } else {
+  //       try {
+  //         customer = await this.REMOVEDService.createCustomer({
+  //           email,
+  //           name,
+  //           payment_method: paymentMethodId,
+  //           invoice_settings: {default_payment_method: paymentMethodId},
+  //         });
+  //       } catch (error:any) {
+  //         throw new Error(`failed to create REMOVED customer    ${error.message}`)
+  //       }
+  //     }
+
+  //     const subscriptionItems = items.map(item => ({
+  //       price: item.priceId,
+  //       quantity: item.quantity || 1, // Default to 1 if quantity is not provided
+  //     }));
+  //     // Define subscriptionParams with the appropriate types
+  //     const subscriptionParams: {
+  //       customer: string;
+  //       items: {price: string; quantity: number}[];
+  //       expand: string[];
+  //       trial_period_days?: number;
+  //       coupon?: string;
+  //     } = {
+  //       customer: customer.id,
+  //       items: subscriptionItems,
+  //       expand: ['latest_invoice.payment_intent', 'discount.coupon'],
+  //     };
+  //     console.log("subscription params",subscriptionParams)
+
+  //     if (trialPeriod > 0) {
+  //       subscriptionParams.trial_period_days = trialPeriod;
+  //     }
+
+  //     if (couponCode && couponCode.trim() !== '') {
+  //       subscriptionParams.coupon = couponCode;
+  //     }
+  //     // Payment intend start
+
+  //     // Payment intend end
+
+  //     // Create the subscription
+  //     let subscription
+  //     try {
+  //       subscription =await this.REMOVEDService.createSubscription(subscriptionParams);
+  //     } catch (error:any) {
+  //       throw new Error(error.message);
+  //     }
+
+  //     // Create a note for the HubSpot contact
+  //     const couponDetails = subscription.discount?.coupon
+  //       ? `\n- Coupon Applied: ${subscription.discount.coupon.name} (${
+  //           subscription.discount.coupon.percent_off ||
+  //           subscription.discount.coupon.amount_off / 100
+  //         } off)`
+  //       : '';
+
+  //     const noteContent = `
+  //       <b>Subscription Details:</b><br>
+  //       <b>- Status:</b> ${subscription.status}<br>
+  //       <b>- Start Date:</b> ${new Date(
+  //         subscription.start_date * 1000,
+  //       ).toISOString()}<br>
+  //       <b>- Next Payment Due Date:</b> ${new Date(
+  //         subscription.current_period_end * 1000,
+  //       ).toISOString()}<br>
+  //       <b>- Next Payment Amount:</b> $${(
+  //         subscription.items.data[0].price.unit_amount / 100
+  //       ).toFixed(2)}<br>
+  //       <b>- Stripe Subscription ID:</b> ${subscription.id}<br>
+  //       ${couponDetails}
+  //     `;
+
+  //     // Add or update the HubSpot contact
+  //     const contact = await this.hubSpotService.upsertContact(email, name);
+  //     await this.hubSpotService.addNoteToHubSpot(contact.id, noteContent);
+
+  //     return {subscriptionId: subscription.id};
+  //   } catch (error: any) {
+  //     console.error('Error:', error.message);
+  //     throw new Error(error.message);
+  //   }
+  // }
   @post('/create-subscription')
   async createSubscription(
     @requestBody()
@@ -281,11 +440,13 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
     } = request;
 
     try {
+      // Validate items
       if (!Array.isArray(items) || items.length === 0) {
-        return {error: 'Items must be an array with at least one item'};
+        throw new HttpErrors.BadRequest(
+          'Items must be an array with at least one item',
+        );
       }
 
-      // check pricing start
       // Validate and retrieve details for each priceId
       const prices = await Promise.all(
         items.map(async item => {
@@ -297,61 +458,71 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
         }),
       );
 
+      // Check pricing consistency
       const interval = prices[0]?.recurring?.interval;
       const intervalCount = prices[0]?.recurring?.interval_count;
-
       for (const price of prices) {
         if (
           price?.recurring?.interval !== interval ||
           price?.recurring?.interval_count !== intervalCount
         ) {
           throw new Error(
-            `All prices must have the same recurring interval and interval count.`,
+            'All prices must have the same recurring interval and interval count.',
           );
         }
       }
-      // check pricing end
 
+      // Check for existing customer by email
       const existingCustomer = await this.REMOVEDService.getCustomerByEmail(
         email,
       );
       let customer;
 
-      // Check if customer exists
       if (existingCustomer) {
         customer = existingCustomer;
-         try {
-           await this.REMOVED.paymentMethods.attach(paymentMethodId, {
-             customer: customer.id,
-           });
+        try {
+          // Wait before attaching payment method to avoid race conditions
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await this.REMOVED.paymentMethods.attach(paymentMethodId, {
+            customer: customer.id,
+          });
            await this.REMOVED.customers.update(customer.id, {
              invoice_settings: {default_payment_method: paymentMethodId},
            });
-         } catch (error: any) {
           
-           throw new Error(
-             'Failed to attach payment method to existing customer: ' +
-               error.message,
-           );
-         }
+        } catch (error: any) {
+          console.error('Attach Payment Method Error:', error);
+          throw new Error(
+            'Failed to attach payment method to existing customer: ' +
+              (error.raw?.message || error.message),
+          );
+        }
       } else {
+        // Create a new customer if none exists
         try {
-          customer = await this.REMOVEDService.createCustomer({
+        
+          customer = await this.REMOVEDService.createCustomerWithPaymentMethod(
             email,
             name,
-            payment_method: paymentMethodId,
-            invoice_settings: {default_payment_method: paymentMethodId},
-          });
-        } catch (error:any) {
-          throw new Error(`failed to create REMOVED customer    ${error.message}`)
+           paymentMethodId,
+          );
+        
+        } catch (error: any) {
+          console.error('Customer Creation Error:', error);
+          throw new Error(
+            'Failed to create Stripe customer: ' +
+              (error.raw?.message || error.message),
+          );
         }
       }
 
+      // Prepare subscription items
       const subscriptionItems = items.map(item => ({
         price: item.priceId,
-        quantity: item.quantity || 1, // Default to 1 if quantity is not provided
+        quantity: item.quantity || 1,
       }));
-      // Define subscriptionParams with the appropriate types
+
+      // Prepare subscription parameters
       const subscriptionParams: {
         customer: string;
         items: {price: string; quantity: number}[];
@@ -363,7 +534,6 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
         items: subscriptionItems,
         expand: ['latest_invoice.payment_intent', 'discount.coupon'],
       };
-      console.log("subscription params",subscriptionParams)
 
       if (trialPeriod > 0) {
         subscriptionParams.trial_period_days = trialPeriod;
@@ -371,21 +541,25 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
 
       if (couponCode && couponCode.trim() !== '') {
         subscriptionParams.coupon = couponCode;
+      } else {
+        delete subscriptionParams.coupon;
       }
-      // Payment intend start
-
-      
-      // Payment intend end
 
       // Create the subscription
-      let subscription 
+      let subscription;
       try {
-        subscription =await this.REMOVEDService.createSubscription(subscriptionParams);
-      } catch (error:any) {
-        throw new Error(error.message);
+        subscription = await this.REMOVEDService.createSubscription(
+          subscriptionParams,
+        );
+      } catch (error: any) {
+        console.error('Subscription Creation Error:', error);
+        throw new Error(
+          'Failed to create subscription: ' +
+            (error.raw?.message || error.message),
+        );
       }
 
-      // Create a note for the HubSpot contact
+      // Prepare HubSpot note content
       const couponDetails = subscription.discount?.coupon
         ? `\n- Coupon Applied: ${subscription.discount.coupon.name} (${
             subscription.discount.coupon.percent_off ||
@@ -409,14 +583,16 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
         ${couponDetails}
       `;
 
-      // Add or update the HubSpot contact
+      // Add or update HubSpot contact and note
       const contact = await this.hubSpotService.upsertContact(email, name);
-      await this.hubSpotService.addNoteToHubSpot(contact.id, noteContent);
+      await this.hubSpotService.addNoteToHubSpot(contact?.id, noteContent);
 
       return {subscriptionId: subscription.id};
     } catch (error: any) {
-      console.error('Error:', error.message);
-      throw new Error(error.message);
+      console.error('Error:', error);
+      throw new HttpErrors.InternalServerError(
+        error.raw?.message || error.message,
+      );
     }
   }
 

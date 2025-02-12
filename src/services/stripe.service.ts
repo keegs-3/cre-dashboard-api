@@ -46,6 +46,40 @@ export class StripeService {
   async createSubscription(subscriptionParams: any) {
     return this.REMOVED.subscriptions.create(subscriptionParams);
   }
+  /**
+   * Create a new customer and attach a payment method
+   */
+  async createCustomerWithPaymentMethod(
+    email: string,
+    name: string,
+    paymentMethodId: string,
+  ) {
+    try {
+      // Create customer
+      const customer = await this.REMOVED.customers.create({
+        email,
+        name,
+      });
+
+      // Attach payment method to the customer
+    await this.REMOVED.paymentMethods.attach(paymentMethodId, {
+      customer: customer.id,
+    });
+    await this.REMOVED.customers.update(customer.id, {
+      invoice_settings: {default_payment_method: paymentMethodId},
+    });
+
+      // Optional: Add delay to avoid race condition
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      return customer;
+    } catch (error: any) {
+      console.error('createCustomerWithPaymentMethod Error:', error);
+      throw new Error(
+        error.raw?.message || 'Failed to create customer with payment method.',
+      );
+    }
+  }
 
   async findProductsWithPricesAndCoupons(): Promise<
     {
@@ -94,7 +128,7 @@ export class StripeService {
               name: response.data.name,
               productIds: response.data.applies_to?.products ?? [], // Associated product IDs
             };
-          } catch (err:any) {
+          } catch (err: any) {
             console.error(
               `Error fetching coupon details for ${coupon.id}:`,
               err.message,
