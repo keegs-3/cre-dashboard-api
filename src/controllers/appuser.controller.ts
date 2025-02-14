@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {generateOTP} from '@eternaljs/otp-generator';
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
-import {inject, tryCatchFinally} from '@loopback/core';
+import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import moment from 'moment-timezone';
 import {
   get,
   getJsonSchemaRef,
@@ -17,11 +16,12 @@ import {
   RestBindings,
 } from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
+import {Request} from 'express';
 import https from 'https';
 import * as _ from 'lodash';
+import moment from 'moment-timezone';
 import nodemailer from 'nodemailer';
 import Stripe from 'REMOVED';
-import {Request} from 'express';
 import {
   PasswordHasherBindings,
   TokenServiceBindings,
@@ -42,8 +42,8 @@ import {SubscriptionData} from './../models/subscription-data.model';
 
 // ✅ Import `TextEncoder` & `TextDecoder` for older Node.js versions
 import {
-  TextEncoder as NodeTextEncoder,
   TextDecoder as NodeTextDecoder,
+  TextEncoder as NodeTextEncoder,
 } from 'util';
 
 if (typeof (global as any).TextEncoder === 'undefined') {
@@ -120,6 +120,126 @@ export class AppUserController {
   };
   // conflict check
 
+  //   @post('/app/user/subscription/webhook', {
+  //     responses: {
+  //       '200': {
+  //         description: 'Webhook received successfully',
+  //         content: {
+  //           'application/json': {
+  //             schema: {type: 'object', properties: {message: {type: 'string'}}},
+  //           },
+  //         },
+  //       },
+  //     },
+  //   })
+  //   async updateEndDate(
+  //     @requestBody({
+  //       description: 'Raw body data',
+  //       required: true,
+  //       content: {
+  //         'application/json': {
+  //           'x-parser': 'raw', // Ensure we get raw Buffer data
+  //         },
+  //       },
+  //     })
+  //     body: Buffer, // ✅ Ensure this is a Buffer
+  //   ): Promise<{message: string}> {
+  //     // ✅ Delay the execution by 1 minute
+  //     await new Promise<void>(resolve => setTimeout(resolve, 60000));
+  //     let event: Stripe.Event;
+  //     try {
+  //       const sig = this.req.headers['REMOVED-signature'] as string;
+  //       if (!sig) throw new HttpErrors.BadRequest('Missing Stripe signature');
+
+  //       console.log('Received raw body:', body);
+
+  //       // ✅ Pass the Buffer directly to Stripe (DO NOT convert to a string)
+  //       event = this.REMOVED.webhooks.constructEvent(
+  //         body,
+  //         sig,
+  //         process.env.STRIPE_WEBHOOK_SECRET ?? '', // Ensure this is set
+  //       );
+
+  //       console.log('Received webhook event:', event.type);
+  //     } catch (error: any) {
+  //       console.error('Error processing webhook:', error);
+  //       throw new HttpErrors.BadRequest(`Webhook Error: ${error.message}`);
+  //     }
+
+  //     // ✅ Check if the event is related to subscriptions
+  //     if (STRIPE_SUBSCRIPTION_EVENTS.includes(event.type)) {
+  //       // ✅ Explicitly cast event.data.object as Stripe.Subscription
+  //       const subscription = event.data.object as Stripe.Subscription;
+
+  //       console.log('Subscription:', subscription);
+
+  //       try {
+  //         // ✅ TypeScript now knows that `subscription.customer` exists
+  //         const customerResponse = await this.REMOVED.customers.retrieve(
+  //           subscription.customer as string, // Ensure customer is a string
+  //         );
+
+  //         if (customerResponse && !customerResponse.deleted) {
+  //           const customer = customerResponse as Stripe.Customer; // Explicitly cast to `Customer`
+
+  //           if (customer.email) {
+  //             try {
+  //               await this.hubSpotService.updateHubSpotContact(
+  //                 customer.email,
+  //                 customer.name,
+  //                 subscription,
+  //               );
+  //             } catch (error: any) {
+  //               throw new HttpErrors.BadRequest(
+  //                 `Updating hubspot error: ${error.message}`,
+  //               );
+  //             }
+
+  //             try {
+  //               const user = await this.userRepository.findOne({
+  //                 where: {email: customer.email},
+  //               });
+
+  //               if (!user) {
+  //                 throw new HttpErrors.NotFound('Email not found in database.');
+  //               }
+  //               const user_id = user.id;
+
+  //               // Step 2: Update the endDate for the user
+  //               const subsData = await this.subData.execute(
+  //                 `SELECT *
+  // FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
+  //                 [JSON.stringify([user_id])],
+  //               );
+
+  //               if (subsData.length < 1) {
+  //                 throw new HttpErrors.NotFound(
+  //                   'Subscription data not found for this user.',
+  //                 );
+  //               }
+  //               await this.subData.updateById(subsData[0].id, {
+  //                 endDate: moment
+  //                   .unix(subscription.current_period_end)
+  //                   .tz('Asia/Kolkata')
+  //                   .format('YYYY-MM-DD HH:mm:ss.SSS Z'),
+  //               });
+  //             } catch (error: any) {
+  //               throw new HttpErrors.BadRequest(
+  //                 `PG Adding SUb error: ${error.message}`,
+  //               );
+  //             }
+  //           }
+  //         }
+  //       } catch (error: any) {
+  //         console.error(
+  //           'Error updating HubSpot contact from webhook:',
+  //           error.message,
+  //         );
+  //       }
+  //     }
+
+  //     return {message: 'Successfully added to DB'};
+  //   }
   @post('/app/user/subscription/webhook', {
     responses: {
       '200': {
@@ -144,99 +264,107 @@ export class AppUserController {
     })
     body: Buffer, // ✅ Ensure this is a Buffer
   ): Promise<{message: string}> {
+    await this.delayExecution(60000);
     let event: Stripe.Event;
     try {
-      const sig = this.req.headers['REMOVED-signature'] as string;
-      if (!sig) throw new HttpErrors.BadRequest('Missing Stripe signature');
-
-      console.log('Received raw body:', body);
-
-      // ✅ Pass the Buffer directly to Stripe (DO NOT convert to a string)
-      event = this.REMOVED.webhooks.constructEvent(
-        body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET ?? 'whsec_...', // Ensure this is set
-      );
-
-      console.log('Received webhook event:', event.type);
+      event = this.constructStripeEvent(body);
     } catch (error: any) {
-      console.error('Error processing webhook:', error);
       throw new HttpErrors.BadRequest(`Webhook Error: ${error.message}`);
     }
 
-    // ✅ Check if the event is related to subscriptions
     if (STRIPE_SUBSCRIPTION_EVENTS.includes(event.type)) {
-      // ✅ Explicitly cast event.data.object as Stripe.Subscription
       const subscription = event.data.object as Stripe.Subscription;
-
-      console.log('Subscription:', subscription);
-
       try {
-        // ✅ TypeScript now knows that `subscription.customer` exists
-        const customerResponse = await this.REMOVED.customers.retrieve(
-          subscription.customer as string, // Ensure customer is a string
-        );
-
-        if (customerResponse && !customerResponse.deleted) {
-          const customer = customerResponse as Stripe.Customer; // Explicitly cast to `Customer`
-
-          if (customer.email) {
-            try {
-              await this.hubSpotService.updateHubSpotContact(
-                customer.email,
-                customer.name,
-                subscription,
-              );
-            } catch (error: any) {
-              throw new HttpErrors.BadRequest(
-                `Updating hubspot error: ${error.message}`,
-              );
-            }
-
-            try {
-              const user = await this.userRepository.findOne({
-                where: {email: customer.email},
-              });
-
-              if (!user) {
-                throw new HttpErrors.NotFound('Email not found in database.');
-              }
-              const user_id = user.id;
-
-              // Step 2: Update the endDate for the user
-              const subsData = await this.subData.execute(
-                `SELECT *
-FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
-                [JSON.stringify([user_id])],
-              );
-
-              if (subsData.length < 1) {
-                throw new HttpErrors.NotFound(
-                  'Subscription data not found for this user.',
-                );
-              }
-              await this.subData.updateById(subsData[0].id, {
-                endDate: moment
-                  .unix(subscription.current_period_end)
-                  .tz('Asia/Kolkata')
-                  .format('YYYY-MM-DD HH:mm:ss.SSS Z'),
-              });
-            } catch (error: any) {
-              throw new HttpErrors.BadRequest(
-                `PG Adding SUb error: ${error.message}`,
-              );
-            }
-          }
-        }
+        await this.processSubscription(subscription);
       } catch (error: any) {
-        console.error(
-          'Error updating HubSpot contact from webhook:',
-          error.message,
-        );
+        console.error('Error processing subscription:', error.message);
       }
     }
 
     return {message: 'Successfully added to DB'};
+  }
+
+  private async delayExecution(ms: number): Promise<void> {
+    await new Promise<void>(resolve => setTimeout(resolve, ms));
+  }
+
+  private constructStripeEvent(body: Buffer): Stripe.Event {
+    const sig = this.req.headers['REMOVED-signature'] as string;
+    if (!sig) throw new HttpErrors.BadRequest('Missing Stripe signature');
+
+    console.log('Received raw body:', body);
+
+    return this.REMOVED.webhooks.constructEvent(
+      body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET ?? '', // Ensure this is set
+    );
+  }
+
+  private async processSubscription(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
+    const customerResponse = await this.REMOVED.customers.retrieve(
+      subscription.customer as string, // Ensure customer is a string
+    );
+
+    if (customerResponse && !customerResponse.deleted) {
+      const customer = customerResponse as Stripe.Customer; // Explicitly cast to `Customer`
+
+      if (customer.email) {
+        await this.updateHubSpotContact(customer, subscription);
+        await this.updateUserSubscriptionData(customer.email, subscription);
+      }
+    }
+  }
+
+  private async updateHubSpotContact(
+    customer: Stripe.Customer,
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
+    try {
+      await this.hubSpotService.updateHubSpotContact(
+        customer.email,
+        customer.name,
+        subscription,
+      );
+    } catch (error: any) {
+      throw new HttpErrors.BadRequest(
+        `Updating hubspot error: ${error.message}`,
+      );
+    }
+  }
+
+  private async updateUserSubscriptionData(
+    email: string,
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: {email},
+    });
+
+    if (!user) {
+      throw new HttpErrors.NotFound('Email not found in database.');
+    }
+    const user_id = user.id;
+
+    const subsData = await this.subData.execute(
+      `SELECT *
+FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
+      [JSON.stringify([user_id])],
+    );
+
+    if (subsData.length < 1) {
+      throw new HttpErrors.NotFound(
+        'Subscription data not found for this user.',
+      );
+    }
+    await this.subData.updateById(subsData[0].id, {
+      endDate: moment
+        .unix(subscription.current_period_end)
+        .tz('Asia/Kolkata')
+        .format('YYYY-MM-DD HH:mm:ss.SSS Z'),
+    });
   }
 
   @get('/products/all')
@@ -418,6 +546,180 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
   //     throw new Error(error.message);
   //   }
   // }
+  // @post('/create-subscription')
+  // async createSubscription(
+  //   @requestBody()
+  //   request: {
+  //     email: string;
+  //     paymentMethodId: string;
+  //     items: Array<{priceId: string; quantity: number}>;
+  //     name: string;
+  //     trialPeriod: number;
+  //     couponCode: string;
+  //   },
+  // ): Promise<{}> {
+  //   const {
+  //     email,
+  //     paymentMethodId,
+  //     items,
+  //     name,
+  //     trialPeriod,
+  //     couponCode,
+  //   } = request;
+
+  //   try {
+  //     // Validate items
+  //     if (!Array.isArray(items) || items.length === 0) {
+  //       throw new HttpErrors.BadRequest(
+  //         'Items must be an array with at least one item',
+  //       );
+  //     }
+
+  //     // Validate and retrieve details for each priceId
+  //     const prices = await Promise.all(
+  //       items.map(async item => {
+  //         try {
+  //           return await this.REMOVED.prices.retrieve(item.priceId);
+  //         } catch (error) {
+  //           throw new Error(`Invalid priceId: ${item.priceId}`);
+  //         }
+  //       }),
+  //     );
+
+  //     // Check pricing consistency
+  //     const interval = prices[0]?.recurring?.interval;
+  //     const intervalCount = prices[0]?.recurring?.interval_count;
+  //     for (const price of prices) {
+  //       if (
+  //         price?.recurring?.interval !== interval ||
+  //         price?.recurring?.interval_count !== intervalCount
+  //       ) {
+  //         throw new Error(
+  //           'All prices must have the same recurring interval and interval count.',
+  //         );
+  //       }
+  //     }
+
+  //     // Check for existing customer by email
+  //     const existingCustomer = await this.REMOVEDService.getCustomerByEmail(
+  //       email,
+  //     );
+  //     let customer;
+
+  //     if (existingCustomer) {
+  //       customer = existingCustomer;
+  //       try {
+  //         // Wait before attaching payment method to avoid race conditions
+  //         await new Promise(resolve => setTimeout(resolve, 500));
+  //         await this.REMOVED.paymentMethods.attach(paymentMethodId, {
+  //           customer: customer.id,
+  //         });
+  //         await this.REMOVED.customers.update(customer.id, {
+  //           invoice_settings: {default_payment_method: paymentMethodId},
+  //         });
+  //       } catch (error: any) {
+  //         console.error('Attach Payment Method Error:', error);
+  //         throw new Error(
+  //           'Failed to attach payment method to existing customer: ' +
+  //             (error.raw?.message || error.message),
+  //         );
+  //       }
+  //     } else {
+  //       // Create a new customer if none exists
+  //       try {
+  //         customer = await this.REMOVEDService.createCustomerWithPaymentMethod(
+  //           email,
+  //           name,
+  //           paymentMethodId,
+  //         );
+  //       } catch (error: any) {
+  //         console.error('Customer Creation Error:', error);
+  //         throw new Error(
+  //           'Failed to create Stripe customer: ' +
+  //             (error.raw?.message || error.message),
+  //         );
+  //       }
+  //     }
+
+  //     // Prepare subscription items
+  //     const subscriptionItems = items.map(item => ({
+  //       price: item.priceId,
+  //       quantity: item.quantity || 1,
+  //     }));
+
+  //     // Prepare subscription parameters
+  //     const subscriptionParams: {
+  //       customer: string;
+  //       items: {price: string; quantity: number}[];
+  //       expand: string[];
+  //       trial_period_days?: number;
+  //       coupon?: string;
+  //     } = {
+  //       customer: customer.id,
+  //       items: subscriptionItems,
+  //       expand: ['latest_invoice.payment_intent', 'discount.coupon'],
+  //     };
+
+  //     if (trialPeriod > 0) {
+  //       subscriptionParams.trial_period_days = trialPeriod;
+  //     }
+
+  //     if (couponCode && couponCode.trim() !== '') {
+  //       subscriptionParams.coupon = couponCode;
+  //     } else {
+  //       delete subscriptionParams.coupon;
+  //     }
+
+  //     // Create the subscription
+  //     let subscription;
+  //     try {
+  //       subscription = await this.REMOVEDService.createSubscription(
+  //         subscriptionParams,
+  //       );
+  //     } catch (error: any) {
+  //       console.error('Subscription Creation Error:', error);
+  //       throw new Error(
+  //         'Failed to create subscription: ' +
+  //           (error.raw?.message || error.message),
+  //       );
+  //     }
+
+  //     // Prepare HubSpot note content
+  //     const couponDetails = subscription.discount?.coupon
+  //       ? `\n- Coupon Applied: ${subscription.discount.coupon.name} (${
+  //           subscription.discount.coupon.percent_off ||
+  //           subscription.discount.coupon.amount_off / 100
+  //         } off)`
+  //       : '';
+
+  //     const noteContent = `
+  //       <b>Subscription Details:</b><br>
+  //       <b>- Status:</b> ${subscription.status}<br>
+  //       <b>- Start Date:</b> ${new Date(
+  //         subscription.start_date * 1000,
+  //       ).toISOString()}<br>
+  //       <b>- Next Payment Due Date:</b> ${new Date(
+  //         subscription.current_period_end * 1000,
+  //       ).toISOString()}<br>
+  //       <b>- Next Payment Amount:</b> $${(
+  //         subscription.items.data[0].price.unit_amount / 100
+  //       ).toFixed(2)}<br>
+  //       <b>- Stripe Subscription ID:</b> ${subscription.id}<br>
+  //       ${couponDetails}
+  //     `;
+
+  //     // Add or update HubSpot contact and note
+  //     const contact = await this.hubSpotService.upsertContact(email, name);
+  //     await this.hubSpotService.addNoteToHubSpot(contact?.id, noteContent);
+
+  //     return {subscriptionId: subscription.id};
+  //   } catch (error: any) {
+  //     console.error('Error:', error);
+  //     throw new HttpErrors.InternalServerError(
+  //       error.raw?.message || error.message,
+  //     );
+  //   }
+  // }
   @post('/create-subscription')
   async createSubscription(
     @requestBody()
@@ -440,150 +742,27 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
     } = request;
 
     try {
-      // Validate items
-      if (!Array.isArray(items) || items.length === 0) {
-        throw new HttpErrors.BadRequest(
-          'Items must be an array with at least one item',
-        );
-      }
+      this.validateItems(items);
+      const prices = await this.retrievePrices(items);
+      this.checkPricingConsistency(prices);
 
-      // Validate and retrieve details for each priceId
-      const prices = await Promise.all(
-        items.map(async item => {
-          try {
-            return await this.REMOVED.prices.retrieve(item.priceId);
-          } catch (error) {
-            throw new Error(`Invalid priceId: ${item.priceId}`);
-          }
-        }),
-      );
-
-      // Check pricing consistency
-      const interval = prices[0]?.recurring?.interval;
-      const intervalCount = prices[0]?.recurring?.interval_count;
-      for (const price of prices) {
-        if (
-          price?.recurring?.interval !== interval ||
-          price?.recurring?.interval_count !== intervalCount
-        ) {
-          throw new Error(
-            'All prices must have the same recurring interval and interval count.',
-          );
-        }
-      }
-
-      // Check for existing customer by email
-      const existingCustomer = await this.REMOVEDService.getCustomerByEmail(
+      const customer = await this.getOrCreateCustomer(
         email,
+        name,
+        paymentMethodId,
       );
-      let customer;
+      const subscriptionParams = this.prepareSubscriptionParams(
+        customer.id,
+        items,
+        trialPeriod,
+        couponCode,
+      );
 
-      if (existingCustomer) {
-        customer = existingCustomer;
-        try {
-          // Wait before attaching payment method to avoid race conditions
-          await new Promise(resolve => setTimeout(resolve, 500));
-          await this.REMOVED.paymentMethods.attach(paymentMethodId, {
-            customer: customer.id,
-          });
-           await this.REMOVED.customers.update(customer.id, {
-             invoice_settings: {default_payment_method: paymentMethodId},
-           });
-          
-        } catch (error: any) {
-          console.error('Attach Payment Method Error:', error);
-          throw new Error(
-            'Failed to attach payment method to existing customer: ' +
-              (error.raw?.message || error.message),
-          );
-        }
-      } else {
-        // Create a new customer if none exists
-        try {
-        
-          customer = await this.REMOVEDService.createCustomerWithPaymentMethod(
-            email,
-            name,
-           paymentMethodId,
-          );
-        
-        } catch (error: any) {
-          console.error('Customer Creation Error:', error);
-          throw new Error(
-            'Failed to create Stripe customer: ' +
-              (error.raw?.message || error.message),
-          );
-        }
-      }
+      const subscription = await this.createStripeSubscription(
+        subscriptionParams,
+      );
+      const noteContent = this.prepareHubSpotNoteContent(subscription);
 
-      // Prepare subscription items
-      const subscriptionItems = items.map(item => ({
-        price: item.priceId,
-        quantity: item.quantity || 1,
-      }));
-
-      // Prepare subscription parameters
-      const subscriptionParams: {
-        customer: string;
-        items: {price: string; quantity: number}[];
-        expand: string[];
-        trial_period_days?: number;
-        coupon?: string;
-      } = {
-        customer: customer.id,
-        items: subscriptionItems,
-        expand: ['latest_invoice.payment_intent', 'discount.coupon'],
-      };
-
-      if (trialPeriod > 0) {
-        subscriptionParams.trial_period_days = trialPeriod;
-      }
-
-      if (couponCode && couponCode.trim() !== '') {
-        subscriptionParams.coupon = couponCode;
-      } else {
-        delete subscriptionParams.coupon;
-      }
-
-      // Create the subscription
-      let subscription;
-      try {
-        subscription = await this.REMOVEDService.createSubscription(
-          subscriptionParams,
-        );
-      } catch (error: any) {
-        console.error('Subscription Creation Error:', error);
-        throw new Error(
-          'Failed to create subscription: ' +
-            (error.raw?.message || error.message),
-        );
-      }
-
-      // Prepare HubSpot note content
-      const couponDetails = subscription.discount?.coupon
-        ? `\n- Coupon Applied: ${subscription.discount.coupon.name} (${
-            subscription.discount.coupon.percent_off ||
-            subscription.discount.coupon.amount_off / 100
-          } off)`
-        : '';
-
-      const noteContent = `
-        <b>Subscription Details:</b><br>
-        <b>- Status:</b> ${subscription.status}<br>
-        <b>- Start Date:</b> ${new Date(
-          subscription.start_date * 1000,
-        ).toISOString()}<br>
-        <b>- Next Payment Due Date:</b> ${new Date(
-          subscription.current_period_end * 1000,
-        ).toISOString()}<br>
-        <b>- Next Payment Amount:</b> $${(
-          subscription.items.data[0].price.unit_amount / 100
-        ).toFixed(2)}<br>
-        <b>- Stripe Subscription ID:</b> ${subscription.id}<br>
-        ${couponDetails}
-      `;
-
-      // Add or update HubSpot contact and note
       const contact = await this.hubSpotService.upsertContact(email, name);
       await this.hubSpotService.addNoteToHubSpot(contact?.id, noteContent);
 
@@ -596,6 +775,177 @@ FROM ${this.DB_SCHEMA}.app_subscription_data WHERE users->'users' @> $1`,
     }
   }
 
+  private validateItems(items: Array<{priceId: string; quantity: number}>) {
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new HttpErrors.BadRequest(
+        'Items must be an array with at least one item',
+      );
+    }
+  }
+
+  private async retrievePrices(
+    items: Array<{priceId: string; quantity: number}>,
+  ) {
+    return  Promise.all(
+      items.map(async item => {
+        try {
+          return await this.REMOVED.prices.retrieve(item.priceId);
+        } catch (error) {
+          throw new Error(`Invalid priceId: ${item.priceId}`);
+        }
+      }),
+    );
+  }
+
+  private checkPricingConsistency(prices: Stripe.Price[]) {
+    const interval = prices[0]?.recurring?.interval;
+    const intervalCount = prices[0]?.recurring?.interval_count;
+    for (const price of prices) {
+      if (
+        price?.recurring?.interval !== interval ||
+        price?.recurring?.interval_count !== intervalCount
+      ) {
+        throw new Error(
+          'All prices must have the same recurring interval and interval count.',
+        );
+      }
+    }
+  }
+
+  private async getOrCreateCustomer(
+    email: string,
+    name: string,
+    paymentMethodId: string,
+  ) {
+    const existingCustomer = await this.REMOVEDService.getCustomerByEmail(email);
+    if (existingCustomer) {
+      await this.attachPaymentMethodToCustomer(
+        existingCustomer.id,
+        paymentMethodId,
+      );
+      return existingCustomer;
+    } else {
+      return  this.createCustomerWithPaymentMethod(
+        email,
+        name,
+        paymentMethodId,
+      );
+    }
+  }
+
+  private async attachPaymentMethodToCustomer(
+    customerId: string,
+    paymentMethodId: string,
+  ) {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await this.REMOVED.paymentMethods.attach(paymentMethodId, {
+        customer: customerId,
+      });
+      await this.REMOVED.customers.update(customerId, {
+        invoice_settings: {default_payment_method: paymentMethodId},
+      });
+    } catch (error: any) {
+      console.error('Attach Payment Method Error:', error);
+      throw new Error(
+        'Failed to attach payment method to existing customer: ' +
+          (error.raw?.message || error.message),
+      );
+    }
+  }
+
+  private async createCustomerWithPaymentMethod(
+    email: string,
+    name: string,
+    paymentMethodId: string,
+  ) {
+    try {
+      return  this.REMOVEDService.createCustomerWithPaymentMethod(
+        email,
+        name,
+        paymentMethodId,
+      );
+    } catch (error: any) {
+      console.error('Customer Creation Error:', error);
+      throw new Error(
+        'Failed to create Stripe customer: ' +
+          (error.raw?.message || error.message),
+      );
+    }
+  }
+
+  private prepareSubscriptionParams(
+    customerId: string,
+    items: Array<{priceId: string; quantity: number}>,
+    trialPeriod: number,
+    couponCode: string,
+  ) {
+    const subscriptionItems = items.map(item => ({
+      price: item.priceId,
+      quantity: item.quantity || 1,
+    }));
+
+    const subscriptionParams: {
+      customer: string;
+      items: {price: string; quantity: number}[];
+      expand: string[];
+      trial_period_days?: number;
+      coupon?: string;
+    } = {
+      customer: customerId,
+      items: subscriptionItems,
+      expand: ['latest_invoice.payment_intent', 'discount.coupon'],
+    };
+
+    if (trialPeriod > 0) {
+      subscriptionParams.trial_period_days = trialPeriod;
+    }
+
+    if (couponCode && couponCode.trim() !== '') {
+      subscriptionParams.coupon = couponCode;
+    } else {
+      delete subscriptionParams.coupon;
+    }
+
+    return subscriptionParams;
+  }
+
+  private async createStripeSubscription(subscriptionParams: any) {
+    try {
+      return  this.REMOVEDService.createSubscription(subscriptionParams);
+    } catch (error: any) {
+      console.error('Subscription Creation Error:', error);
+      throw new Error(
+        'Failed to create subscription: ' +
+          (error.raw?.message || error.message),
+      );
+    }
+  }
+
+  private prepareHubSpotNoteContent(subscription: any) {
+    const couponDetails = subscription.discount?.coupon
+      ? `\n- Coupon Applied: ${subscription.discount.coupon.name} (${
+          subscription.discount.coupon.percent_off ||
+          subscription.discount.coupon.amount_off / 100
+        } off)`
+      : '';
+
+    return `
+    <b>Subscription Details:</b><br>
+    <b>- Status:</b> ${subscription.status}<br>
+    <b>- Start Date:</b> ${new Date(
+      subscription.start_date * 1000,
+    ).toISOString()}<br>
+    <b>- Next Payment Due Date:</b> ${new Date(
+      subscription.current_period_end * 1000,
+    ).toISOString()}<br>
+    <b>- Next Payment Amount:</b> $${(
+      subscription.items.data[0].price.unit_amount / 100
+    ).toFixed(2)}<br>
+    <b>- Stripe Subscription ID:</b> ${subscription.id}<br>
+    ${couponDetails}
+  `;
+  }
   @post('/hubspot/search', {
     responses: {
       '200': {
