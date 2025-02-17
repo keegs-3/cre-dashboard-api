@@ -9,7 +9,7 @@ export class StripeService {
   private REMOVED: Stripe;
 
   constructor() {
-    this.REMOVED = new Stripe(`${process.env.STRIPE_KEY_TEST}`);
+    this.REMOVED = new Stripe(`${process.env.STRIPE_KEY}`);
   }
 
   async getCustomerByEmail(email: string) {
@@ -46,84 +46,40 @@ export class StripeService {
   async createSubscription(subscriptionParams: any) {
     return this.REMOVED.subscriptions.create(subscriptionParams);
   }
+  /**
+   * Create a new customer and attach a payment method
+   */
+  async createCustomerWithPaymentMethod(
+    email: string,
+    name: string,
+    paymentMethodId: string,
+  ) {
+    try {
+      // Create customer
+      const customer = await this.REMOVED.customers.create({
+        email,
+        name,
+      });
 
-  //   async findProductsWithPricesAndCoupons(): Promise<
-  //     object
-  //   > {
-  //     try {
-  //       // Retrieve all prices
-  //       const prices = await this.REMOVED.prices.list({limit: 100});
+      // Attach payment method to the customer
+    await this.REMOVED.paymentMethods.attach(paymentMethodId, {
+      customer: customer.id,
+    });
+    await this.REMOVED.customers.update(customer.id, {
+      invoice_settings: {default_payment_method: paymentMethodId},
+    });
 
-  //       // Retrieve all products
-  //       const products = await this.REMOVED.products.list({limit: 100});
+      // Optional: Add delay to avoid race condition
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-  //       // Retrieve all coupons
-  //       const coupons = await this.REMOVED.coupons.list({limit: 100});
-
-  //       // Helper function to fetch coupon details from Stripe API
-  //      const  cuponWithProduct =[];
-  //       coupons.data.map(async (d)=> {
-  // const cupon=await axios.get(
-  //   `https://api.REMOVED.com/v1/coupons/${d.id}?expand[]=applies_to`,
-  //   {
-  //     headers: {
-  //       Authorization: `Bearer ${process.env.STRIPE_KEY_TEST}`, // Ensure this is your Stripe secret key
-  //     },
-  //   },
-  // );
-  // cuponWithProduct.push({cuponId: cupon.data.id, name: cupon.data.name,productsId:cupon.data.applies_to.products});
-  //       })
-
-  // // const productWithPriceAndCoupon = [];
-  //   const productsWithPrices = products.data.map(product => {
-  //     // Find the first price related to the current product
-  //     const relatedPrice = prices.data.find(
-  //       price => price.product === product.id,
-  //     );
-
-  //     return {
-  //       productId: product.id,
-  //       name: product.name,
-  //       description: product.description,
-  //       price: relatedPrice
-  //         ? {
-  //             priceId: relatedPrice.id,
-  //             priceName: relatedPrice.nickname ?? null, // Stripe uses `nickname` for price name
-  //             amount: relatedPrice.unit_amount ?? null, // Handle `null` amount
-  //           }
-  //         : null, // No price found
-  //     };
-  //   });
-
-  // const productWithPriceCupons = productsWithPrices.map(product => {
-  //   // Find the first price related to the current product
-  //   const relatedPrice = cuponWithProduct.find(p => p.product === product.productId);
-
-  //   return {
-  //     productId: product.productId,
-  //     name: product.name,
-  //     description: product.description,
-  //     cupons:cuponWithProduct,
-  //     price: relatedPrice
-  //       ? {
-  //           priceId: relatedPrice.id,
-  //           priceName: relatedPrice.nickname ?? null, // Stripe uses `nickname` for price name
-  //           amount: relatedPrice.unit_amount ?? null, // Handle `null` amount
-  //         }
-  //       : null, // No price found
-  //   };
-  // });
-
-  // return productWithPriceCupons;
-
-  //     } catch (error) {
-  //       console.error(
-  //         'Error fetching prices, products, or coupons:',
-  //         error.message,
-  //       );
-  //       throw error;
-  //     }
-  //   }
+      return customer;
+    } catch (error: any) {
+      console.error('createCustomerWithPaymentMethod Error:', error);
+      throw new Error(
+        error.raw?.message || 'Failed to create customer with payment method.',
+      );
+    }
+  }
 
   async findProductsWithPricesAndCoupons(): Promise<
     {
@@ -150,10 +106,10 @@ export class StripeService {
 
       // Retrieve all coupons
       const coupons = await this.REMOVED.coupons.list({limit: 100});
-const activeProducts = products.data.filter(
-  product => product.active === true,
-);
-console.log('active product',activeProducts)
+      const activeProducts = products.data.filter(
+        product => product.active === true,
+      );
+      console.log('active product', activeProducts);
       // Helper function to fetch coupon details
       const cuponWithProduct = await Promise.all(
         coupons.data.map(async coupon => {
@@ -162,7 +118,7 @@ console.log('active product',activeProducts)
               `https://api.REMOVED.com/v1/coupons/${coupon.id}?expand[]=applies_to`,
               {
                 headers: {
-                  Authorization: `Bearer ${process.env.STRIPE_KEY_TEST}`, // Your Stripe secret key
+                  Authorization: `Bearer ${process.env.STRIPE_KEY}`, // Your Stripe secret key
                 },
               },
             );
@@ -172,7 +128,7 @@ console.log('active product',activeProducts)
               name: response.data.name,
               productIds: response.data.applies_to?.products ?? [], // Associated product IDs
             };
-          } catch (err) {
+          } catch (err: any) {
             console.error(
               `Error fetching coupon details for ${coupon.id}:`,
               err.message,
@@ -216,7 +172,7 @@ console.log('active product',activeProducts)
       });
 
       return productsWithPricesAndCoupons;
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         'Error fetching prices, products, or coupons:',
         error.message,
